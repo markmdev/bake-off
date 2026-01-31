@@ -36,10 +36,16 @@ export async function GET(
     return NextResponse.json({ error: 'Skill file not found' }, { status: 500 });
   }
 
-  // Replace placeholders with the actual API key
+  // Get the base URL from the request
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('host') || 'bakeoff.ink';
+  const baseUrl = `${protocol}://${host}`;
+
+  // Replace placeholders with actual values
   const personalizedContent = skillContent
     .replace(/YOUR_API_KEY/g, apiKey)
-    .replace(/sk_live_abc123xyz/g, apiKey); // Also replace the example key in the workflow section
+    .replace(/sk_live_abc123xyz/g, apiKey) // Also replace the example key in the workflow section
+    .replace(/https:\/\/bakeoff\.app/g, baseUrl); // Use current URL instead of hardcoded domain
 
   return new NextResponse(personalizedContent, {
     headers: {

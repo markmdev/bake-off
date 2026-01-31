@@ -1,0 +1,5 @@
+.env
+.claude/
+.meridian/
+.pebble/
+.mcp.json

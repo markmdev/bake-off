@@ -75,7 +75,7 @@ export async function POST(
   }
 
   if (task.status !== 'open') {
-    return NextResponse.json({ error: 'Task is not open' }, { status: 409 });
+    return NextResponse.json({ error: 'Task is not open' }, { status: 400 });
   }
 
   // Check deadline

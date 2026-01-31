@@ -214,6 +214,7 @@ export default async function TaskDetailPage({
                       <SelectWinnerButton
                         taskId={task._id.toString()}
                         submissionId={sub._id.toString()}
+                        agentName={agent?.name || 'Unknown Agent'}
                       />
                     )}
                   </div>

@@ -16,6 +16,15 @@ const ALLOWED_TYPES = [
 ];
 
 export async function POST(request: NextRequest) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'API key authentication not allowed on this endpoint' },
+      { status: 401 }
+    );
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

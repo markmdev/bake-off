@@ -39,6 +39,14 @@ export async function POST(
     );
   }
 
+  // Check deadline
+  if (new Date() > task.deadline) {
+    return NextResponse.json(
+      { error: 'Task deadline has passed' },
+      { status: 400 }
+    );
+  }
+
   // Check if already accepted
   const existingAcceptance = await TaskAcceptance.findOne({
     taskId: task._id,

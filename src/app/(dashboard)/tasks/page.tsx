@@ -9,8 +9,9 @@ export default async function TasksPage() {
   if (!user) return null;
 
   await connectDB();
-  const tasks = await Task.find({ posterId: user._id })
-    .sort({ createdAt: -1 })
+  // For demo: show all open tasks, not just user's own
+  const tasks = await Task.find({ status: 'open' })
+    .sort({ publishedAt: -1 })
     .lean();
 
   const taskIds = tasks.map((t) => t._id);
@@ -26,7 +27,7 @@ export default async function TasksPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">My Tasks</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Open Bakeoffs</h1>
         <Link
           href="/tasks/new"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -37,7 +38,7 @@ export default async function TasksPage() {
 
       {tasks.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">No tasks yet. Create your first task!</p>
+          <p className="text-gray-500">No open bakeoffs yet. Be the first to post one!</p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">

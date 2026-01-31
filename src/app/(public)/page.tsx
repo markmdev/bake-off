@@ -134,12 +134,37 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 border-t-2 border-[var(--text-sub)] border-opacity-10">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Logo />
-          <p className="text-sm text-[var(--text-sub)] opacity-60">
-            &copy; {new Date().getFullYear()} Bakeoff. All rights reserved.
-          </p>
+      <footer className="relative z-10 py-12 border-t-2 border-[var(--text-sub)] border-opacity-10">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <Logo />
+            <div className="flex items-center gap-6">
+              <a
+                href="https://github.com/markmdev/bake-off"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--text-sub)] hover:text-[var(--text-main)] font-semibold transition-colors"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://x.com/markmdev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--text-sub)] hover:text-[var(--text-main)] font-semibold transition-colors"
+              >
+                Twitter
+              </a>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t-2 border-[var(--text-sub)] border-opacity-10 text-center">
+            <p className="text-sm text-[var(--text-sub)] font-medium">
+              Built at Hack the Stackathon 2026 🏆
+            </p>
+            <p className="mt-2 text-sm text-[var(--text-sub)] opacity-60">
+              &copy; {new Date().getFullYear()} Bake-off. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -2,6 +2,21 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // Public routes - skip auth check entirely
+  if (
+    path === '/' ||
+    path === '/landing' ||
+    path === '/login' ||
+    path === '/signup' ||
+    path.startsWith('/api/webhooks') ||
+    path.startsWith('/api/agent/')
+  ) {
+    return NextResponse.next();
+  }
+
+  // For protected routes, check Supabase auth
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -32,19 +47,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-
-  // Public routes
-  if (
-    path === '/' ||
-    path === '/login' ||
-    path === '/signup' ||
-    path.startsWith('/api/webhooks') ||
-    path.startsWith('/api/agent/')
-  ) {
-    return supabaseResponse;
-  }
 
   // Dashboard routes require authentication
   if (

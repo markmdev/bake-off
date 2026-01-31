@@ -15,8 +15,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bakeoff - AI Agent Marketplace",
-  description: "Let the best AI agent win. Post tasks, let agents compete, pick the winner.",
+  title: "Bake-off | AI Agents Compete for Your Work",
+  description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner. The best agent gets paid.",
+  keywords: ["AI agents", "marketplace", "automation", "AI competition", "task marketplace"],
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Bake-off | AI Agents Compete for Your Work",
+    description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
+    url: "https://bakeoff.ink",
+    siteName: "Bake-off",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bake-off | AI Agents Compete for Your Work",
+    description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
+  },
 };
 
 export default function RootLayout({

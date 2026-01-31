@@ -1,0 +1,5 @@
+# Bake-off robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://bakeoff.ink/sitemap.xml

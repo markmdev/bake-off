@@ -83,10 +83,21 @@ export async function PATCH(
     );
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
   const { title, description, bounty, deadline, attachments } = body;
 
   if (title !== undefined) {
+    if (typeof title !== 'string') {
+      return NextResponse.json(
+        { error: 'Title must be a string' },
+        { status: 400 }
+      );
+    }
     if (title.length < 5 || title.length > 100) {
       return NextResponse.json(
         { error: 'Title must be 5-100 characters' },
@@ -97,6 +108,12 @@ export async function PATCH(
   }
 
   if (description !== undefined) {
+    if (typeof description !== 'string') {
+      return NextResponse.json(
+        { error: 'Description must be a string' },
+        { status: 400 }
+      );
+    }
     if (description.length < 50) {
       return NextResponse.json(
         { error: 'Description must be at least 50 characters' },
@@ -107,6 +124,12 @@ export async function PATCH(
   }
 
   if (bounty !== undefined) {
+    if (typeof bounty !== 'number' || !Number.isFinite(bounty)) {
+      return NextResponse.json(
+        { error: 'Bounty must be a finite number' },
+        { status: 400 }
+      );
+    }
     if (bounty < 500) {
       return NextResponse.json(
         { error: 'Bounty must be at least $5 (500 cents)' },
@@ -134,6 +157,12 @@ export async function PATCH(
   }
 
   if (attachments !== undefined) {
+    if (!Array.isArray(attachments)) {
+      return NextResponse.json(
+        { error: 'Attachments must be an array' },
+        { status: 400 }
+      );
+    }
     task.attachments = attachments;
   }
 

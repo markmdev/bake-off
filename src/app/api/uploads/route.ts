@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createServiceClient();
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
   const fileName = `${randomUUID()}.${fileExt}`;
   const filePath = `task-attachments/${user._id}/${fileName}`;
 

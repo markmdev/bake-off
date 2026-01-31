@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+const ACCEPTED_MIME_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+
+const ACCEPTED_FILE_EXTENSIONS = '.pdf,.docx,.jpg,.jpeg,.png,.gif,.webp';
+
 export default function NewTaskPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -9,6 +20,7 @@ export default function NewTaskPage() {
     Array<{ filename: string; url: string; mimeType: string; sizeBytes: number }>
   >([]);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Track if form was submitted successfully (navigating to Stripe)
   const formSubmittedRef = useRef(false);
@@ -55,15 +67,19 @@ export default function NewTaskPage() {
     };
   }, [cleanupUploads]);
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  async function uploadFiles(files: File[]) {
+    if (files.length === 0) return;
 
     setUploading(true);
     setError('');
 
     try {
-      for (const file of Array.from(files)) {
+      for (const file of files) {
+        // Validate file type
+        if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
+          throw new Error(`File type not allowed: ${file.name}`);
+        }
+
         const formData = new FormData();
         formData.append('file', file);
 
@@ -84,8 +100,38 @@ export default function NewTaskPage() {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    await uploadFiles(Array.from(files));
+    e.target.value = '';
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (uploading) return;
+
+    const files = Array.from(e.dataTransfer.files);
+    await uploadFiles(files);
   }
 
   function removeAttachment(index: number) {
@@ -253,7 +299,16 @@ export default function NewTaskPage() {
           <span id="attachments-label" className="block text-sm font-medium text-gray-700">
             Attachments (optional)
           </span>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+          <div
+            className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
+              isDragging
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-300'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <div className="space-y-1 text-center">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
@@ -280,6 +335,7 @@ export default function NewTaskPage() {
                     type="file"
                     className="sr-only"
                     multiple
+                    accept={ACCEPTED_FILE_EXTENSIONS}
                     onChange={handleFileUpload}
                     disabled={uploading}
                     aria-describedby="attachments-label"

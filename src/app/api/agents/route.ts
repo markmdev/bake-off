@@ -41,18 +41,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
   const { name, description, skillFileUrl } = body;
 
   // Validation
-  if (!name || name.length < 3 || name.length > 50) {
+  if (typeof name !== 'string' || name.length < 3 || name.length > 50) {
     return NextResponse.json(
       { error: 'Name must be 3-50 characters' },
       { status: 400 }
     );
   }
 
-  if (!description || description.length < 10 || description.length > 280) {
+  if (typeof description !== 'string' || description.length < 10 || description.length > 280) {
     return NextResponse.json(
       { error: 'Description must be 10-280 characters' },
       { status: 400 }
@@ -98,19 +106,31 @@ export async function POST(request: NextRequest) {
   // Generate API key
   const { key, hash } = generateApiKey();
 
-  const agent = await Agent.create({
-    ownerId: user._id,
-    name,
-    description,
-    skillFileUrl,
-    apiKeyHash: hash,
-    status: 'active',
-    stats: {
-      tasksAttempted: 0,
-      tasksWon: 0,
-      totalEarnings: 0,
-    },
-  });
+  let agent;
+  try {
+    agent = await Agent.create({
+      ownerId: user._id,
+      name,
+      description,
+      skillFileUrl,
+      apiKeyHash: hash,
+      status: 'active',
+      stats: {
+        tasksAttempted: 0,
+        tasksWon: 0,
+        totalEarnings: 0,
+      },
+    });
+  } catch (error) {
+    // Handle duplicate key error (E11000)
+    if (error instanceof Error && 'code' in error && (error as { code: number }).code === 11000) {
+      return NextResponse.json(
+        { error: 'An agent with this name already exists' },
+        { status: 400 }
+      );
+    }
+    throw error;
+  }
 
   // Return the plain API key (only time it's visible)
   return NextResponse.json(

@@ -351,6 +351,7 @@ async function seedDemoData() {
   for (let i = 0; i < tasksCreated.length; i++) {
     const task = tasksCreated[i] as mongoose.Document & {
       _id: mongoose.Types.ObjectId;
+      title: string;
       status: string;
       bounty: number;
       winnerId: mongoose.Types.ObjectId | null;
@@ -371,7 +372,7 @@ async function seedDemoData() {
       taskId: task._id,
     });
     if (existingSubmissions > 0) {
-      console.log(`Task "${(task as { title: string }).title}" already has submissions`);
+      console.log(`Task "${task.title}" already has submissions`);
       continue;
     }
 
@@ -403,7 +404,7 @@ async function seedDemoData() {
         taskId: task._id,
         agentId: agent._id,
         submissionType: 'github',
-        submissionUrl: `https://github.com/demo-agent/${(task as { title: string }).title.toLowerCase().replace(/\s+/g, '-')}`,
+        submissionUrl: `https://github.com/demo-agent/${task.title.toLowerCase().replace(/\s+/g, '-')}`,
         submittedAt: new Date(),
         isWinner,
       });

@@ -82,20 +82,14 @@ export default async function AgentDetailPage({
       </div>
 
       <div className="bg-white shadow rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Install the Bake-off Skill</h2>
+        <h2 className="text-lg font-medium text-gray-900">API Key & Skill Installation</h2>
         <p className="text-sm text-gray-600">
-          Run this command in your agent&apos;s project directory to install the Bake-off skill:
+          Your API key is hashed and cannot be retrieved. To get a new install
+          command with your API key baked in, regenerate your key below.
         </p>
-        <pre className="bg-gray-800 text-green-400 rounded p-3 text-sm overflow-x-auto">
-          mkdir -p .claude/skills/bakeoff &amp;&amp; curl -o .claude/skills/bakeoff/SKILL.md {process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.app'}/SKILL.md
-        </pre>
-      </div>
-
-      <div className="bg-white shadow rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">API Key Management</h2>
-        <p className="text-sm text-gray-600">
-          Your API key is hashed and cannot be retrieved. If you need a new key,
-          regenerate it below. This will invalidate your current key.
+        <p className="text-sm text-gray-500">
+          This will invalidate your current key and give you a new one-liner to
+          install the Bake-off skill.
         </p>
         <RegenerateKeyButton agentId={agent._id.toString()} />
       </div>

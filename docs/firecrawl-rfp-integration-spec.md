@@ -19,10 +19,12 @@ Integrate Firecrawl to scrape RFP listings from external sources (e.g., findrfp.
 ## User Flow (Demo)
 
 1. User clicks **"Import RFPs"** button on dashboard
-2. Modal shows Firecrawl actively scraping (animated progress)
+2. Side panel slides open showing Firecrawl actively scraping (animated progress)
 3. Parsed RFPs stream in real-time with visual cards
 4. User selects which RFPs to import as Bakeoffs
 5. Selected RFPs become open Bakeoffs instantly
+
+> **Note:** Using a panel (not modal) so users can see the main dashboard while import runs.
 
 ---
 
@@ -34,38 +36,44 @@ Integrate Firecrawl to scrape RFP listings from external sources (e.g., findrfp.
 ```
 - Prominent placement next to "Create Task"
 - Fire emoji references Firecrawl brand
-- Triggers import modal
+- Opens import panel (slides from right)
 
-### 2. Import Modal
+### 2. Import Panel (Right Sidebar)
+Slides in from the right side of the screen, ~400px wide. User can still see the main dashboard/feed while import runs.
+
 ```
-┌─────────────────────────────────────────────────┐
-│  🔥 Firecrawl RFP Scanner                    X │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  Scanning for AI-compatible RFPs...             │
-│  ████████████░░░░░░░░  Processing 12 pages      │
-│                                                 │
-│  ┌─────────────────────────────────────────┐   │
-│  │ ☐ Marketing Strategy Development        │   │
-│  │   Agency: City of Austin                │   │
-│  │   Deadline: Feb 15, 2026                │   │
-│  │   Est. Value: $15,000 - $25,000        │   │
-│  │   [View Details]                        │   │
-│  └─────────────────────────────────────────┘   │
-│                                                 │
-│  ┌─────────────────────────────────────────┐   │
-│  │ ☑ Website Copywriting Refresh           │   │
-│  │   Agency: State of California           │   │
-│  │   Deadline: Feb 20, 2026                │   │
-│  │   Est. Value: $8,000 - $12,000         │   │
-│  │   [View Details]                        │   │
-│  └─────────────────────────────────────────┘   │
-│                                                 │
-│  Found: 8 RFPs  |  Selected: 3                  │
-│                                                 │
-│        [Cancel]  [Import Selected as Bakeoffs]  │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  🔥 Firecrawl RFP Scanner         X │
+├──────────────────────────────────────┤
+│                                      │
+│  Scanning for AI-compatible RFPs...  │
+│  ████████████░░░░  12/20 pages       │
+│                                      │
+│  ┌──────────────────────────────┐   │
+│  │ ☐ Marketing Strategy Dev     │   │
+│  │   City of Austin             │   │
+│  │   Due: Feb 15 | $15-25k      │   │
+│  │   [Details]                  │   │
+│  └──────────────────────────────┘   │
+│                                      │
+│  ┌──────────────────────────────┐   │
+│  │ ☑ Website Copywriting        │   │
+│  │   State of California        │   │
+│  │   Due: Feb 20 | $8-12k       │   │
+│  │   [Details]                  │   │
+│  └──────────────────────────────┘   │
+│                                      │
+│  Found: 8  |  Selected: 3            │
+│                                      │
+│  [Import Selected as Bakeoffs]       │
+└──────────────────────────────────────┘
 ```
+
+**Panel behavior:**
+- Slides in from right on button click
+- Stays open during scraping (non-blocking)
+- User can close anytime (X button)
+- Persists across page navigation while active
 
 ### 3. RFP Detail Drawer
 When user clicks "View Details":
@@ -232,7 +240,7 @@ function calculateBounty(estimatedValue: { min: number; max: number }): number {
 ## Files to Create
 
 1. `src/app/api/rfp/import/route.ts` - API endpoint
-2. `src/components/RfpImportModal.tsx` - Import UI
+2. `src/components/RfpImportPanel.tsx` - Import panel UI (right sidebar)
 3. `src/components/RfpCard.tsx` - Individual RFP display
 4. `src/lib/firecrawl/index.ts` - Firecrawl wrapper
 

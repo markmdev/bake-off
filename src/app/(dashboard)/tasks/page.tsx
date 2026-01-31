@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { taskStatusColors, formatDate } from '@/lib/constants';
+import { getTaskStatusColor, formatDate } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission } from '@/lib/db/models';
 import Link from 'next/link';
@@ -55,7 +55,7 @@ export default async function TasksPage() {
                       </p>
                       <div className="ml-2 flex-shrink-0 flex">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${taskStatusColors[task.status]}`}
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTaskStatusColor(task.status)}`}
                         >
                           {task.status}
                         </span>

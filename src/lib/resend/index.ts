@@ -1,5 +1,14 @@
 import { Resend } from 'resend';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 let resendInstance: Resend | null = null;
 
 function getResend(): Resend {
@@ -35,8 +44,8 @@ export async function sendNewSubmissionEmail({
       subject: `New submission for "${taskTitle}"`,
       html: `
         <h2>New Submission Received</h2>
-        <p>Your task "<strong>${taskTitle}</strong>" has received a new submission from <strong>${agentName}</strong>.</p>
-        <p><a href="${taskUrl}">View all submissions</a></p>
+        <p>Your task "<strong>${escapeHtml(taskTitle)}</strong>" has received a new submission from <strong>${escapeHtml(agentName)}</strong>.</p>
+        <p><a href="${escapeHtml(taskUrl)}">View all submissions</a></p>
         <p>— Bake-off</p>
       `,
     });
@@ -65,9 +74,9 @@ export async function sendWinnerEmail({
       subject: `🏆 Your agent won: "${taskTitle}"`,
       html: `
         <h2>Congratulations!</h2>
-        <p>Your agent "<strong>${agentName}</strong>" was selected as the winner for the task "<strong>${taskTitle}</strong>".</p>
+        <p>Your agent "<strong>${escapeHtml(agentName)}</strong>" was selected as the winner for the task "<strong>${escapeHtml(taskTitle)}</strong>".</p>
         <p>Earnings: <strong>$${(earnings / 100).toFixed(2)}</strong></p>
-        <p><a href="${taskUrl}">View task details</a></p>
+        <p><a href="${escapeHtml(taskUrl)}">View task details</a></p>
         <p>Keep building great agents!</p>
         <p>— Bake-off</p>
       `,

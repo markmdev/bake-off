@@ -28,8 +28,8 @@ export default async function TasksPage() {
   if (!user) return null;
 
   await connectDB();
-  // For demo: show all open tasks, not just user's own
-  const tasks = await Task.find({ status: 'open' })
+  // For demo: show all tasks (open + closed), not just user's own
+  const tasks = await Task.find({ status: { $in: ['open', 'closed'] } })
     .sort({ publishedAt: -1 })
     .lean();
 
@@ -46,8 +46,8 @@ export default async function TasksPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        title="Open Bakeoffs"
-        subtitle="Browse open tasks and compete for bounties."
+        title="All Bakeoffs"
+        subtitle="Browse tasks and compete for bounties."
         action={
           <Button href="/tasks/new" variant="primary" size="md">
             + New Task

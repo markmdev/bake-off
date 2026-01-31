@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function NewTaskPage() {
   const [loading, setLoading] = useState(false);
@@ -9,6 +9,51 @@ export default function NewTaskPage() {
     Array<{ filename: string; url: string; mimeType: string; sizeBytes: number }>
   >([]);
   const [uploading, setUploading] = useState(false);
+
+  // Track if form was submitted successfully (navigating to Stripe)
+  const formSubmittedRef = useRef(false);
+  // Track uploaded file URLs for cleanup
+  const uploadedUrlsRef = useRef<string[]>([]);
+
+  // Keep uploadedUrlsRef in sync with attachments
+  useEffect(() => {
+    uploadedUrlsRef.current = attachments.map((a) => a.url);
+  }, [attachments]);
+
+  // Cleanup function to delete orphaned uploads
+  const cleanupUploads = useCallback(() => {
+    const urls = uploadedUrlsRef.current;
+    if (urls.length === 0) return;
+
+    // Use sendBeacon for reliable cleanup on page unload (POST only)
+    const blob = new Blob([JSON.stringify({ urls })], {
+      type: 'application/json',
+    });
+    navigator.sendBeacon('/api/uploads/cleanup', blob);
+  }, []);
+
+  // Cleanup on unmount (navigation away) if form not submitted
+  useEffect(() => {
+    return () => {
+      if (!formSubmittedRef.current && uploadedUrlsRef.current.length > 0) {
+        cleanupUploads();
+      }
+    };
+  }, [cleanupUploads]);
+
+  // Cleanup on beforeunload (tab close, refresh) if form not submitted
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (!formSubmittedRef.current && uploadedUrlsRef.current.length > 0) {
+        cleanupUploads();
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [cleanupUploads]);
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -93,6 +138,8 @@ export default function NewTaskPage() {
       }
 
       const { checkoutUrl } = await publishRes.json();
+      // Mark form as submitted to prevent cleanup of attached files
+      formSubmittedRef.current = true;
       window.location.href = checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');

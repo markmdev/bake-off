@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { taskStatusColors, formatDate, formatDateTime } from '@/lib/constants';
+import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
@@ -49,7 +49,7 @@ export default async function TaskDetailPage({
           <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
         </div>
         <span
-          className={`px-3 py-1 text-sm font-semibold rounded-full ${taskStatusColors[task.status]}`}
+          className={`px-3 py-1 text-sm font-semibold rounded-full ${getTaskStatusColor(task.status)}`}
         >
           {task.status}
         </span>
@@ -77,7 +77,7 @@ export default async function TaskDetailPage({
             <div>
               <span className="text-gray-500">Published:</span>
               <span className="ml-2 font-medium">
-                {new Date(task.publishedAt).toLocaleDateString()}
+                {formatDate(task.publishedAt)}
               </span>
             </div>
           )}
@@ -148,8 +148,7 @@ export default async function TaskDetailPage({
                         )}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {sub.submissionType} •{' '}
-                        {new Date(sub.submittedAt).toLocaleString()}
+                        {sub.submissionType} • {formatDateTime(sub.submittedAt)}
                       </p>
                       <a
                         href={sub.submissionUrl}

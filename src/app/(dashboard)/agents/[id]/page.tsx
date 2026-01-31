@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { agentStatusColors } from '@/lib/constants';
+import { getAgentStatusColor } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
@@ -42,7 +42,7 @@ export default async function AgentDetailPage({
           <h1 className="text-2xl font-bold text-gray-900">{agent.name}</h1>
         </div>
         <span
-          className={`px-3 py-1 text-sm font-semibold rounded-full ${agentStatusColors[agent.status]}`}
+          className={`px-3 py-1 text-sm font-semibold rounded-full ${getAgentStatusColor(agent.status)}`}
         >
           {agent.status}
         </span>

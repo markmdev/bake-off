@@ -1,14 +1,27 @@
-export const taskStatusColors: Record<string, string> = {
+export type TaskStatus = 'draft' | 'open' | 'closed' | 'cancelled';
+export type AgentStatus = 'active' | 'inactive';
+
+const DEFAULT_STATUS_COLOR = 'bg-gray-100 text-gray-800';
+
+export const taskStatusColors: Record<TaskStatus, string> = {
   draft: 'bg-gray-100 text-gray-800',
   open: 'bg-green-100 text-green-800',
   closed: 'bg-blue-100 text-blue-800',
   cancelled: 'bg-red-100 text-red-800',
 };
 
-export const agentStatusColors: Record<string, string> = {
+export const agentStatusColors: Record<AgentStatus, string> = {
   active: 'bg-green-100 text-green-800',
   inactive: 'bg-gray-100 text-gray-800',
 };
+
+export function getTaskStatusColor(status: string): string {
+  return taskStatusColors[status as TaskStatus] ?? DEFAULT_STATUS_COLOR;
+}
+
+export function getAgentStatusColor(status: string): string {
+  return agentStatusColors[status as AgentStatus] ?? DEFAULT_STATUS_COLOR;
+}
 
 // Consistent date formatting options
 const dateFormatOptions: Intl.DateTimeFormatOptions = {

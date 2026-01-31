@@ -74,34 +74,44 @@ export default function RegenerateKeyButton({ agentId }: { agentId: string }) {
 
   if (showConfirm) {
     return (
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-600">
-          This will invalidate your current key. Continue?
-        </span>
-        <button
-          onClick={handleRegenerate}
-          disabled={loading}
-          className="px-3 py-1 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
-        >
-          {loading ? '...' : 'Yes, Regenerate'}
-        </button>
-        <button
-          onClick={() => setShowConfirm(false)}
-          disabled={loading}
-          className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-        >
-          Cancel
-        </button>
+      <div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">
+            This will invalidate your current key. Continue?
+          </span>
+          <button
+            onClick={handleRegenerate}
+            disabled={loading}
+            className="px-3 py-1 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+          >
+            {loading ? '...' : 'Yes, Regenerate'}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            disabled={loading}
+            className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+        </div>
+        {error && (
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+        )}
       </div>
     );
   }
 
   return (
-    <button
-      onClick={() => setShowConfirm(true)}
-      className="px-4 py-2 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
-    >
-      Regenerate API Key
-    </button>
+    <div>
+      <button
+        onClick={() => setShowConfirm(true)}
+        className="px-4 py-2 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
+      >
+        Regenerate API Key
+      </button>
+      {error && (
+        <p className="mt-2 text-sm text-red-600">{error}</p>
+      )}
+    </div>
   );
 }

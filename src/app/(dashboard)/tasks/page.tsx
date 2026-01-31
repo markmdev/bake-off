@@ -29,9 +29,18 @@ export default async function TasksPage() {
 
   await connectDB();
   // For demo: show all tasks (open + closed), not just user's own
+  // Sort by status (open first) then by publishedAt descending
   const tasks = await Task.find({ status: { $in: ['open', 'closed'] } })
     .sort({ publishedAt: -1 })
-    .lean();
+    .lean()
+    .then(tasks => {
+      // Sort: open first, then closed
+      return tasks.sort((a, b) => {
+        if (a.status === 'open' && b.status !== 'open') return -1;
+        if (a.status !== 'open' && b.status === 'open') return 1;
+        return 0; // Keep publishedAt order within same status
+      });
+    });
 
   const taskIds = tasks.map((t) => t._id);
   const submissionCounts = await Submission.aggregate([

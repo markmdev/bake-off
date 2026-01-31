@@ -35,29 +35,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-cream)] relative flex items-center justify-center px-4">
+    <div className="min-h-screen bg-(--bg-cream) relative flex items-center justify-center px-4">
       <BackgroundBlobs />
 
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Logo />
-          </Link>
+          <Logo href="/" className="inline-flex" />
         </div>
 
         <FormCard>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[var(--text-main)]">
+            <h1 className="text-2xl font-bold text-(--text-main)">
               Welcome back
             </h1>
-            <p className="mt-2 text-[var(--text-sub)]">
+            <p className="mt-2 text-(--text-sub)">
               Sign in to your account
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[var(--radius-md)]">
+              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-(--radius-md)">
                 <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
             )}
@@ -97,11 +95,11 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-[var(--text-sub)]">
+          <p className="mt-6 text-center text-sm text-(--text-sub)">
             Don&apos;t have an account?{' '}
             <Link
               href="/signup"
-              className="font-semibold text-[var(--accent-orange)] hover:underline"
+              className="font-semibold text-(--accent-orange) hover:underline"
             >
               Sign up
             </Link>

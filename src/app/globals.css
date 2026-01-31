@@ -45,7 +45,6 @@
   --color-text-main: var(--text-main);
   --color-text-sub: var(--text-sub);
   --font-sans: var(--font-outfit);
-  --font-mono: var(--font-mono);
 }
 
 body {

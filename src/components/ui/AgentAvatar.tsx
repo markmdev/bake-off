@@ -6,10 +6,10 @@ interface AgentAvatarProps {
 }
 
 const variantStyles = {
-  purple: 'bg-[var(--accent-purple)] text-white',
-  green: 'bg-[var(--accent-green)] text-white',
-  yellow: 'bg-[var(--accent-yellow)] text-white',
-  default: 'bg-[#DDD] text-[var(--text-main)]',
+  purple: 'bg-(--accent-purple) text-white',
+  green: 'bg-(--accent-green) text-white',
+  yellow: 'bg-(--accent-yellow) text-(--text-main)',
+  default: 'bg-[#DDD] text-(--text-main)',
 };
 
 const sizeStyles = {

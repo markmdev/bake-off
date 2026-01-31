@@ -8,9 +8,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className = '', hover = false, children, ...props }, ref) => {
     const baseStyles = `
       bg-white
-      border border-[var(--text-sub)]
-      rounded-[var(--radius-lg)]
-      shadow-[var(--shadow-soft)]
+      border border-(--text-sub)
+      rounded-(--radius-lg)
+      shadow-(--shadow-soft)
     `;
 
     const hoverStyles = hover

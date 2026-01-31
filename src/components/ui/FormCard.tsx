@@ -9,10 +9,10 @@ export const FormCard = forwardRef<HTMLDivElement, FormCardProps>(
         ref={ref}
         className={`
           bg-white
-          border-[2px] border-[var(--text-sub)]
-          rounded-[var(--radius-lg)]
+          border-2 border-(--text-sub)
+          rounded-(--radius-lg)
           p-10
-          shadow-[var(--shadow-hard)]
+          shadow-(--shadow-hard)
           ${className}
         `}
         {...props}

@@ -17,6 +17,7 @@ const ACCEPTED_FILE_EXTENSIONS = '.pdf,.docx,.jpg,.jpeg,.png,.gif,.webp';
 export default function NewTaskPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bounty, setBounty] = useState(5);
   const [attachments, setAttachments] = useState<
     Array<{ filename: string; url: string; mimeType: string; sizeBytes: number }>
   >([]);
@@ -139,23 +140,27 @@ export default function NewTaskPage() {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function handleBountyChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = parseFloat(e.target.value);
+    setBounty(Number.isFinite(value) && value >= 0 ? value : 0);
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const formData = new FormData(e.currentTarget);
-    const bountyDollars = parseFloat(formData.get('bounty') as string);
-    if (!Number.isFinite(bountyDollars) || bountyDollars < 5) {
+    if (!Number.isFinite(bounty) || bounty < 5) {
       setError('Bounty must be at least $5');
       setLoading(false);
       return;
     }
 
+    const formData = new FormData(e.currentTarget);
     const payload = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
-      bounty: Math.round(bountyDollars * 100),
+      bounty: Math.round(bounty * 100),
       deadline: formData.get('deadline') as string,
       attachments,
     };
@@ -200,6 +205,14 @@ export default function NewTaskPage() {
   );
   const defaultDeadline = defaultDeadlineDate.toISOString().slice(0, 16);
 
+  // Calculate summary values
+  const platformFee = bounty * 0.1;
+  const total = bounty + platformFee;
+
+  const formatCurrency = (value: number) => {
+    return value.toFixed(2);
+  };
+
   return (
     <div className="space-y-10">
       <PageHeader
@@ -230,7 +243,7 @@ export default function NewTaskPage() {
                   maxLength={100}
                   placeholder="Build a REST API for user management"
                 />
-                <p className="text-sm text-[var(--text-sub)] opacity-60">5-100 characters</p>
+                <p className="text-sm text-(--text-sub) opacity-60">5-100 characters</p>
               </FormGroup>
 
               <FormGroup label="Requirements & Context" htmlFor="description" required>
@@ -242,7 +255,7 @@ export default function NewTaskPage() {
                   minLength={50}
                   placeholder="Describe your task in detail. Include requirements, expected output format, and any constraints..."
                 />
-                <p className="text-sm text-[var(--text-sub)] opacity-60">
+                <p className="text-sm text-(--text-sub) opacity-60">
                   Minimum 50 characters. Markdown supported.
                 </p>
               </FormGroup>
@@ -251,7 +264,7 @@ export default function NewTaskPage() {
                 <FormGroup label="Bounty (USD)" htmlFor="bounty" required>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-[var(--text-sub)]">$</span>
+                      <span className="text-(--text-sub)">$</span>
                     </div>
                     <Input
                       type="number"
@@ -260,11 +273,12 @@ export default function NewTaskPage() {
                       required
                       min={5}
                       step={0.01}
-                      defaultValue={5}
+                      value={bounty}
+                      onChange={handleBountyChange}
                       className="pl-8"
                     />
                   </div>
-                  <p className="text-sm text-[var(--text-sub)] opacity-60">
+                  <p className="text-sm text-(--text-sub) opacity-60">
                     Minimum $5. 10% platform fee added.
                   </p>
                 </FormGroup>
@@ -282,10 +296,10 @@ export default function NewTaskPage() {
 
               <FormGroup label="Attachments" htmlFor="file-upload" hint="Optional">
                 <div
-                  className={`flex justify-center px-6 py-8 border-2 border-dashed rounded-[var(--radius-md)] transition-colors ${
+                  className={`flex justify-center px-6 py-8 border-2 border-dashed rounded-(--radius-md) transition-colors ${
                     isDragging
-                      ? 'border-[var(--accent-orange)] bg-[rgba(255,127,50,0.05)]'
-                      : 'border-[var(--text-sub)] border-opacity-30'
+                      ? 'border-(--accent-orange) bg-[rgba(255,127,50,0.05)]'
+                      : 'border-(--text-sub) border-opacity-30'
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -293,7 +307,7 @@ export default function NewTaskPage() {
                 >
                   <div className="space-y-2 text-center">
                     <svg
-                      className="mx-auto h-12 w-12 text-[var(--text-sub)] opacity-40"
+                      className="mx-auto h-12 w-12 text-(--text-sub) opacity-40"
                       stroke="currentColor"
                       fill="none"
                       viewBox="0 0 48 48"
@@ -305,10 +319,10 @@ export default function NewTaskPage() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    <div className="flex text-sm text-[var(--text-sub)]">
+                    <div className="flex text-sm text-(--text-sub)">
                       <label
                         htmlFor="file-upload"
-                        className="relative cursor-pointer font-semibold text-[var(--accent-orange)] hover:text-[#e06a20] transition-colors"
+                        className="relative cursor-pointer font-semibold text-(--accent-orange) hover:text-[#e06a20] transition-colors"
                       >
                         <span>Upload files</span>
                         <input
@@ -325,14 +339,14 @@ export default function NewTaskPage() {
                       </label>
                       <p className="pl-1">or drag and drop</p>
                     </div>
-                    <p className="text-xs text-[var(--text-sub)] opacity-60">
+                    <p className="text-xs text-(--text-sub) opacity-60">
                       PDF, DOCX, images up to 50MB each
                     </p>
                   </div>
                 </div>
 
                 {uploading && (
-                  <p className="mt-2 text-sm text-[var(--accent-orange)] font-medium">Uploading...</p>
+                  <p className="mt-2 text-sm text-(--accent-orange) font-medium">Uploading...</p>
                 )}
 
                 {attachments.length > 0 && (
@@ -340,9 +354,9 @@ export default function NewTaskPage() {
                     {attachments.map((att, i) => (
                       <li
                         key={i}
-                        className="py-2 px-3 flex items-center justify-between bg-[var(--bg-cream)] rounded-[var(--radius-sm)]"
+                        className="py-2 px-3 flex items-center justify-between bg-(--bg-cream) rounded-(--radius-sm)"
                       >
-                        <span className="text-sm text-[var(--text-main)] font-medium">{att.filename}</span>
+                        <span className="text-sm text-(--text-main) font-medium">{att.filename}</span>
                         <button
                           type="button"
                           onClick={() => removeAttachment(i)}
@@ -374,23 +388,23 @@ export default function NewTaskPage() {
         {/* Summary Sidebar */}
         <div className="lg:col-span-1">
           <div className="sticky top-10">
-            <Card className="p-6 bg-[var(--accent-yellow)] border-[var(--text-sub)] border-2 shadow-[6px_6px_0px_var(--text-sub)]">
-              <div className="text-lg font-bold text-[var(--text-sub)] mb-4">Task Summary</div>
+            <Card className="p-6 bg-(--accent-yellow) border-(--text-sub) border-2 shadow-[6px_6px_0px_var(--text-sub)]">
+              <div className="text-lg font-bold text-(--text-sub) mb-4">Task Summary</div>
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
-                  <span className="text-[var(--text-sub)] opacity-60">Bounty</span>
-                  <span className="font-bold">$5.00</span>
+                  <span className="text-(--text-sub) opacity-60">Bounty</span>
+                  <span className="font-bold">${formatCurrency(bounty)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
-                  <span className="text-[var(--text-sub)] opacity-60">Platform Fee</span>
-                  <span className="font-bold">$0.50</span>
+                  <span className="text-(--text-sub) opacity-60">Platform Fee</span>
+                  <span className="font-bold">${formatCurrency(platformFee)}</span>
                 </div>
                 <div className="flex justify-between py-3 text-lg">
                   <span className="font-bold">Total</span>
-                  <span className="font-black text-[var(--accent-orange)]">$5.50</span>
+                  <span className="font-black text-(--accent-orange)">${formatCurrency(total)}</span>
                 </div>
               </div>
-              <p className="text-xs text-[var(--text-sub)] opacity-50 mt-4">
+              <p className="text-xs text-(--text-sub) opacity-50 mt-4">
                 *Final amount calculated at checkout
               </p>
             </Card>

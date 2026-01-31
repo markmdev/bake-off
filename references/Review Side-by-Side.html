@@ -1,0 +1,582 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Bakeoff - Results Comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet" vid="7">
+    <style vid="8">
+        :root {
+            --bg-cream: #F5F0E8;
+            --surface-white: #C19A6B;
+            --text-main: #3E2723;
+            --text-sub: #1A2B3C;
+            
+            --accent-orange: #FF7F32;
+            --accent-purple: #0047AB;
+            --accent-purple-light: #D0E0FF;
+            --accent-green: #2C5F2D;
+            --accent-yellow: #B8860B;
+            --accent-pink: #D946A0;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            --radius-pill: 999px;
+            
+            --border-thick: 2px solid #1A2B3C;
+            --border-thin: 1px solid #1A2B3C;
+            --shadow-hard: 4px 4px 0px #1A2B3C;
+            --shadow-soft: 0px 4px 20px rgba(26,43,60,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: 100vh;
+        }
+
+        .sidebar {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-thick); 
+            background: var(--bg-cream);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+            color: #1A2B3C;
+        }
+
+        .logo-mark {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            border: 2px solid var(--text-sub);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            top: -4px;
+            right: -8px;
+            border: 2px solid var(--text-sub);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background: var(--accent-orange);
+            color: white;
+            border: var(--border-thick);
+            box-shadow: 2px 2px 0px var(--text-sub); 
+        }
+
+        .nav-item:hover:not(.active) {
+            background: rgba(193, 154, 107, 0.3);
+            color: var(--text-sub);
+        }
+
+        .main-content {
+            padding: 40px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-sub);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: -16px;
+            cursor: pointer;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .page-title h1 {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .page-title p {
+            color: var(--text-sub);
+            font-size: 16px;
+        }
+
+        .badge-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(26,43,60,0.1);
+        }
+        .tag.purple { background: var(--accent-purple-light); color: var(--accent-purple); }
+        .tag.pink { background: #FFEAFA; color: var(--accent-pink); }
+        .tag.yellow { background: #FFF4D1; color: var(--accent-yellow); }
+        .tag.green { background: #E8F5E9; color: var(--accent-green); }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            margin-top: 8px;
+        }
+
+        .agent-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card-header {
+            background: white;
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-hard);
+        }
+
+        .agent-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .agent-avatar-large {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: var(--border-thick);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .agent-meta-text h3 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .agent-meta-text p {
+            font-size: 14px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .score-pill {
+            background: var(--text-sub);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .response-card {
+            background: white;
+            border: var(--border-thin);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            min-height: 400px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .response-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-main);
+            white-space: pre-line;
+        }
+
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: var(--bg-cream);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            gap: 12px;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-sub);
+            opacity: 0.7;
+        }
+
+        .metric-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .rating-footer {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px dashed #DDD;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .star-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .star-icon {
+            color: var(--accent-yellow);
+            cursor: pointer;
+        }
+
+        .btn-select-winner {
+            width: 100%;
+            background: white;
+            border: var(--border-thick);
+            padding: 12px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-select-winner:hover {
+            background: var(--accent-green);
+            color: white;
+            box-shadow: 3px 3px 0px var(--text-sub);
+        }
+
+        .btn-select-winner.selected {
+            background: var(--accent-green);
+            color: white;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .doodle-float {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-purple);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            top: -100px;
+            right: -100px;
+        }
+        
+        .blob-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-orange);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            bottom: 50px;
+            left: 100px;
+        }
+
+        .vs-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-orange);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            border: var(--border-thick);
+            box-shadow: 4px 4px 0px var(--text-sub);
+            z-index: 10;
+        }
+
+        .comparison-wrapper {
+            position: relative;
+        }
+
+    </style>
+</head>
+<body vid="9">
+    <div class="doodle-float blob-1" vid="10"></div>
+    <div class="doodle-float blob-2" vid="11"></div>
+
+    <div class="app-container" vid="12">
+        <nav class="sidebar" vid="13">
+            <div class="logo" vid="14">
+                <div class="logo-mark" vid="15"></div>
+                <span vid="16">Bakeoff</span>
+            </div>
+            
+            <ul class="nav-list" vid="17">
+                <li class="nav-item" vid="18">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="19"><rect x="3" y="3" width="7" height="7" vid="20"></rect><rect x="14" y="3" width="7" height="7" vid="21"></rect><rect x="14" y="14" width="7" height="7" vid="22"></rect><rect x="3" y="14" width="7" height="7" vid="23"></rect></svg>
+                    <span vid="24">Dashboard</span>
+                </li>
+                <li class="nav-item" vid="25">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="26"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" vid="27"></path><polyline points="14 2 14 8 20 8" vid="28"></polyline><line x1="16" y1="13" x2="8" y2="13" vid="29"></line><line x1="16" y1="17" x2="8" y2="17" vid="30"></line><polyline points="10 9 9 9 8 9" vid="31"></polyline></svg>
+                    <span vid="32">Drafts</span>
+                </li>
+                <li class="nav-item active" vid="33">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="34"><circle cx="12" cy="12" r="10" vid="35"></circle><polyline points="12 6 12 12 16 14" vid="36"></polyline></svg>
+                    <span vid="37">History</span>
+                </li>
+                <li class="nav-item" vid="38">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="39"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" vid="40"></path><circle cx="9" cy="7" r="4" vid="41"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87" vid="42"></path><path d="M16 3.13a4 4 0 0 1 0 7.75" vid="43"></path></svg>
+                    <span vid="44">Agents</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content" vid="45">
+            <div class="breadcrumb" vid="46">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="47"><polyline points="15 18 9 12 15 6" vid="48"></polyline></svg>
+                Back to Dashboard
+            </div>
+
+            <div class="header-section" vid="49">
+                <div class="page-title" vid="50">
+                    <h1 vid="51">Summarize Series B Term Sheet</h1>
+                    <p vid="52">Completed bakeoff comparison for task #8829</p>
+                    <div class="badge-group" vid="53">
+                        <span class="tag purple" vid="54">Contract Analysis</span>
+                        <span class="tag pink" vid="55">Legal</span>
+                        <span class="tag green" vid="56">Finished</span>
+                    </div>
+                </div>
+                <div style="text-align: right;" vid="57">
+                    <div style="font-weight: 700; font-size: 24px; color: var(--text-main);" vid="58">$42.10</div>
+                    <div style="font-size: 14px; color: var(--text-sub);" vid="59">Total Bakeoff Cost</div>
+                </div>
+            </div>
+
+            <div class="comparison-wrapper" vid="60">
+                <div class="vs-badge" vid="61">VS</div>
+                
+                <div class="comparison-grid" vid="62">
+                    
+                    <div class="agent-column" vid="63">
+                        <div class="card-header" vid="64">
+                            <div class="agent-info" vid="65">
+                                <div class="agent-avatar-large" style="background: var(--accent-purple); color: white;" vid="66">AI</div>
+                                <div class="agent-meta-text" vid="67">
+                                    <h3 vid="68">LegalEagle GPT-4</h3>
+                                    <p vid="69">Reasoning Model</p>
+                                </div>
+                            </div>
+                            <div class="score-pill" vid="70">9.4</div>
+                        </div>
+
+                        <div class="response-card" vid="71">
+                            <div class="metrics-bar" vid="72">
+                                <div class="metric-item" vid="73">
+                                    <span class="metric-label" vid="74">Latency</span>
+                                    <span class="metric-value" vid="75">12.4s</span>
+                                </div>
+                                <div class="metric-item" vid="76">
+                                    <span class="metric-label" vid="77">Cost</span>
+                                    <span class="metric-value" vid="78">$0.042</span>
+                                </div>
+                                <div class="metric-item" vid="79">
+                                    <span class="metric-label" vid="80">Tokens</span>
+                                    <span class="metric-value" vid="81">1,420</span>
+                                </div>
+                            </div>
+
+                            <div class="response-content" vid="82">
+                                <strong vid="83">Executive Summary:</strong>
+                                This Series B Term Sheet outlines a $15M investment led by Blue Chip Ventures. Key terms include:
+                                
+                                1. <strong vid="84">Valuation:</strong> $60M Post-money valuation.
+                                2. <strong vid="85">Liquidation Preference:</strong> 1x Non-participating, which is founder-friendly.
+                                3. <strong vid="86">Board Composition:</strong> Increases to 5 seats (2 Common, 2 Preferred, 1 Independent).
+                                4. <strong vid="87">Anti-Dilution:</strong> Broad-based weighted average.
+                                
+                                <strong vid="88">Critical Risks:</strong>
+                                Section 7.2 includes a "Pay-to-Play" provision that could force participation in future rounds or face conversion to Common stock. This is standard but requires awareness from existing seed investors.
+                            </div>
+
+                            <div class="rating-footer" vid="89">
+                                <div style="display: flex; justify-content: space-between; align-items: center;" vid="90">
+                                    <span style="font-weight: 700; font-size: 14px;" vid="91">Quality Rating</span>
+                                    <div class="star-row" vid="92">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="93"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="94"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="95"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="96"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="97"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="98"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="99"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="100"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="star-icon" vid="101"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="102"></polygon></svg>
+                                    </div>
+                                </div>
+                                <button class="btn-select-winner" vid="103">Select as Winner</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="agent-column" vid="104">
+                        <div class="card-header" vid="105">
+                            <div class="agent-info" vid="106">
+                                <div class="agent-avatar-large" style="background: var(--accent-yellow); color: white;" vid="107">:)</div>
+                                <div class="agent-meta-text" vid="108">
+                                    <h3 vid="109">Claude Brief</h3>
+                                    <p vid="110">Fast Summarizer</p>
+                                </div>
+                            </div>
+                            <div class="score-pill" style="background: var(--accent-orange);" vid="111">8.1</div>
+                        </div>
+
+                        <div class="response-card" vid="112">
+                            <div class="metrics-bar" vid="113">
+                                <div class="metric-item" vid="114">
+                                    <span class="metric-label" vid="115">Latency</span>
+                                    <span class="metric-value" vid="116">4.2s</span>
+                                </div>
+                                <div class="metric-item" vid="117">
+                                    <span class="metric-label" vid="118">Cost</span>
+                                    <span class="metric-value" vid="119">$0.015</span>
+                                </div>
+                                <div class="metric-item" vid="120">
+                                    <span class="metric-label" vid="121">Tokens</span>
+                                    <span class="metric-value" vid="122">850</span>
+                                </div>
+                            </div>
+
+                            <div class="response-content" vid="123">
+                                <strong vid="124">Series B Summary</strong>
+                                
+                                • <strong vid="125">Investment:</strong> $15 million total.
+                                • <strong vid="126">Valuation:</strong> The company is valued at $45M pre-money ($60M post).
+                                • <strong vid="127">Board:</strong> Adds one preferred director seat.
+                                • <strong vid="128">Participation:</strong> Includes standard 1x preference.
+                                
+                                The terms are fairly standard for a Series B in the current market. The most notable point is the aggressive timeline for closing (15 days from signing), which suggests a high-intent investor but may squeeze legal due diligence.
+                                
+                                No significant red flags were detected in the protective provisions.
+                            </div>
+
+                            <div class="rating-footer" vid="129">
+                                <div style="display: flex; justify-content: space-between; align-items: center;" vid="130">
+                                    <span style="font-weight: 700; font-size: 14px;" vid="131">Quality Rating</span>
+                                    <div class="star-row" vid="132">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="133"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="134"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="135"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="136"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icon" vid="137"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="138"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="star-icon" vid="139"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="140"></polygon></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="star-icon" vid="141"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" vid="142"></polygon></svg>
+                                    </div>
+                                </div>
+                                <button class="btn-select-winner" vid="143">Select as Winner</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; border: var(--border-thin); border-radius: var(--radius-lg); padding: 24px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px;" vid="144">
+                <div style="display: flex; gap: 24px;" vid="145">
+                    <div vid="146">
+                        <div class="metric-label" vid="147">Winning Efficiency</div>
+                        <div style="font-weight: 700; font-size: 18px; color: var(--accent-green);" vid="148">+34% faster</div>
+                    </div>
+                    <div style="border-left: 1px solid #DDD; padding-left: 24px;" vid="149">
+                        <div class="metric-label" vid="150">Budget Impact</div>
+                        <div style="font-weight: 700; font-size: 18px; color: var(--text-main);" vid="151">Saved $4.20</div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="background: var(--text-sub);" vid="152">
+                    Download Full Report
+                </button>
+            </div>
+        </main>
+    </div>
+</body></html>

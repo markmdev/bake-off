@@ -1,0 +1,534 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Bakeoff - Comparison View</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet" vid="7">
+    <style vid="8">
+        :root {
+            --bg-cream: #F5F0E8;
+            --surface-white: #C19A6B;
+            --text-main: #3E2723;
+            --text-sub: #1A2B3C;
+            
+            --accent-orange: #FF7F32;
+            --accent-purple: #0047AB;
+            --accent-purple-light: #D0E0FF;
+            --accent-green: #2C5F2D;
+            --accent-yellow: #B8860B;
+            --accent-pink: #D946A0;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            --radius-pill: 999px;
+            
+            --border-thick: 2px solid #1A2B3C;
+            --border-thin: 1px solid #1A2B3C;
+            --shadow-hard: 4px 4px 0px #1A2B3C;
+            --shadow-soft: 0px 4px 20px rgba(26,43,60,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: 100vh;
+        }
+
+        .sidebar {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-thick); 
+            background: var(--bg-cream);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+            color: #1A2B3C;
+        }
+
+        .logo-mark {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            border: 2px solid var(--text-sub);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            top: -4px;
+            right: -8px;
+            border: 2px solid var(--text-sub);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background: var(--accent-orange);
+            color: white;
+            border: var(--border-thick);
+            box-shadow: 2px 2px 0px var(--text-sub); 
+        }
+
+        .main-content {
+            padding: 40px 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: -16px;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .agent-column {
+            background: white;
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+        }
+
+        .agent-column.winner-picked {
+            border-color: var(--accent-orange);
+            box-shadow: 8px 8px 0px var(--accent-orange);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .agent-big-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: var(--border-thick);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .score-pill {
+            background: var(--text-sub);
+            color: white;
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .metric-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .progress-bg {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            width: 100px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-purple);
+        }
+
+        .response-preview {
+            background: var(--bg-cream);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .cost-breakdown {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+        }
+
+        .btn-select {
+            width: 100%;
+            background: white;
+            border: var(--border-thick);
+            padding: 12px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-select:hover {
+            background: var(--text-sub);
+            color: white;
+        }
+
+        .btn-select.active {
+            background: var(--accent-orange);
+            color: white;
+            border-color: var(--text-sub);
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .doodle-float {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .blob-1 {
+            width: 400px; height: 400px; background: var(--accent-purple);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            top: -100px; right: -100px;
+        }
+
+        .winner-ribbon {
+            position: absolute;
+            top: -12px;
+            right: 24px;
+            background: var(--accent-orange);
+            color: white;
+            padding: 4px 12px;
+            font-weight: 700;
+            font-size: 12px;
+            border: 2px solid var(--text-sub);
+            border-radius: 4px;
+            transform: rotate(3deg);
+        }
+
+    </style>
+</head>
+<body vid="9">
+    <div class="doodle-float blob-1" vid="10"></div>
+
+    <div class="app-container" vid="11">
+        <nav class="sidebar" vid="12">
+            <div class="logo" vid="13">
+                <div class="logo-mark" vid="14"></div>
+                <span vid="15">Bakeoff</span>
+            </div>
+            
+            <ul class="nav-list" vid="16">
+                <li class="nav-item" vid="17">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" vid="18"><rect x="3" y="3" width="7" height="7" vid="19"></rect><rect x="14" y="3" width="7" height="7" vid="20"></rect><rect x="14" y="14" width="7" height="7" vid="21"></rect><rect x="3" y="14" width="7" height="7" vid="22"></rect></svg>
+                    <span vid="23">Dashboard</span>
+                </li>
+                <li class="nav-item" vid="24">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" vid="25"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" vid="26"></path><polyline points="14 2 14 8 20 8" vid="27"></polyline></svg>
+                    <span vid="28">Drafts</span>
+                </li>
+                <li class="nav-item active" vid="29">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" vid="30"><circle cx="12" cy="12" r="10" vid="31"></circle><polyline points="12 6 12 12 16 14" vid="32"></polyline></svg>
+                    <span vid="33">History</span>
+                </li>
+                <li class="nav-item" vid="34">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" vid="35"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" vid="36"></path><circle cx="9" cy="7" r="4" vid="37"></circle></svg>
+                    <span vid="38">Agents</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content" vid="39">
+            <div class="breadcrumb" vid="40">
+                <span vid="41">History</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" vid="42"><polyline points="9 18 15 12 9 6" vid="43"></polyline></svg>
+                <span vid="44">Bakeoff Results</span>
+            </div>
+
+            <div class="header-row" vid="45">
+                <div class="page-title" vid="46">
+                    <h1 vid="47">Series B Term Sheet Review</h1>
+                    <p style="color: var(--text-sub); margin-top: 4px;" vid="48">3 Agents compared • Completed 12m ago</p>
+                </div>
+                <div style="display: flex; gap: 12px;" vid="49">
+                    <button class="btn-select" style="padding: 10px 24px; width: auto;" vid="50">Export Comparison</button>
+                    <button class="btn-primary" style="background: var(--text-sub); box-shadow: 4px 4px 0px var(--accent-orange); color: white; border: var(--border-thick); padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 700; cursor: pointer;" vid="51">Finalize Winner</button>
+                </div>
+            </div>
+
+            <div class="comparison-grid" vid="52">
+                
+                <div class="agent-column winner-picked" vid="53">
+                    <div class="winner-ribbon" vid="54">BEST VALUE</div>
+                    <div class="agent-header" vid="55">
+                        <div class="agent-big-avatar" style="background: var(--accent-purple); color: white;" vid="56">AI</div>
+                        <div vid="57">
+                            <div style="font-weight: 700; font-size: 18px;" vid="58">LegalEagle v2</div>
+                            <div class="score-pill" vid="59">Score: 9.4</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-group" vid="60">
+                        <div class="metric-row" vid="61">
+                            <span class="metric-label" vid="62">Accuracy</span>
+                            <div class="progress-bg" vid="63"><div class="progress-fill" style="width: 95%;" vid="64"></div></div>
+                        </div>
+                        <div class="metric-row" vid="65">
+                            <span class="metric-label" vid="66">Conciseness</span>
+                            <div class="progress-bg" vid="67"><div class="progress-fill" style="width: 80%;" vid="68"></div></div>
+                        </div>
+                        <div class="metric-row" vid="69">
+                            <span class="metric-label" vid="70">Risk Focus</span>
+                            <div class="progress-bg" vid="71"><div class="progress-fill" style="width: 100%;" vid="72"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="response-preview" vid="73">
+                        <strong vid="74">Executive Summary:</strong><br vid="75">
+                        The proposed Series B term sheet suggests a $40M pre-money valuation. Key risks identified: 
+                        1. 2x Liquidation preference is non-standard for this stage.
+                        2. Participation rights are aggressive.
+                        3. Board observer seat requested by lead is standard but needs limits...
+                    </div>
+
+                    <div class="cost-breakdown" vid="76">
+                        <div class="metric-row" style="margin-bottom: 8px;" vid="77">
+                            <span class="metric-label" vid="78">Latency</span>
+                            <span vid="79">1.2s</span>
+                        </div>
+                        <div class="metric-row" style="font-size: 18px; font-weight: 700;" vid="80">
+                            <span vid="81">Cost</span>
+                            <span style="color: var(--accent-green);" vid="82">$0.14</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-select active" vid="83">Selected Winner</button>
+                </div>
+
+                
+                <div class="agent-column" vid="84">
+                    <div class="agent-header" vid="85">
+                        <div class="agent-big-avatar" style="background: var(--accent-green); color: white;" vid="86">:)</div>
+                        <div vid="87">
+                            <div style="font-weight: 700; font-size: 18px;" vid="88">ClarityBot</div>
+                            <div class="score-pill" vid="89">Score: 8.1</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-group" vid="90">
+                        <div class="metric-row" vid="91">
+                            <span class="metric-label" vid="92">Accuracy</span>
+                            <div class="progress-bg" vid="93"><div class="progress-fill" style="width: 82%;" vid="94"></div></div>
+                        </div>
+                        <div class="metric-row" vid="95">
+                            <span class="metric-label" vid="96">Conciseness</span>
+                            <div class="progress-bg" vid="97"><div class="progress-fill" style="width: 95%;" vid="98"></div></div>
+                        </div>
+                        <div class="metric-row" vid="99">
+                            <span class="metric-label" vid="100">Risk Focus</span>
+                            <div class="progress-bg" vid="101"><div class="progress-fill" style="width: 60%;" vid="102"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="response-preview" vid="103">
+                        <strong vid="104">Overview:</strong><br vid="105">
+                        Summary of investment: $10M total raise. Valuation looks healthy. The liquidation preference is 2x. Board will expand to 5 members. There are standard anti-dilution clauses included in the annex.
+                    </div>
+
+                    <div class="cost-breakdown" vid="106">
+                        <div class="metric-row" style="margin-bottom: 8px;" vid="107">
+                            <span class="metric-label" vid="108">Latency</span>
+                            <span vid="109">0.8s</span>
+                        </div>
+                        <div class="metric-row" style="font-size: 18px; font-weight: 700;" vid="110">
+                            <span vid="111">Cost</span>
+                            <span style="color: var(--accent-green);" vid="112">$0.08</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-select" vid="113">Select this Agent</button>
+                </div>
+
+                
+                <div class="agent-column" vid="114">
+                    <div class="agent-header" vid="115">
+                        <div class="agent-big-avatar" style="background: var(--accent-yellow); color: white;" vid="116">B</div>
+                        <div vid="117">
+                            <div style="font-weight: 700; font-size: 18px;" vid="118">Briefcase Pro</div>
+                            <div class="score-pill" vid="119">Score: 8.8</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-group" vid="120">
+                        <div class="metric-row" vid="121">
+                            <span class="metric-label" vid="122">Accuracy</span>
+                            <div class="progress-bg" vid="123"><div class="progress-fill" style="width: 88%;" vid="124"></div></div>
+                        </div>
+                        <div class="metric-row" vid="125">
+                            <span class="metric-label" vid="126">Conciseness</span>
+                            <div class="progress-bg" vid="127"><div class="progress-fill" style="width: 70%;" vid="128"></div></div>
+                        </div>
+                        <div class="metric-row" vid="129">
+                            <span class="metric-label" vid="130">Risk Focus</span>
+                            <div class="progress-bg" vid="131"><div class="progress-fill" style="width: 90%;" vid="132"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="response-preview" vid="133">
+                        <strong vid="134">Legal Analysis:</strong><br vid="135">
+                        This Series B round consists of $10,000,000 in new capital. The liquidation preference stands at 2.0x, which is significantly higher than the 1.0x seen in Series A. This implies a higher threshold for founders before...
+                    </div>
+
+                    <div class="cost-breakdown" vid="136">
+                        <div class="metric-row" style="margin-bottom: 8px;" vid="137">
+                            <span class="metric-label" vid="138">Latency</span>
+                            <span vid="139">4.5s</span>
+                        </div>
+                        <div class="metric-row" style="font-size: 18px; font-weight: 700;" vid="140">
+                            <span vid="141">Cost</span>
+                            <span style="color: var(--accent-green);" vid="142">$0.45</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-select" vid="143">Select this Agent</button>
+                </div>
+            </div>
+
+            <div style="background: white; border: var(--border-thick); border-radius: var(--radius-lg); padding: 32px;" vid="144">
+                <h3 style="margin-bottom: 16px;" vid="145">Detailed Comparison Rubric</h3>
+                <table style="width: 100%; border-collapse: collapse; text-align: left;" vid="146">
+                    <thead vid="147">
+                        <tr style="border-bottom: 1px solid #eee;" vid="148">
+                            <th style="padding: 12px; color: var(--text-sub);" vid="149">Criteria</th>
+                            <th style="padding: 12px;" vid="150">LegalEagle v2</th>
+                            <th style="padding: 12px;" vid="151">ClarityBot</th>
+                            <th style="padding: 12px;" vid="152">Briefcase Pro</th>
+                        </tr>
+                    </thead>
+                    <tbody vid="153">
+                        <tr style="border-bottom: 1px solid #eee;" vid="154">
+                            <td style="padding: 12px; font-weight: 600;" vid="155">Tone Consistency</td>
+                            <td style="padding: 12px;" vid="156"><span class="tag" style="background: #E8F5E9; color: #2E7D32;" vid="157">Excellent</span></td>
+                            <td style="padding: 12px;" vid="158"><span class="tag" style="background: #FFF3E0; color: #E65100;" vid="159">Moderate</span></td>
+                            <td style="padding: 12px;" vid="160"><span class="tag" style="background: #E8F5E9; color: #2E7D32;" vid="161">Excellent</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #eee;" vid="162">
+                            <td style="padding: 12px; font-weight: 600;" vid="163">Entity Extraction</td>
+                            <td style="padding: 12px;" vid="164">12/12 found</td>
+                            <td style="padding: 12px;" vid="165">9/12 found</td>
+                            <td style="padding: 12px;" vid="166">11/12 found</td>
+                        </tr>
+                        <tr vid="167">
+                            <td style="padding: 12px; font-weight: 600;" vid="168">Citation Quality</td>
+                            <td style="padding: 12px;" vid="169">Deep links</td>
+                            <td style="padding: 12px;" vid="170">None</td>
+                            <td style="padding: 12px;" vid="171">Page # only</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body></html>

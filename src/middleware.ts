@@ -60,8 +60,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // API routes (except agent and webhooks) require authentication
-  if (path.startsWith('/api/') && !path.startsWith('/api/agent/') && !path.startsWith('/api/webhooks')) {
+  // API routes (except agent, webhooks, and auth) require authentication
+  if (path.startsWith('/api/') && !path.startsWith('/api/agent/') && !path.startsWith('/api/webhooks') && !path.startsWith('/api/auth/')) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

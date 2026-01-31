@@ -1,8 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
-import { getAgentStatusColor } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
 import Link from 'next/link';
+import { PageHeader, Button, Badge, Card, Tag, AgentAvatar } from '@/components/ui';
 
 export default async function AgentsPage() {
   const user = await getCurrentUser();
@@ -14,66 +14,95 @@ export default async function AgentsPage() {
     .lean();
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">My Agents</h1>
-        <Link
-          href="/agents/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
-        >
-          Register Agent
-        </Link>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        title="My Agents"
+        subtitle="Manage your registered AI agents."
+        action={
+          <Link href="/agents/new">
+            <Button variant="primary" size="md">
+              + Register Agent
+            </Button>
+          </Link>
+        }
+      />
 
-      {agents.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">
-            No agents registered yet. Register your first agent!
-          </p>
+      {/* Section header with count */}
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-[var(--text-main)]">Registered Agents</h2>
+          <Badge count={agents.length} />
         </div>
-      ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {agents.map((agent) => (
-              <li key={agent._id.toString()}>
+
+        {agents.length === 0 ? (
+          <Card className="p-12 text-center">
+            <p className="text-[var(--text-sub)] text-lg">
+              No agents registered yet. Register your first agent!
+            </p>
+            <Link href="/agents/new" className="mt-4 inline-block">
+              <Button variant="primary" size="md">
+                Register Your First Agent
+              </Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {agents.map((agent) => {
+              const winRate = agent.stats.tasksAttempted > 0
+                ? Math.round((agent.stats.tasksWon / agent.stats.tasksAttempted) * 100)
+                : 0;
+
+              return (
                 <Link
+                  key={agent._id.toString()}
                   href={`/agents/${agent._id.toString()}`}
-                  className="block hover:bg-gray-50"
+                  className="block no-underline"
                 >
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-green-600 truncate">
-                        {agent.name}
-                      </p>
-                      <div className="ml-2 flex-shrink-0 flex">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getAgentStatusColor(agent.status)}`}
-                        >
-                          {agent.status}
-                        </span>
+                  <Card hover className="p-6">
+                    <div className="flex items-start gap-4">
+                      <AgentAvatar
+                        label={agent.name.charAt(0).toUpperCase()}
+                        variant="purple"
+                        size="lg"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-bold text-[var(--text-main)] truncate">
+                            {agent.name}
+                          </h3>
+                          <Tag variant={agent.status === 'active' ? 'green' : 'default'}>
+                            {agent.status}
+                          </Tag>
+                        </div>
+                        <p className="mt-1 text-sm text-[var(--text-sub)] truncate">
+                          {agent.description}
+                        </p>
+                        <div className="mt-4 flex items-center gap-6 text-sm">
+                          <div>
+                            <span className="font-bold text-[var(--text-main)]">
+                              {agent.stats.tasksWon}/{agent.stats.tasksAttempted}
+                            </span>
+                            <span className="text-[var(--text-sub)] ml-1">wins</span>
+                            {winRate > 0 && (
+                              <span className="text-[var(--accent-green)] ml-2">({winRate}%)</span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-bold text-[var(--text-main)]">
+                              ${(agent.stats.totalEarnings / 100).toFixed(2)}
+                            </span>
+                            <span className="text-[var(--text-sub)] ml-1">earned</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          {agent.stats.tasksWon}/{agent.stats.tasksAttempted}{' '}
-                          wins
-                        </p>
-                        <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                          ${(agent.stats.totalEarnings / 100).toFixed(2)} earned
-                        </p>
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <p className="truncate max-w-xs">{agent.description}</p>
-                      </div>
-                    </div>
-                  </div>
+                  </Card>
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

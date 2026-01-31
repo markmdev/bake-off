@@ -3,7 +3,7 @@ import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants'
 import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { PageHeader, Card, Badge } from '@/components/ui';
 import SelectWinnerButton from './SelectWinnerButton';
 import CancelTaskButton from './CancelTaskButton';
 
@@ -37,78 +37,62 @@ export default async function TaskDetailPage({
   const canSelectWinner = task.status === 'open' && submissions.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex justify-between items-start">
-        <div>
-          <Link
-            href="/tasks"
-            className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
-          >
-            ← Back to Tasks
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
-        </div>
-        <span
-          className={`px-3 py-1 text-sm font-semibold rounded-full ${getTaskStatusColor(task.status)}`}
-        >
-          {task.status}
-        </span>
-      </div>
+    <div className="space-y-10">
+      <PageHeader
+        title={task.title}
+        backHref="/tasks"
+        backLabel="Back to tasks"
+        action={
+          <span className={`px-4 py-1.5 text-sm font-bold rounded-full border-2 border-[var(--text-sub)] ${getTaskStatusColor(task.status)}`}>
+            {task.status}
+          </span>
+        }
+      />
 
-      <div className="bg-white shadow rounded-lg p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <Card className="p-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-8 border-b-2 border-dashed border-[rgba(26,43,60,0.1)]">
           <div>
-            <span className="text-gray-500">Bounty:</span>
-            <span className="ml-2 font-medium">
-              ${(task.bounty / 100).toFixed(2)}
-            </span>
+            <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Bounty</div>
+            <div className="text-xl font-bold text-[var(--accent-orange)]">${(task.bounty / 100).toFixed(2)}</div>
           </div>
           <div>
-            <span className="text-gray-500">Deadline:</span>
-            <span className="ml-2 font-medium">
-              {formatDateTime(task.deadline)}
-            </span>
+            <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Deadline</div>
+            <div className="text-xl font-bold text-[var(--text-main)]">{formatDateTime(task.deadline)}</div>
           </div>
           <div>
-            <span className="text-gray-500">Created:</span>
-            <span className="ml-2 font-medium">{formatDate(task.createdAt)}</span>
+            <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Created</div>
+            <div className="text-xl font-bold text-[var(--text-main)]">{formatDate(task.createdAt)}</div>
           </div>
           {task.publishedAt && (
             <div>
-              <span className="text-gray-500">Published:</span>
-              <span className="ml-2 font-medium">
-                {formatDate(task.publishedAt)}
-              </span>
+              <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Published</div>
+              <div className="text-xl font-bold text-[var(--text-main)]">{formatDate(task.publishedAt)}</div>
             </div>
           )}
         </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">
-            Description
-          </h3>
-          <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+        <div className="mb-8">
+          <h3 className="text-sm font-bold text-[var(--text-sub)] mb-3 uppercase tracking-wide">Description</h3>
+          <div className="prose prose-sm max-w-none text-[var(--text-main)] whitespace-pre-wrap">
             {task.description}
           </div>
         </div>
 
         {task.attachments.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">
-              Attachments
-            </h3>
-            <ul className="space-y-1">
+          <div className="mb-8">
+            <h3 className="text-sm font-bold text-[var(--text-sub)] mb-3 uppercase tracking-wide">Attachments</h3>
+            <ul className="space-y-2">
               {task.attachments.map((att, i) => (
                 <li key={i}>
                   <a
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    className="text-[var(--text-main)] hover:text-[var(--accent-orange)] font-medium transition-colors"
                   >
                     {att.filename}
                   </a>
-                  <span className="text-gray-400 text-xs ml-2">
+                  <span className="text-[var(--text-sub)] opacity-60 text-sm ml-2">
                     ({(att.sizeBytes / 1024).toFixed(1)} KB)
                   </span>
                 </li>
@@ -118,43 +102,42 @@ export default async function TaskDetailPage({
         )}
 
         {canCancel && (
-          <div className="pt-4 border-t">
+          <div className="pt-6 border-t-2 border-dashed border-[rgba(26,43,60,0.1)]">
             <CancelTaskButton taskId={task._id.toString()} />
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Submissions ({submissions.length})
-        </h2>
+      <Card className="p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-[var(--text-main)]">Submissions</h2>
+          <Badge count={submissions.length} />
+        </div>
 
         {submissions.length === 0 ? (
-          <p className="text-gray-500 text-sm">No submissions yet.</p>
+          <p className="text-[var(--text-sub)] opacity-60">No submissions yet.</p>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <div className="space-y-4">
             {submissions.map((sub) => {
               const agent = agentMap.get(sub.agentId.toString());
               return (
-                <li key={sub._id.toString()} className="py-4">
+                <div key={sub._id.toString()} className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-cream)] border-2 border-[var(--text-sub)] border-opacity-10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-bold text-[var(--text-main)]">
                         {agent?.name || 'Unknown Agent'}
                         {sub.isWinner && (
-                          <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                            Winner
-                          </span>
+                          <span className="ml-2 px-3 py-1 text-xs font-bold bg-[var(--accent-yellow)] text-[var(--text-sub)] rounded-full border-2 border-[var(--text-sub)]">Winner</span>
                         )}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
                         {sub.submissionType} • {formatDateTime(sub.submittedAt)}
                       </p>
                       <a
                         href={sub.submissionUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm mt-1 inline-block"
+                        className="text-[var(--accent-orange)] hover:underline text-sm font-semibold mt-2 inline-block"
                       >
                         View Submission →
                       </a>
@@ -166,12 +149,12 @@ export default async function TaskDetailPage({
                       />
                     )}
                   </div>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -45,7 +45,7 @@ export default function RegenerateKeyButton({ agentId }: { agentId: string }) {
   function copyInstallCommand() {
     if (newKey) {
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app';
-      const command = `mkdir -p .claude/skills && curl -o .claude/skills/bakeoff.md ${origin}/api/skill/${newKey}`;
+      const command = `mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${origin}/api/skill/${newKey}`;
       navigator.clipboard.writeText(command);
       setCopiedCommand(true);
       setTimeout(() => setCopiedCommand(false), 2000);
@@ -54,7 +54,7 @@ export default function RegenerateKeyButton({ agentId }: { agentId: string }) {
 
   if (newKey) {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app';
-    const installCommand = `mkdir -p .claude/skills && curl -o .claude/skills/bakeoff.md ${origin}/api/skill/${newKey}`;
+    const installCommand = `mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${origin}/api/skill/${newKey}`;
 
     return (
       <div className="space-y-4">

@@ -54,7 +54,7 @@ export default function NewAgentPage() {
   function copyInstallCommand() {
     if (apiKey) {
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app';
-      const command = `mkdir -p .claude/skills && curl -o .claude/skills/bakeoff.md ${origin}/api/skill/${apiKey}`;
+      const command = `mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${origin}/api/skill/${apiKey}`;
       navigator.clipboard.writeText(command);
       setCopiedCommand(true);
       setTimeout(() => setCopiedCommand(false), 2000);
@@ -102,7 +102,7 @@ export default function NewAgentPage() {
             </p>
             <div className="flex items-start space-x-2">
               <pre className="flex-1 bg-gray-800 text-green-400 rounded p-3 text-sm overflow-x-auto">
-{`mkdir -p .claude/skills && curl -o .claude/skills/bakeoff.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/api/skill/${apiKey}`}
+{`mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/api/skill/${apiKey}`}
               </pre>
               <button
                 onClick={copyInstallCommand}

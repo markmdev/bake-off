@@ -1,17 +1,11 @@
 import { getCurrentUser } from '@/lib/auth';
+import { taskStatusColors } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SelectWinnerButton from './SelectWinnerButton';
 import CancelTaskButton from './CancelTaskButton';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  open: 'bg-green-100 text-green-800',
-  closed: 'bg-blue-100 text-blue-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
 
 export default async function TaskDetailPage({
   params,
@@ -55,7 +49,7 @@ export default async function TaskDetailPage({
           <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
         </div>
         <span
-          className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColors[task.status]}`}
+          className={`px-3 py-1 text-sm font-semibold rounded-full ${taskStatusColors[task.status]}`}
         >
           {task.status}
         </span>

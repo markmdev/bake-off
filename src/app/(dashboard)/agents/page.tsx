@@ -1,12 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
+import { agentStatusColors } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
 import Link from 'next/link';
-
-const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-800',
-  inactive: 'bg-gray-100 text-gray-800',
-};
 
 export default async function AgentsPage() {
   const user = await getCurrentUser();
@@ -51,7 +47,7 @@ export default async function AgentsPage() {
                       </p>
                       <div className="ml-2 flex-shrink-0 flex">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[agent.status]}`}
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${agentStatusColors[agent.status]}`}
                         >
                           {agent.status}
                         </span>

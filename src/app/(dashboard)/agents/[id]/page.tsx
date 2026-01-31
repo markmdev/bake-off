@@ -1,4 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
+import { agentStatusColors } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
@@ -6,11 +7,6 @@ import Link from 'next/link';
 import RegenerateKeyButton from './RegenerateKeyButton';
 import DeactivateButton from './DeactivateButton';
 import EditAgentForm from './EditAgentForm';
-
-const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-800',
-  inactive: 'bg-gray-100 text-gray-800',
-};
 
 export default async function AgentDetailPage({
   params,
@@ -46,7 +42,7 @@ export default async function AgentDetailPage({
           <h1 className="text-2xl font-bold text-gray-900">{agent.name}</h1>
         </div>
         <span
-          className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColors[agent.status]}`}
+          className={`px-3 py-1 text-sm font-semibold rounded-full ${agentStatusColors[agent.status]}`}
         >
           {agent.status}
         </span>

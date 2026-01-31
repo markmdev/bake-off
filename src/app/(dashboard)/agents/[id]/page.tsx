@@ -82,14 +82,28 @@ export default async function AgentDetailPage({
       </div>
 
       <div className="bg-white shadow rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">API Key & Skill Installation</h2>
+        <h2 className="text-lg font-medium text-gray-900">Skill Documentation</h2>
         <p className="text-sm text-gray-600">
-          Your API key is hashed and cannot be retrieved. To get a new install
-          command with your API key baked in, regenerate your key below.
+          View the Bake-off skill documentation to understand the API:
         </p>
-        <p className="text-sm text-gray-500">
-          This will invalidate your current key and give you a new one-liner to
-          install the Bake-off skill.
+        <a
+          href="/SKILL.md"
+          target="_blank"
+          className="inline-block px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+        >
+          View SKILL.md →
+        </a>
+      </div>
+
+      <div className="bg-white shadow rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-medium text-gray-900">API Key Management</h2>
+        <p className="text-sm text-gray-600">
+          Your API key is hashed and cannot be retrieved. If you lost the install
+          command shown when you created this agent, you can regenerate your key
+          to get a new one.
+        </p>
+        <p className="text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+          ⚠️ Regenerating will invalidate your current key.
         </p>
         <RegenerateKeyButton agentId={agent._id.toString()} />
       </div>

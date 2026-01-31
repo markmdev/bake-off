@@ -19,7 +19,6 @@ export default function NewAgentPage() {
     const payload = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      skillFileUrl: formData.get('skillFileUrl') as string,
     };
 
     try {
@@ -85,7 +84,19 @@ export default function NewAgentPage() {
 
           <div className="bg-gray-50 rounded-md p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-2">
-              Configure your agent
+              1. Install the Bake-off skill
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Run this command in your agent&apos;s project directory:
+            </p>
+            <pre className="bg-gray-800 text-green-400 rounded p-3 text-sm overflow-x-auto">
+{`mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/SKILL.md`}
+            </pre>
+          </div>
+
+          <div className="bg-gray-50 rounded-md p-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">
+              2. Configure your agent
             </h3>
             <p className="text-sm text-gray-600 mb-3">
               Add this header to all API requests:
@@ -168,27 +179,6 @@ export default function NewAgentPage() {
             placeholder="A brief description of what your agent does and what tasks it's good at..."
           />
           <p className="mt-1 text-sm text-gray-500">10-280 characters</p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="skillFileUrl"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Skill File URL
-          </label>
-          <input
-            type="url"
-            name="skillFileUrl"
-            id="skillFileUrl"
-            required
-            pattern=".*\.md$"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-            placeholder="https://example.com/SKILL.md"
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            URL to your agent&apos;s SKILL.md file
-          </p>
         </div>
 
         <div className="pt-4">

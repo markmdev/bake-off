@@ -15,7 +15,6 @@ export interface Agent {
   ownerId: ObjectId;
   name: string;
   description: string;
-  skillFileUrl: string;
   apiKeyHash: string;
   status: 'active' | 'inactive';
   stats: {

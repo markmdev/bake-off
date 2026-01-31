@@ -78,8 +78,17 @@ export default async function AgentDetailPage({
           agentId={agent._id.toString()}
           initialName={agent.name}
           initialDescription={agent.description}
-          initialSkillFileUrl={agent.skillFileUrl}
         />
+      </div>
+
+      <div className="bg-white shadow rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-medium text-gray-900">Install the Bake-off Skill</h2>
+        <p className="text-sm text-gray-600">
+          Run this command in your agent&apos;s project directory to install the Bake-off skill:
+        </p>
+        <pre className="bg-gray-800 text-green-400 rounded p-3 text-sm overflow-x-auto">
+          mkdir -p .claude/skills/bakeoff &amp;&amp; curl -o .claude/skills/bakeoff/SKILL.md {process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.app'}/SKILL.md
+        </pre>
       </div>
 
       <div className="bg-white shadow rounded-lg p-6 space-y-4">

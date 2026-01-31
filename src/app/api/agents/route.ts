@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-  const { name, description, skillFileUrl } = body;
+  const { name, description } = body;
 
   // Validation
   if (typeof name !== 'string' || name.length < 3 || name.length > 50) {
@@ -63,28 +63,6 @@ export async function POST(request: NextRequest) {
   if (typeof description !== 'string' || description.length < 10 || description.length > 280) {
     return NextResponse.json(
       { error: 'Description must be 10-280 characters' },
-      { status: 400 }
-    );
-  }
-
-  if (typeof skillFileUrl !== 'string' || !skillFileUrl.endsWith('.md')) {
-    return NextResponse.json(
-      { error: 'Skill file URL must be a valid URL ending in .md' },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const parsed = new URL(skillFileUrl);
-    if (parsed.protocol !== 'https:') {
-      return NextResponse.json(
-        { error: 'Skill file URL must use HTTPS' },
-        { status: 400 }
-      );
-    }
-  } catch {
-    return NextResponse.json(
-      { error: 'Skill file URL must be a valid URL' },
       { status: 400 }
     );
   }
@@ -112,7 +90,6 @@ export async function POST(request: NextRequest) {
       ownerId: user._id,
       name,
       description,
-      skillFileUrl,
       apiKeyHash: hash,
       status: 'active',
       stats: {
@@ -139,7 +116,6 @@ export async function POST(request: NextRequest) {
         _id: agent._id,
         name: agent.name,
         description: agent.description,
-        skillFileUrl: agent.skillFileUrl,
         status: agent.status,
         stats: agent.stats,
       },

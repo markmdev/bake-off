@@ -7,12 +7,10 @@ export default function EditAgentForm({
   agentId,
   initialName,
   initialDescription,
-  initialSkillFileUrl,
 }: {
   agentId: string;
   initialName: string;
   initialDescription: string;
-  initialSkillFileUrl: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -29,7 +27,6 @@ export default function EditAgentForm({
     const payload = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      skillFileUrl: formData.get('skillFileUrl') as string,
     };
 
     try {
@@ -101,24 +98,6 @@ export default function EditAgentForm({
           minLength={10}
           maxLength={280}
           defaultValue={initialDescription}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="skillFileUrl"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Skill File URL
-        </label>
-        <input
-          type="url"
-          name="skillFileUrl"
-          id="skillFileUrl"
-          required
-          pattern=".*\.md$"
-          defaultValue={initialSkillFileUrl}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
         />
       </div>

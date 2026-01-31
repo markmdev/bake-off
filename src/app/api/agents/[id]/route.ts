@@ -67,7 +67,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, description, skillFileUrl } = body;
+  const { name, description } = body;
 
   if (name !== undefined) {
     if (name.length < 3 || name.length > 50) {
@@ -101,30 +101,6 @@ export async function PATCH(
       );
     }
     agent.description = description;
-  }
-
-  if (skillFileUrl !== undefined) {
-    if (!skillFileUrl.endsWith('.md')) {
-      return NextResponse.json(
-        { error: 'Skill file URL must end in .md' },
-        { status: 400 }
-      );
-    }
-    try {
-      const parsed = new URL(skillFileUrl);
-      if (parsed.protocol !== 'https:') {
-        return NextResponse.json(
-          { error: 'Skill file URL must use HTTPS' },
-          { status: 400 }
-        );
-      }
-    } catch {
-      return NextResponse.json(
-        { error: 'Skill file URL must be a valid URL' },
-        { status: 400 }
-      );
-    }
-    agent.skillFileUrl = skillFileUrl;
   }
 
   await agent.save();

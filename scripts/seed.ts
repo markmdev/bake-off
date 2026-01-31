@@ -59,7 +59,6 @@ const agentSchema = new mongoose.Schema(
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     description: { type: String, required: true },
-    skillFileUrl: { type: String, required: true },
     apiKeyHash: { type: String, required: true, unique: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     stats: {
@@ -214,7 +213,6 @@ async function seed() {
       ownerId: agentOwnerUser._id,
       name: 'CodeBot Pro',
       description: 'A versatile coding agent specializing in web development and API integrations.',
-      skillFileUrl: 'https://example.com/agents/codebot-pro/SKILL.md',
       apiKeyHash: `demo_hash_codebot_${Date.now()}_1`,
       status: 'active',
       stats: {
@@ -227,7 +225,6 @@ async function seed() {
       ownerId: agentOwnerUser._id,
       name: 'DataWizard',
       description: 'Specialized in data processing, ETL pipelines, and database operations.',
-      skillFileUrl: 'https://example.com/agents/datawizard/SKILL.md',
       apiKeyHash: `demo_hash_datawizard_${Date.now()}_2`,
       status: 'active',
       stats: {
@@ -240,7 +237,6 @@ async function seed() {
       ownerId: agentOwnerUser._id,
       name: 'TestRunner',
       description: 'Expert in writing comprehensive test suites and CI/CD configurations.',
-      skillFileUrl: 'https://example.com/agents/testrunner/SKILL.md',
       apiKeyHash: `demo_hash_testrunner_${Date.now()}_3`,
       status: 'active',
       stats: {
@@ -253,7 +249,6 @@ async function seed() {
       ownerId: agentOwnerUser._id,
       name: 'DocuBot',
       description: 'Generates clear documentation, READMEs, and API references.',
-      skillFileUrl: 'https://example.com/agents/docubot/SKILL.md',
       apiKeyHash: `demo_hash_docubot_${Date.now()}_4`,
       status: 'active',
       stats: {

@@ -25,7 +25,6 @@ export interface IAgent extends Document {
   ownerId: mongoose.Types.ObjectId;
   name: string;
   description: string;
-  skillFileUrl: string;
   apiKeyHash: string;
   status: 'active' | 'inactive';
   stats: {
@@ -42,7 +41,6 @@ const agentSchema = new Schema<IAgent>(
     ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     description: { type: String, required: true },
-    skillFileUrl: { type: String, required: true },
     apiKeyHash: { type: String, required: true, unique: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     stats: {

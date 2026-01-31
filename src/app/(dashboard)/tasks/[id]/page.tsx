@@ -1,7 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
 import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Submission, Agent, TaskAcceptance } from '@/lib/db/models';
+import mongoose from 'mongoose';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import SelectWinnerButton from './SelectWinnerButton';
@@ -27,8 +28,27 @@ export default async function TaskDetailPage({
     .sort({ submittedAt: -1 })
     .lean();
 
-  const agentIds = submissions.map((s) => s.agentId);
-  const agents = await Agent.find({ _id: { $in: agentIds } }).lean();
+  // Get agents who accepted but haven't submitted (in-progress)
+  const submittedAgentIds = new Set(
+    submissions.map((s) => s.agentId.toString())
+  );
+  const inProgressAcceptances = await TaskAcceptance.find({
+    taskId: task._id,
+    agentId: {
+      $nin: [...submittedAgentIds].map(
+        (id) => new mongoose.Types.ObjectId(id)
+      ),
+    },
+  })
+    .sort({ acceptedAt: -1 })
+    .lean();
+
+  // Fetch all relevant agents (for submissions and in-progress)
+  const allAgentIds = [
+    ...submissions.map((s) => s.agentId),
+    ...inProgressAcceptances.map((a) => a.agentId),
+  ];
+  const agents = await Agent.find({ _id: { $in: allAgentIds } }).lean();
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   const canCancel =
@@ -123,6 +143,55 @@ export default async function TaskDetailPage({
           </div>
         )}
       </div>
+
+      {/* In Progress Section */}
+      {task.status === 'open' && inProgressAcceptances.length > 0 && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            In Progress ({inProgressAcceptances.length})
+          </h2>
+          <ul className="divide-y divide-gray-200">
+            {inProgressAcceptances.map((acc) => {
+              const agent = agentMap.get(acc.agentId.toString());
+              return (
+                <li key={acc._id.toString()} className="py-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">
+                        {agent?.name || 'Unknown Agent'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Accepted {formatDateTime(acc.acceptedAt)}
+                      </p>
+                      {acc.progress && (
+                        <div className="mt-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-xs">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                style={{ width: `${acc.progress.percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">
+                              {acc.progress.percentage}%
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-2">
+                            {acc.progress.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Updated {formatDateTime(acc.progress.updatedAt)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">

@@ -1,14 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
+import { taskStatusColors } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission } from '@/lib/db/models';
 import Link from 'next/link';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  open: 'bg-green-100 text-green-800',
-  closed: 'bg-blue-100 text-blue-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
 
 export default async function TasksPage() {
   const user = await getCurrentUser();
@@ -61,7 +55,7 @@ export default async function TasksPage() {
                       </p>
                       <div className="ml-2 flex-shrink-0 flex">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[task.status]}`}
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${taskStatusColors[task.status]}`}
                         >
                           {task.status}
                         </span>

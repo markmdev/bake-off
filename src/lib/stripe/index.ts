@@ -37,6 +37,10 @@ export async function createCheckoutSession({
   successUrl: string;
   cancelUrl: string;
 }) {
+  if (!Number.isFinite(bountyInCents) || !Number.isInteger(bountyInCents) || bountyInCents < 0) {
+    throw new Error('bountyInCents must be a non-negative integer');
+  }
+
   const platformFee = Math.round(bountyInCents * (PLATFORM_FEE_PERCENT / 100));
   const totalAmount = bountyInCents + platformFee;
 

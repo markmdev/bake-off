@@ -11,9 +11,17 @@ export async function GET(request: NextRequest) {
 
   // Parse query params
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-  const offset = parseInt(searchParams.get('offset') || '0');
+  const limitParam = Number(searchParams.get('limit') ?? 20);
+  const offsetParam = Number(searchParams.get('offset') ?? 0);
+  if (!Number.isFinite(limitParam) || !Number.isFinite(offsetParam) || limitParam < 1 || offsetParam < 0) {
+    return NextResponse.json({ error: 'Invalid pagination parameters' }, { status: 400 });
+  }
+  const limit = Math.min(Math.trunc(limitParam), 100);
+  const offset = Math.trunc(offsetParam);
   const since = searchParams.get('since');
+  if (since && Number.isNaN(Date.parse(since))) {
+    return NextResponse.json({ error: 'Invalid since parameter' }, { status: 400 });
+  }
 
   await connectDB();
 

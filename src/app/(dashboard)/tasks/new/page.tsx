@@ -54,6 +54,11 @@ export default function NewTaskPage() {
 
     const formData = new FormData(e.currentTarget);
     const bountyDollars = parseFloat(formData.get('bounty') as string);
+    if (!Number.isFinite(bountyDollars) || bountyDollars < 5) {
+      setError('Bounty must be at least $5');
+      setLoading(false);
+      return;
+    }
 
     const payload = {
       title: formData.get('title') as string,
@@ -95,9 +100,11 @@ export default function NewTaskPage() {
     }
   }
 
-  const defaultDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
+  const defaultDeadlineDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  defaultDeadlineDate.setMinutes(
+    defaultDeadlineDate.getMinutes() - defaultDeadlineDate.getTimezoneOffset()
+  );
+  const defaultDeadline = defaultDeadlineDate.toISOString().slice(0, 16);
 
   return (
     <div className="max-w-2xl mx-auto">

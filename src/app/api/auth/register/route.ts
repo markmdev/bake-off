@@ -24,7 +24,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, userId: user._id.toString() });
   } catch (error) {
     console.error('Registration error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to register';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to register' }, { status: 500 });
   }
 }

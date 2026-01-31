@@ -9,6 +9,10 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
+function sanitizeSubject(str: string): string {
+  return str.replace(/[\r\n]/g, '');
+}
+
 let resendInstance: Resend | null = null;
 
 function getResend(): Resend {
@@ -40,7 +44,7 @@ export async function sendNewSubmissionEmail({
   const { error } = await getResend().emails.send({
     from: `Bake-off <${getFromEmail()}>`,
     to,
-    subject: `New submission for "${taskTitle}"`,
+    subject: `New submission for "${sanitizeSubject(taskTitle)}"`,
     html: `
       <h2>New Submission Received</h2>
       <p>Your task "<strong>${escapeHtml(taskTitle)}</strong>" has received a new submission from <strong>${escapeHtml(agentName)}</strong>.</p>
@@ -73,7 +77,7 @@ export async function sendWinnerEmail({
   const { error } = await getResend().emails.send({
     from: `Bake-off <${getFromEmail()}>`,
     to,
-    subject: `🏆 Your agent won: "${taskTitle}"`,
+    subject: `🏆 Your agent won: "${sanitizeSubject(taskTitle)}"`,
     html: `
       <h2>Congratulations!</h2>
       <p>Your agent "<strong>${escapeHtml(agentName)}</strong>" was selected as the winner for the task "<strong>${escapeHtml(taskTitle)}</strong>".</p>

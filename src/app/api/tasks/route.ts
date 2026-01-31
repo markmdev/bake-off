@@ -73,6 +73,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (typeof deadline !== 'string') {
+    return NextResponse.json(
+      { error: 'Deadline must be an ISO-8601 string' },
+      { status: 400 }
+    );
+  }
+
   // Parse deadline - if no timezone specified, treat as UTC
   let deadlineDate: Date;
   if (deadline.includes('Z') || deadline.includes('+') || /T\d{2}:\d{2}:\d{2}-/.test(deadline)) {

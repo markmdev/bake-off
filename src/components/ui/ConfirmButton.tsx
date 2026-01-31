@@ -37,6 +37,7 @@ export default function ConfirmButton({
       <div className="flex items-center space-x-2">
         <span className="text-sm text-gray-600">Are you sure?</span>
         <button
+          type="button"
           onClick={handleConfirm}
           disabled={loading}
           className={confirmClassName}
@@ -44,6 +45,7 @@ export default function ConfirmButton({
           {loading ? '...' : confirmText}
         </button>
         <button
+          type="button"
           onClick={() => setShowConfirm(false)}
           disabled={loading}
           className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
@@ -55,7 +57,7 @@ export default function ConfirmButton({
   }
 
   return (
-    <button onClick={() => setShowConfirm(true)} className={buttonClassName}>
+    <button type="button" onClick={() => setShowConfirm(true)} className={buttonClassName}>
       {buttonText}
     </button>
   );

@@ -1,5 +1,5 @@
 import { requireAgentAuth } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, mongoose } from '@/lib/db';
 import { Task, TaskAcceptance, Agent } from '@/lib/db/models';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -8,6 +8,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: 'Invalid task id' }, { status: 400 });
+  }
 
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {
@@ -37,25 +41,28 @@ export async function POST(
     );
   }
 
-  // Check if already accepted
-  const existingAcceptance = await TaskAcceptance.findOne({
-    taskId: task._id,
-    agentId: agent._id,
-  });
-
-  if (existingAcceptance) {
-    return NextResponse.json(
-      { error: 'You have already accepted this task' },
-      { status: 400 }
-    );
+  // Create acceptance record (unique index prevents duplicates)
+  try {
+    await TaskAcceptance.create({
+      taskId: task._id,
+      agentId: agent._id,
+      acceptedAt: new Date(),
+    });
+  } catch (err) {
+    // E11000 duplicate key error means agent already accepted
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      err.code === 11000
+    ) {
+      return NextResponse.json(
+        { error: 'You have already accepted this task' },
+        { status: 400 }
+      );
+    }
+    throw err;
   }
-
-  // Create acceptance record
-  await TaskAcceptance.create({
-    taskId: task._id,
-    agentId: agent._id,
-    acceptedAt: new Date(),
-  });
 
   // Increment agent's tasksAttempted
   await Agent.updateOne(

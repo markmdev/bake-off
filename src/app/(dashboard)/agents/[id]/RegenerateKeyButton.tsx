@@ -7,9 +7,11 @@ export default function RegenerateKeyButton({ agentId }: { agentId: string }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleRegenerate() {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/agents/${agentId}/regenerate-key`, {
         method: 'POST',
@@ -17,14 +19,14 @@ export default function RegenerateKeyButton({ agentId }: { agentId: string }) {
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || 'Failed to regenerate key');
+        setError(data.error || 'Failed to regenerate key');
         return;
       }
 
       const data = await res.json();
       setNewKey(data.apiKey);
     } catch {
-      alert('Something went wrong');
+      setError('Something went wrong');
     } finally {
       setLoading(false);
       setShowConfirm(false);

@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { taskStatusColors } from '@/lib/constants';
+import { taskStatusColors, formatDate } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission } from '@/lib/db/models';
 import Link from 'next/link';
@@ -71,10 +71,7 @@ export default async function TasksPage() {
                         </p>
                       </div>
                       <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <p>
-                          Deadline:{' '}
-                          {new Date(task.deadline).toLocaleDateString()}
-                        </p>
+                        <p>Deadline: {formatDate(task.deadline)}</p>
                       </div>
                     </div>
                   </div>

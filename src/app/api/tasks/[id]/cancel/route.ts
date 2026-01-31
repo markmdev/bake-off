@@ -58,7 +58,7 @@ export async function POST(
   // Clean up attachments from storage (best-effort)
   if (task.attachments.length > 0) {
     try {
-      const supabase = await createServiceClient();
+      const supabase = createServiceClient();
       const filePaths = task.attachments
         .map((att) => {
           const url = new URL(att.url);

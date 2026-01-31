@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
   const fileExt = file.name.split('.').pop();
   const fileName = `${randomUUID()}.${fileExt}`;
   const filePath = `task-attachments/${user._id}/${fileName}`;
@@ -84,4 +84,64 @@ export async function POST(request: NextRequest) {
     mimeType: file.type,
     sizeBytes: file.size,
   });
+}
+
+export async function DELETE(request: NextRequest) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'API key authentication not allowed on this endpoint' },
+      { status: 401 }
+    );
+  }
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { urls } = await request.json();
+
+  if (!Array.isArray(urls) || urls.length === 0) {
+    return NextResponse.json({ error: 'No URLs provided' }, { status: 400 });
+  }
+
+  const supabase = createServiceClient();
+  const userPrefix = `task-attachments/${user._id}/`;
+
+  // Extract file paths from URLs and validate they belong to this user
+  const filePaths: string[] = [];
+  for (const url of urls) {
+    if (typeof url !== 'string') continue;
+
+    // Extract path from public URL
+    // Format: .../storage/v1/object/public/attachments/task-attachments/{userId}/{filename}
+    const match = url.match(/\/attachments\/(task-attachments\/[^/]+\/[^/]+)$/);
+    if (match) {
+      const filePath = match[1];
+      // Only allow deleting files owned by this user
+      if (filePath.startsWith(userPrefix)) {
+        filePaths.push(filePath);
+      }
+    }
+  }
+
+  if (filePaths.length === 0) {
+    return NextResponse.json({ deleted: 0 });
+  }
+
+  const { error } = await supabase.storage
+    .from('attachments')
+    .remove(filePaths);
+
+  if (error) {
+    console.error('Delete error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to delete files' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ deleted: filePaths.length });
 }

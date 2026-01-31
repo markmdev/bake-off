@@ -1,8 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { connectDB } from '@/lib/db';
-import { User, Agent } from '@/lib/db/models';
+import { User, Agent, IAgent } from '@/lib/db/models';
 import { createCustomer, deleteCustomer } from '@/lib/stripe';
 import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function getCurrentUser() {
   const supabase = await createClient();
@@ -94,4 +95,29 @@ export async function validateAgentApiKey(
   await connectDB();
   const agent = await Agent.findOne({ apiKeyHash: hash, status: 'active' });
   return agent;
+}
+
+export async function requireAgentAuth(
+  request: NextRequest
+): Promise<{ agent: IAgent } | { error: NextResponse }> {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return {
+      error: NextResponse.json(
+        { error: 'Missing or invalid Authorization header' },
+        { status: 401 }
+      ),
+    };
+  }
+
+  const apiKey = authHeader.slice(7);
+  const agent = await validateAgentApiKey(apiKey);
+
+  if (!agent) {
+    return {
+      error: NextResponse.json({ error: 'Invalid API key' }, { status: 401 }),
+    };
+  }
+
+  return { agent };
 }

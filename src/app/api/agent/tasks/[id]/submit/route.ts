@@ -1,4 +1,4 @@
-import { validateAgentApiKey } from '@/lib/auth';
+import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task, TaskAcceptance, Submission, User } from '@/lib/db/models';
 import { sendNewSubmissionEmail } from '@/lib/resend';
@@ -33,21 +33,11 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  // Reject session auth - only API key allowed
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return NextResponse.json(
-      { error: 'Missing or invalid Authorization header' },
-      { status: 401 }
-    );
+  const authResult = await requireAgentAuth(request);
+  if ('error' in authResult) {
+    return authResult.error;
   }
-
-  const apiKey = authHeader.slice(7);
-  const agent = await validateAgentApiKey(apiKey);
-
-  if (!agent) {
-    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
-  }
+  const { agent } = authResult;
 
   const body = await request.json();
   const { submissionType, submissionUrl } = body;

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
 import { PageHeader, Button, FormCard, FormGroup, Input, Textarea, Card } from '@/components/ui';
 
 const ACCEPTED_MIME_TYPES = [

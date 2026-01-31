@@ -14,7 +14,7 @@ export async function getCurrentUser() {
   if (!user) return null;
 
   await connectDB();
-  const dbUser = await User.findOne({ supabaseId: user.id });
+  const dbUser = await User.findOne({ supabaseId: user.id }).lean();
   return dbUser;
 }
 

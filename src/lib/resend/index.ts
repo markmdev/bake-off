@@ -36,22 +36,25 @@ export async function sendNewSubmissionEmail({
   taskTitle: string;
   agentName: string;
   taskUrl: string;
-}) {
-  try {
-    await getResend().emails.send({
-      from: `Bake-off <${getFromEmail()}>`,
-      to,
-      subject: `New submission for "${taskTitle}"`,
-      html: `
-        <h2>New Submission Received</h2>
-        <p>Your task "<strong>${escapeHtml(taskTitle)}</strong>" has received a new submission from <strong>${escapeHtml(agentName)}</strong>.</p>
-        <p><a href="${escapeHtml(taskUrl)}">View all submissions</a></p>
-        <p>— Bake-off</p>
-      `,
-    });
-  } catch (error) {
-    console.error('Failed to send new submission email:', error);
+}): Promise<boolean> {
+  const { error } = await getResend().emails.send({
+    from: `Bake-off <${getFromEmail()}>`,
+    to,
+    subject: `New submission for "${taskTitle}"`,
+    html: `
+      <h2>New Submission Received</h2>
+      <p>Your task "<strong>${escapeHtml(taskTitle)}</strong>" has received a new submission from <strong>${escapeHtml(agentName)}</strong>.</p>
+      <p><a href="${escapeHtml(taskUrl)}">View all submissions</a></p>
+      <p>— Bake-off</p>
+    `,
+  });
+
+  if (error) {
+    console.error('Failed to send new submission email:', error.message);
+    return false;
   }
+
+  return true;
 }
 
 export async function sendWinnerEmail({
@@ -66,22 +69,25 @@ export async function sendWinnerEmail({
   agentName: string;
   earnings: number;
   taskUrl: string;
-}) {
-  try {
-    await getResend().emails.send({
-      from: `Bake-off <${getFromEmail()}>`,
-      to,
-      subject: `🏆 Your agent won: "${taskTitle}"`,
-      html: `
-        <h2>Congratulations!</h2>
-        <p>Your agent "<strong>${escapeHtml(agentName)}</strong>" was selected as the winner for the task "<strong>${escapeHtml(taskTitle)}</strong>".</p>
-        <p>Earnings: <strong>$${(earnings / 100).toFixed(2)}</strong></p>
-        <p><a href="${escapeHtml(taskUrl)}">View task details</a></p>
-        <p>Keep building great agents!</p>
-        <p>— Bake-off</p>
-      `,
-    });
-  } catch (error) {
-    console.error('Failed to send winner email:', error);
+}): Promise<boolean> {
+  const { error } = await getResend().emails.send({
+    from: `Bake-off <${getFromEmail()}>`,
+    to,
+    subject: `🏆 Your agent won: "${taskTitle}"`,
+    html: `
+      <h2>Congratulations!</h2>
+      <p>Your agent "<strong>${escapeHtml(agentName)}</strong>" was selected as the winner for the task "<strong>${escapeHtml(taskTitle)}</strong>".</p>
+      <p>Earnings: <strong>$${(earnings / 100).toFixed(2)}</strong></p>
+      <p><a href="${escapeHtml(taskUrl)}">View task details</a></p>
+      <p>Keep building great agents!</p>
+      <p>— Bake-off</p>
+    `,
+  });
+
+  if (error) {
+    console.error('Failed to send winner email:', error.message);
+    return false;
   }
+
+  return true;
 }

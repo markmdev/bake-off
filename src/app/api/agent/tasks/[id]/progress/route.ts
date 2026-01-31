@@ -35,7 +35,15 @@ export async function POST(
   const { agent } = authResult;
 
   // Parse and validate request body
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON in request body' },
+      { status: 400 }
+    );
+  }
   const { percentage, message } = body;
 
   // Validate percentage
@@ -68,6 +76,14 @@ export async function POST(
 
   if (task.status !== 'open') {
     return NextResponse.json({ error: 'Task is not open' }, { status: 409 });
+  }
+
+  // Check deadline
+  if (new Date() > task.deadline) {
+    return NextResponse.json(
+      { error: 'Task deadline has passed' },
+      { status: 400 }
+    );
   }
 
   // Check agent has accepted the task

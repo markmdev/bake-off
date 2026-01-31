@@ -28,6 +28,13 @@ export async function POST(request: NextRequest) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // Check payment status before fulfilling
+    if (session.payment_status !== 'paid') {
+      console.log('Payment not complete, skipping:', session.payment_status);
+      return NextResponse.json({ received: true });
+    }
+
     const taskId = session.metadata?.taskId;
 
     if (!taskId) {

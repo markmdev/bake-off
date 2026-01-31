@@ -66,7 +66,7 @@ export async function createCheckoutSession({
   });
 }
 
-export async function constructWebhookEvent(
+export function constructWebhookEvent(
   payload: string | Buffer,
   signature: string
 ) {
@@ -74,6 +74,7 @@ export async function constructWebhookEvent(
   if (!secret) {
     throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not defined');
   }
+  // Note: constructEvent is synchronous
   return getStripe().webhooks.constructEvent(payload, signature, secret);
 }
 

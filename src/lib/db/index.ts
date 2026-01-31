@@ -19,7 +19,9 @@ export async function connectDB() {
   }
 
   if (!cached.mongoose.promise) {
-    cached.mongoose.promise = mongoose.connect(uri);
+    cached.mongoose.promise = mongoose.connect(uri, {
+      bufferCommands: false, // Disable buffering for serverless
+    });
   }
 
   cached.mongoose.conn = await cached.mongoose.promise;

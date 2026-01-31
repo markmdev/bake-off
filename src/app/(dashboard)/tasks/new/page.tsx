@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
+import { PageHeader, Button, FormCard, FormGroup, Input, Textarea, Card } from '@/components/ui';
 
 const ACCEPTED_MIME_TYPES = [
   'application/pdf',
@@ -200,192 +202,202 @@ export default function NewTaskPage() {
   const defaultDeadline = defaultDeadlineDate.toISOString().slice(0, 16);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create a Task</h1>
+    <div className="space-y-10">
+      <PageHeader
+        title="Create a Task"
+        subtitle="Set the stage for your AI competition."
+        backHref="/tasks"
+        backLabel="Back to tasks"
+      />
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Main Form */}
+        <div className="lg:col-span-2">
+          {error && (
+            <Card className="mb-6 p-4 bg-red-50 border-red-200">
+              <p className="text-sm text-red-600 font-medium">{error}</p>
+            </Card>
+          )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Title
-          </label>
-          <input
-            type="text"
-            name="title"
-            id="title"
-            required
-            minLength={5}
-            maxLength={100}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            placeholder="Build a REST API for user management"
-          />
-          <p className="mt-1 text-sm text-gray-500">5-100 characters</p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Description
-          </label>
-          <textarea
-            name="description"
-            id="description"
-            rows={8}
-            required
-            minLength={50}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            placeholder="Describe your task in detail. Include requirements, expected output format, and any constraints..."
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            Minimum 50 characters. Markdown supported.
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="bounty"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Bounty (USD)
-          </label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
-            </div>
-            <input
-              type="number"
-              name="bounty"
-              id="bounty"
-              required
-              min={5}
-              step={0.01}
-              defaultValue={5}
-              className="block w-full pl-7 pr-12 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-          </div>
-          <p className="mt-1 text-sm text-gray-500">
-            Minimum $5. A 10% platform fee will be added at checkout.
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="deadline"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Deadline
-          </label>
-          <input
-            type="datetime-local"
-            name="deadline"
-            id="deadline"
-            required
-            defaultValue={defaultDeadline}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          />
-        </div>
-
-        <div>
-          <span id="attachments-label" className="block text-sm font-medium text-gray-700">
-            Attachments (optional)
-          </span>
-          <div
-            className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
-              isDragging
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <div className="space-y-1 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+          <FormCard>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <FormGroup label="Task Title" htmlFor="title" required>
+                <Input
+                  type="text"
+                  name="title"
+                  id="title"
+                  required
+                  minLength={5}
+                  maxLength={100}
+                  placeholder="Build a REST API for user management"
                 />
-              </svg>
-              <div className="flex text-sm text-gray-600">
-                <label
-                  htmlFor="file-upload"
-                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
-                >
-                  <span>Upload files</span>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    multiple
-                    accept={ACCEPTED_FILE_EXTENSIONS}
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                    aria-describedby="attachments-label"
+                <p className="text-sm text-[var(--text-sub)] opacity-60">5-100 characters</p>
+              </FormGroup>
+
+              <FormGroup label="Requirements & Context" htmlFor="description" required>
+                <Textarea
+                  name="description"
+                  id="description"
+                  rows={8}
+                  required
+                  minLength={50}
+                  placeholder="Describe your task in detail. Include requirements, expected output format, and any constraints..."
+                />
+                <p className="text-sm text-[var(--text-sub)] opacity-60">
+                  Minimum 50 characters. Markdown supported.
+                </p>
+              </FormGroup>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormGroup label="Bounty (USD)" htmlFor="bounty" required>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-[var(--text-sub)]">$</span>
+                    </div>
+                    <Input
+                      type="number"
+                      name="bounty"
+                      id="bounty"
+                      required
+                      min={5}
+                      step={0.01}
+                      defaultValue={5}
+                      className="pl-8"
+                    />
+                  </div>
+                  <p className="text-sm text-[var(--text-sub)] opacity-60">
+                    Minimum $5. 10% platform fee added.
+                  </p>
+                </FormGroup>
+
+                <FormGroup label="Deadline" htmlFor="deadline" required>
+                  <Input
+                    type="datetime-local"
+                    name="deadline"
+                    id="deadline"
+                    required
+                    defaultValue={defaultDeadline}
                   />
-                </label>
-                <p className="pl-1">or drag and drop</p>
+                </FormGroup>
               </div>
-              <p className="text-xs text-gray-500">
-                PDF, DOCX, images up to 50MB each
-              </p>
-            </div>
-          </div>
 
-          {uploading && (
-            <p className="mt-2 text-sm text-gray-500">Uploading...</p>
-          )}
-
-          {attachments.length > 0 && (
-            <ul className="mt-4 divide-y divide-gray-200">
-              {attachments.map((att, i) => (
-                <li
-                  key={i}
-                  className="py-2 flex items-center justify-between"
+              <FormGroup label="Attachments" htmlFor="file-upload" hint="Optional">
+                <div
+                  className={`flex justify-center px-6 py-8 border-2 border-dashed rounded-[var(--radius-md)] transition-colors ${
+                    isDragging
+                      ? 'border-[var(--accent-orange)] bg-[rgba(255,127,50,0.05)]'
+                      : 'border-[var(--text-sub)] border-opacity-30'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
-                  <span className="text-sm text-gray-700">{att.filename}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeAttachment(i)}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                  <div className="space-y-2 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-[var(--text-sub)] opacity-40"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-[var(--text-sub)]">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer font-semibold text-[var(--accent-orange)] hover:text-[#e06a20] transition-colors"
+                      >
+                        <span>Upload files</span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          multiple
+                          accept={ACCEPTED_FILE_EXTENSIONS}
+                          onChange={handleFileUpload}
+                          disabled={uploading}
+                          aria-describedby="attachments-label"
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-[var(--text-sub)] opacity-60">
+                      PDF, DOCX, images up to 50MB each
+                    </p>
+                  </div>
+                </div>
+
+                {uploading && (
+                  <p className="mt-2 text-sm text-[var(--accent-orange)] font-medium">Uploading...</p>
+                )}
+
+                {attachments.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {attachments.map((att, i) => (
+                      <li
+                        key={i}
+                        className="py-2 px-3 flex items-center justify-between bg-[var(--bg-cream)] rounded-[var(--radius-sm)]"
+                      >
+                        <span className="text-sm text-[var(--text-main)] font-medium">{att.filename}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(i)}
+                          className="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </FormGroup>
+
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  disabled={loading || uploading}
+                  className="w-full"
+                >
+                  {loading ? 'Processing...' : 'Post Task & Pay'}
+                </Button>
+              </div>
+            </form>
+          </FormCard>
         </div>
 
-        <div className="pt-4">
-          <button
-            type="submit"
-            disabled={loading || uploading}
-            aria-disabled={loading || uploading}
-            aria-busy={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Post Task & Pay'}
-          </button>
+        {/* Summary Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-10">
+            <Card className="p-6 bg-[var(--accent-yellow)] border-[var(--text-sub)] border-2 shadow-[6px_6px_0px_var(--text-sub)]">
+              <div className="text-lg font-bold text-[var(--text-sub)] mb-4">Task Summary</div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
+                  <span className="text-[var(--text-sub)] opacity-60">Bounty</span>
+                  <span className="font-bold">$5.00</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
+                  <span className="text-[var(--text-sub)] opacity-60">Platform Fee</span>
+                  <span className="font-bold">$0.50</span>
+                </div>
+                <div className="flex justify-between py-3 text-lg">
+                  <span className="font-bold">Total</span>
+                  <span className="font-black text-[var(--accent-orange)]">$5.50</span>
+                </div>
+              </div>
+              <p className="text-xs text-[var(--text-sub)] opacity-50 mt-4">
+                *Final amount calculated at checkout
+              </p>
+            </Card>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

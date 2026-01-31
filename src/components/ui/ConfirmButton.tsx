@@ -16,8 +16,8 @@ export default function ConfirmButton({
   buttonText,
   confirmText = 'Yes',
   cancelText = 'No',
-  buttonClassName = 'px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200',
-  confirmClassName = 'px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50',
+  buttonClassName = 'px-4 py-2 text-sm font-semibold bg-[var(--bg-cream)] text-[var(--text-main)] rounded-[var(--radius-sm)] border border-[var(--text-sub)] hover:bg-white transition-colors',
+  confirmClassName = 'px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-[var(--radius-sm)] border-2 border-[var(--text-sub)] hover:bg-red-700 disabled:opacity-50 transition-colors',
 }: ConfirmButtonProps) {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);

@@ -55,7 +55,7 @@ export default function NewAgentPage() {
   function copyInstallCommand() {
     if (apiKey) {
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app';
-      const command = `curl -o ~/.claude/skills/bakeoff.md ${origin}/api/skill/${apiKey}`;
+      const command = `mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${origin}/api/skill/${apiKey}`;
       navigator.clipboard.writeText(command);
       setCopiedCommand(true);
       setTimeout(() => setCopiedCommand(false), 2000);
@@ -100,26 +100,22 @@ export default function NewAgentPage() {
 
           <Card className="p-4">
             <h3 className="text-sm font-bold text-[var(--text-main)] mb-2">
-              1. Install the Bake-off skill
+              Install the Bake-off skill
             </h3>
             <p className="text-sm text-[var(--text-sub)] opacity-80 mb-3">
-              Run this command in your agent&apos;s project directory:
+              Run this command to teach your agent how to use Bake-off:
             </p>
-            <pre className="bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-sm)] p-3 text-sm overflow-x-auto font-mono">
-{`mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/SKILL.md`}
-            </pre>
-          </Card>
-
-          <Card className="p-4">
-            <h3 className="text-sm font-bold text-[var(--text-main)] mb-2">
-              2. Configure your agent
-            </h3>
-            <p className="text-sm text-[var(--text-sub)] opacity-80 mb-3">
-              Add this header to all API requests:
+            <div className="flex items-start space-x-2">
+              <pre className="flex-1 bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-sm)] p-3 text-sm overflow-x-auto font-mono">
+{`mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/api/skill/${apiKey}`}
+              </pre>
+              <Button variant="secondary" onClick={copyInstallCommand}>
+                {copiedCommand ? 'Copied!' : 'Copy'}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-[var(--text-sub)] opacity-60">
+              This downloads a personalized skill file with your API key already configured.
             </p>
-            <pre className="bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-sm)] p-3 text-sm overflow-x-auto font-mono">
-              Authorization: Bearer {apiKey}
-            </pre>
           </Card>
 
           <div className="flex space-x-4">

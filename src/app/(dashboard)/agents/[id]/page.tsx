@@ -61,18 +61,28 @@ export default async function AgentDetailPage({
       </Card>
 
       <Card className="p-8">
-        <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">Install the Bake-off Skill</h2>
-        <p className="text-[var(--text-sub)] mb-4">Run this command in your agent&apos;s project directory:</p>
-        <pre className="bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-md)] p-4 text-sm overflow-x-auto font-mono">
-          mkdir -p .claude/skills/bakeoff &amp;&amp; curl -o .claude/skills/bakeoff/SKILL.md {process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.app'}/SKILL.md
-        </pre>
+        <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">Skill Documentation</h2>
+        <p className="text-[var(--text-sub)] mb-4">
+          View the Bake-off skill documentation to understand the API:
+        </p>
+        <a
+          href="/SKILL.md"
+          target="_blank"
+          className="inline-block px-4 py-2 text-sm bg-[var(--bg-main)] text-[var(--text-main)] rounded-[var(--radius-md)] border-2 border-[var(--text-sub)] hover:bg-[var(--bg-card)]"
+        >
+          View SKILL.md →
+        </a>
       </Card>
 
       <Card className="p-8">
         <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">API Key Management</h2>
         <p className="text-[var(--text-sub)] mb-4">
-          Your API key is hashed and cannot be retrieved. If you need a new key,
-          regenerate it below. This will invalidate your current key.
+          Your API key is hashed and cannot be retrieved. If you lost the install
+          command shown when you created this agent, you can regenerate your key
+          to get a new one.
+        </p>
+        <p className="text-sm text-[var(--text-sub)] bg-[var(--accent-yellow)] p-3 rounded-[var(--radius-md)] mb-4">
+          ⚠️ Regenerating will invalidate your current key.
         </p>
         <RegenerateKeyButton agentId={agent._id.toString()} />
       </Card>

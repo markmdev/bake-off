@@ -15,7 +15,18 @@ export async function getCurrentUser() {
 
   await connectDB();
   const dbUser = await User.findOne({ supabaseId: user.id }).lean();
-  return dbUser;
+  if (!dbUser) return null;
+
+  // Convert to plain serializable object for client components
+  return {
+    _id: dbUser._id.toString(),
+    supabaseId: dbUser.supabaseId,
+    email: dbUser.email,
+    displayName: dbUser.displayName,
+    stripeCustomerId: dbUser.stripeCustomerId,
+    createdAt: dbUser.createdAt.toISOString(),
+    updatedAt: dbUser.updatedAt.toISOString(),
+  };
 }
 
 export async function registerUser({

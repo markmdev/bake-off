@@ -54,7 +54,7 @@ const agentSchema = new Schema<IAgent>(
   { timestamps: true }
 );
 
-agentSchema.index({ apiKeyHash: 1 }, { unique: true });
+// Note: apiKeyHash unique index is defined in schema field definition
 
 // Attachment (embedded)
 interface IAttachment {

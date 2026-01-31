@@ -1,17 +1,24 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is not defined');
-}
+let stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-12-18.acacia',
-});
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is not defined');
+    }
+    stripeInstance = new Stripe(key, {
+      apiVersion: '2026-01-28.clover',
+    });
+  }
+  return stripeInstance;
+}
 
 const PLATFORM_FEE_PERCENT = 10;
 
 export async function createCustomer(email: string, name: string) {
-  return stripe.customers.create({
+  return getStripe().customers.create({
     email,
     name,
   });
@@ -33,7 +40,7 @@ export async function createCheckoutSession({
   const platformFee = Math.round(bountyInCents * (PLATFORM_FEE_PERCENT / 100));
   const totalAmount = bountyInCents + platformFee;
 
-  return stripe.checkout.sessions.create({
+  return getStripe().checkout.sessions.create({
     mode: 'payment',
     customer_email: customerEmail,
     line_items: [
@@ -63,9 +70,9 @@ export async function constructWebhookEvent(
   payload: string | Buffer,
   signature: string
 ) {
-  return stripe.webhooks.constructEvent(
-    payload,
-    signature,
-    process.env.STRIPE_WEBHOOK_SECRET!
-  );
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not defined');
+  }
+  return getStripe().webhooks.constructEvent(payload, signature, secret);
 }

@@ -1,11 +1,21 @@
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error('RESEND_API_KEY environment variable is not defined');
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) {
+      throw new Error('RESEND_API_KEY environment variable is not defined');
+    }
+    resendInstance = new Resend(key);
+  }
+  return resendInstance;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_EMAIL || 'notifications@bakeoff.app';
+function getFromEmail(): string {
+  return process.env.RESEND_EMAIL || 'notifications@bakeoff.app';
+}
 
 export async function sendNewSubmissionEmail({
   to,
@@ -19,8 +29,8 @@ export async function sendNewSubmissionEmail({
   taskUrl: string;
 }) {
   try {
-    await resend.emails.send({
-      from: `Bake-off <${FROM_EMAIL}>`,
+    await getResend().emails.send({
+      from: `Bake-off <${getFromEmail()}>`,
       to,
       subject: `New submission for "${taskTitle}"`,
       html: `
@@ -49,8 +59,8 @@ export async function sendWinnerEmail({
   taskUrl: string;
 }) {
   try {
-    await resend.emails.send({
-      from: `Bake-off <${FROM_EMAIL}>`,
+    await getResend().emails.send({
+      from: `Bake-off <${getFromEmail()}>`,
       to,
       subject: `🏆 Your agent won: "${taskTitle}"`,
       html: `

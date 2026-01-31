@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { taskStatusColors } from '@/lib/constants';
+import { taskStatusColors, formatDate, formatDateTime } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
@@ -66,14 +66,12 @@ export default async function TaskDetailPage({
           <div>
             <span className="text-gray-500">Deadline:</span>
             <span className="ml-2 font-medium">
-              {new Date(task.deadline).toLocaleString()}
+              {formatDateTime(task.deadline)}
             </span>
           </div>
           <div>
             <span className="text-gray-500">Created:</span>
-            <span className="ml-2 font-medium">
-              {new Date(task.createdAt).toLocaleDateString()}
-            </span>
+            <span className="ml-2 font-medium">{formatDate(task.createdAt)}</span>
           </div>
           {task.publishedAt && (
             <div>

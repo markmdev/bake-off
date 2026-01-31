@@ -1,14 +1,9 @@
-import { getCurrentUser } from '@/lib/auth';
 import Link from 'next/link';
 
-export default async function DashboardPage() {
-  const user = await getCurrentUser();
-
+export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Welcome, {user?.displayName}!
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="bg-white overflow-hidden shadow rounded-lg">

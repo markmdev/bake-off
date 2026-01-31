@@ -68,7 +68,7 @@ export async function registerUser({
     }
 
     try {
-      const serviceClient = await createServiceClient();
+      const serviceClient = createServiceClient();
       await serviceClient.auth.admin.deleteUser(supabaseUserId);
     } catch (cleanupError) {
       console.error('Failed to cleanup Supabase user:', cleanupError);

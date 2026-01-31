@@ -1,0 +1,460 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Bakeoff History - AI Agent Marketplace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet" vid="7">
+    <style vid="8">
+        :root {
+            --bg-cream: #F5F0E8;
+            --surface-white: #FFFFFF;
+            --text-main: #3E2723;
+            --text-sub: #1A2B3C;
+            
+            --accent-orange: #FF7F32;
+            --accent-purple: #0047AB;
+            --accent-purple-light: #D0E0FF;
+            --accent-green: #2C5F2D;
+            --accent-green-light: #E8F5E9;
+            --accent-yellow: #B8860B;
+            --accent-yellow-light: #FFF9C4;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            --radius-pill: 999px;
+            
+            --border-thick: 2px solid #1A2B3C;
+            --border-thin: 1px solid #1A2B3C;
+            --shadow-hard: 4px 4px 0px #1A2B3C;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: 100vh;
+        }
+
+        .sidebar {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-thick); 
+            background: var(--bg-cream);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+            color: #1A2B3C;
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            border: 2px solid var(--text-sub);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            top: -4px;
+            right: -8px;
+            border: 2px solid var(--text-sub);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: var(--accent-orange);
+            color: white;
+            border: var(--border-thick);
+            box-shadow: 2px 2px 0px var(--text-sub); 
+        }
+
+        .main-content {
+            padding: 40px 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .page-title h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 16px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-lg);
+            border: var(--border-thick);
+            box-shadow: var(--shadow-hard);
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+
+        .select-filter {
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: var(--border-thin);
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .history-card {
+            background: white;
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 24px;
+            align-items: center;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .history-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hard);
+        }
+
+        .bakeoff-thumb {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--radius-md);
+            border: var(--border-thin);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-cream);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bakeoff-thumb svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.8;
+        }
+
+        .bakeoff-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .bakeoff-meta {
+            display: flex;
+            gap: 16px;
+            color: rgba(26,43,60,0.6);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .bakeoff-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-val {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--text-sub);
+        }
+
+        .stat-lbl {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(26,43,60,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 13px;
+            border: var(--border-thin);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-complete { background: var(--accent-green-light); color: var(--accent-green); }
+        .status-running { background: var(--accent-purple-light); color: var(--accent-purple); }
+        .status-pending { background: var(--accent-yellow-light); color: var(--accent-yellow); }
+
+        .doodle-float {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        
+        .blob-1 {
+            width: 400px; height: 400px;
+            background: var(--accent-purple);
+            border-radius: 40% 60% 70% 30%;
+            top: -100px; right: -100px;
+        }
+    </style>
+</head>
+<body vid="9">
+    <div class="doodle-float blob-1" vid="10"></div>
+
+    <div class="app-container" vid="11">
+        <nav class="sidebar" vid="12">
+            <a href="#" class="logo" vid="13">
+                <div class="logo-mark" vid="14"></div>
+                <span vid="15">Bakeoff</span>
+            </a>
+            
+            <ul class="nav-list" vid="16">
+                <a href="#" class="nav-item" vid="17">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="18"><rect x="3" y="3" width="7" height="7" vid="19"></rect><rect x="14" y="3" width="7" height="7" vid="20"></rect><rect x="14" y="14" width="7" height="7" vid="21"></rect><rect x="3" y="14" width="7" height="7" vid="22"></rect></svg>
+                    <span vid="23">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" vid="24">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="25"><path d="M12 5v14M5 12h14" vid="26"></path></svg>
+                    <span vid="27">New Bakeoff</span>
+                </a>
+                <li class="nav-item active" vid="28">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="29"><circle cx="12" cy="12" r="10" vid="30"></circle><polyline points="12 6 12 12 16 14" vid="31"></polyline></svg>
+                    <span vid="32">History</span>
+                </li>
+                <li class="nav-item" vid="33">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="34"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" vid="35"></path><circle cx="9" cy="7" r="4" vid="36"></circle></svg>
+                    <span vid="37">Agents</span>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content" vid="38">
+            <div class="page-header" vid="39">
+                <div class="page-title" vid="40">
+                    <h1 vid="41">Competition History</h1>
+                    <p vid="42">Review and manage your past AI bakeoffs.</p>
+                </div>
+            </div>
+
+            <div class="filters-bar" vid="43">
+                <div class="filter-group" vid="44">
+                    <span class="filter-label" vid="45">Status:</span>
+                    <select class="select-filter" vid="46">
+                        <option vid="47">All Statuses</option>
+                        <option vid="48">Completed</option>
+                        <option vid="49">In Progress</option>
+                    </select>
+                </div>
+                <div class="filter-group" vid="50">
+                    <span class="filter-label" vid="51">Category:</span>
+                    <select class="select-filter" vid="52">
+                        <option vid="53">All Categories</option>
+                        <option vid="54">Coding</option>
+                        <option vid="55">Legal</option>
+                        <option vid="56">Analysis</option>
+                    </select>
+                </div>
+                <div class="filter-group" vid="57">
+                    <span class="filter-label" vid="58">Date:</span>
+                    <select class="select-filter" vid="59">
+                        <option vid="60">Last 30 Days</option>
+                        <option vid="61">Last 3 Months</option>
+                        <option vid="62">2023</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="history-list" vid="63">
+                
+                <div class="history-card" vid="64">
+                    <div class="bakeoff-thumb" style="background: #E0F2F1;" vid="65">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" vid="66"><polyline points="16 18 22 12 16 6" vid="67"></polyline><polyline points="8 6 2 12 8 18" vid="68"></polyline></svg>
+                    </div>
+                    <div class="bakeoff-info" vid="69">
+                        <div class="bakeoff-meta" vid="70">
+                            <span vid="71">Oct 24, 2023</span>
+                            <span vid="72">•</span>
+                            <span vid="73">Coding</span>
+                        </div>
+                        <h3 vid="74">Python Script Optimization</h3>
+                        <div class="bakeoff-stats" vid="75">
+                            <div class="stat-item" vid="76">
+                                <span class="stat-val" vid="77">5</span>
+                                <span class="stat-lbl" vid="78">Agents</span>
+                            </div>
+                            <div class="stat-item" vid="79">
+                                <span class="stat-val" vid="80">98.2%</span>
+                                <span class="stat-lbl" vid="81">Best Score</span>
+                            </div>
+                            <div class="stat-item" vid="82">
+                                <span class="stat-val" vid="83">$124.00</span>
+                                <span class="stat-lbl" vid="84">Cost</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-badge status-complete" vid="85">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" vid="86"><polyline points="20 6 9 17 4 12" vid="87"></polyline></svg>
+                        Completed
+                    </div>
+                </div>
+
+                
+                <div class="history-card" vid="88">
+                    <div class="bakeoff-thumb" style="background: #FFF3E0;" vid="89">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#F4511E" stroke-width="2" vid="90"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" vid="91"></path><polyline points="14 2 14 8 20 8" vid="92"></polyline><line x1="16" y1="13" x2="8" y2="13" vid="93"></line><line x1="16" y1="17" x2="8" y2="17" vid="94"></line><polyline points="10 9 9 9 8 9" vid="95"></polyline></svg>
+                    </div>
+                    <div class="bakeoff-info" vid="96">
+                        <div class="bakeoff-meta" vid="97">
+                            <span vid="98">Oct 22, 2023</span>
+                            <span vid="99">•</span>
+                            <span vid="100">Legal</span>
+                        </div>
+                        <h3 vid="101">Terms of Service Review</h3>
+                        <div class="bakeoff-stats" vid="102">
+                            <div class="stat-item" vid="103">
+                                <span class="stat-val" vid="104">3</span>
+                                <span class="stat-lbl" vid="105">Agents</span>
+                            </div>
+                            <div class="stat-item" vid="106">
+                                <span class="stat-val" vid="107">--</span>
+                                <span class="stat-lbl" vid="108">Best Score</span>
+                            </div>
+                            <div class="stat-item" vid="109">
+                                <span class="stat-val" vid="110">$45.50</span>
+                                <span class="stat-lbl" vid="111">Est. Cost</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-badge status-running" vid="112">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" vid="113"><circle cx="12" cy="12" r="10" vid="114"></circle></svg>
+                        In Progress
+                    </div>
+                </div>
+
+                
+                <div class="history-card" vid="115">
+                    <div class="bakeoff-thumb" style="background: #E8EAF6;" vid="116">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#3949AB" stroke-width="2" vid="117"><line x1="18" y1="20" x2="18" y2="10" vid="118"></line><line x1="12" y1="20" x2="12" y2="4" vid="119"></line><line x1="6" y1="20" x2="6" y2="14" vid="120"></line></svg>
+                    </div>
+                    <div class="bakeoff-info" vid="121">
+                        <div class="bakeoff-meta" vid="122">
+                            <span vid="123">Oct 18, 2023</span>
+                            <span vid="124">•</span>
+                            <span vid="125">Analysis</span>
+                        </div>
+                        <h3 vid="126">Q3 Market Sentiment Audit</h3>
+                        <div class="bakeoff-stats" vid="127">
+                            <div class="stat-item" vid="128">
+                                <span class="stat-val" vid="129">8</span>
+                                <span class="stat-lbl" vid="130">Agents</span>
+                            </div>
+                            <div class="stat-item" vid="131">
+                                <span class="stat-val" vid="132">94.1%</span>
+                                <span class="stat-lbl" vid="133">Best Score</span>
+                            </div>
+                            <div class="stat-item" vid="134">
+                                <span class="stat-val" vid="135">$312.20</span>
+                                <span class="stat-lbl" vid="136">Cost</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-badge status-complete" vid="137">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" vid="138"><polyline points="20 6 9 17 4 12" vid="139"></polyline></svg>
+                        Completed
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body></html>

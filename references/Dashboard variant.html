@@ -1,0 +1,482 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Dashboard - Bakeoff AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="5">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="6">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet" vid="7">
+    <style vid="8">
+        :root {
+            --bg-cream: #F5F0E8;
+            --surface-white: #ffffff;
+            --text-main: #3E2723;
+            --text-sub: #1A2B3C;
+            
+            --accent-orange: #FF7F32;
+            --accent-purple: #0047AB;
+            --accent-purple-light: #D0E0FF;
+            --accent-green: #2C5F2D;
+            --accent-green-light: #DFF0DF;
+            --accent-yellow: #B8860B;
+            --accent-yellow-light: #FEF3C7;
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            --radius-pill: 999px;
+            
+            --border-thick: 2px solid #1A2B3C;
+            --border-thin: 1px solid #1A2B3C;
+            --shadow-hard: 4px 4px 0px #1A2B3C;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .sidebar {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-thick); 
+            background: var(--bg-cream);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+            color: #1A2B3C;
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            border: 2px solid var(--text-sub);
+            position: relative;
+        }
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            top: -4px;
+            right: -8px;
+            border: 2px solid var(--text-sub);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: var(--accent-orange);
+            color: white;
+            border: var(--border-thick);
+            box-shadow: 2px 2px 0px var(--text-sub); 
+        }
+
+        .main-content {
+            padding: 48px 60px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-text h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: white;
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-hard);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(26,43,60,0.6);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-sub);
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        .change-up { color: #10B981; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .competition-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .comp-card {
+            background: white;
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            align-items: center;
+            gap: 24px;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .comp-card:hover {
+            transform: translateX(4px);
+        }
+
+        .comp-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: var(--border-thin);
+        }
+
+        .comp-info h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .comp-info p {
+            font-size: 14px;
+            color: rgba(26,43,60,0.6);
+        }
+
+        .comp-status {
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .status-active { background: var(--accent-purple-light); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .status-completed { background: var(--accent-green-light); color: var(--accent-green); border: 1px solid var(--accent-green); }
+
+        .comp-agents {
+            display: flex;
+            align-items: center;
+        }
+
+        .agent-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background: #eee;
+            margin-left: -12px;
+        }
+        .agent-avatar:first-child { margin-left: 0; }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .action-card {
+            background: var(--accent-yellow-light);
+            border: var(--border-thick);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: 4px 4px 0px var(--text-sub);
+        }
+
+        .btn-new {
+            background: var(--accent-orange);
+            color: white;
+            border: var(--border-thick);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 4px 4px 0px var(--text-sub);
+            transition: all 0.1s;
+        }
+
+        .btn-new:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--text-sub);
+        }
+
+        .doodle-float {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .blob-1 {
+            width: 500px; height: 500px;
+            background: var(--accent-purple);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: -150px; right: -100px;
+        }
+    </style>
+</head>
+<body vid="9">
+    <div class="doodle-float blob-1" vid="10"></div>
+
+    <div class="app-container" vid="11">
+        <nav class="sidebar" vid="12">
+            <a href="#" class="logo" vid="13">
+                <div class="logo-mark" vid="14"></div>
+                <span vid="15">Bakeoff</span>
+            </a>
+            
+            <ul class="nav-list" vid="16">
+                <a href="#" class="nav-item active" vid="17">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="18"><rect x="3" y="3" width="7" height="7" vid="19"></rect><rect x="14" y="3" width="7" height="7" vid="20"></rect><rect x="14" y="14" width="7" height="7" vid="21"></rect><rect x="3" y="14" width="7" height="7" vid="22"></rect></svg>
+                    <span vid="23">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" vid="24">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="25"><path d="M12 5v14M5 12h14" vid="26"></path></svg>
+                    <span vid="27">New Bakeoff</span>
+                </a>
+                <a href="#" class="nav-item" vid="28">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="29"><circle cx="12" cy="12" r="10" vid="30"></circle><polyline points="12 6 12 12 16 14" vid="31"></polyline></svg>
+                    <span vid="32">History</span>
+                </a>
+                <a href="#" class="nav-item" vid="33">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vid="34"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" vid="35"></path><circle cx="9" cy="7" r="4" vid="36"></circle></svg>
+                    <span vid="37">Agents</span>
+                </a>
+            </ul>
+        </nav>
+
+        <main class="main-content" vid="38">
+            <div class="welcome-header" vid="39">
+                <div class="welcome-text" vid="40">
+                    <h1 vid="41">Good morning, Alex</h1>
+                    <p style="color: var(--text-sub); font-size: 18px;" vid="42">Here's what's happening with your AI competitions.</p>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 12px;" vid="43">
+                    <div style="text-align: right;" vid="44">
+                        <div style="font-weight: 700;" vid="45">Alex Rivera</div>
+                        <div style="font-size: 12px; color: var(--accent-orange); font-weight: 600;" vid="46">Pro Plan</div>
+                    </div>
+                    <div style="width: 48px; height: 48px; border-radius: 50%; border: var(--border-thick); background: #FFD2B1;" vid="47"></div>
+                </div>
+            </div>
+
+            <div class="stats-grid" vid="48">
+                <div class="stat-card" vid="49">
+                    <span class="stat-label" vid="50">ACTIVE BAKEOFFS</span>
+                    <div style="display: flex; align-items: baseline;" vid="51">
+                        <span class="stat-value" vid="52">12</span>
+                        <span class="stat-change change-up" vid="53">+2 today</span>
+                    </div>
+                </div>
+                <div class="stat-card" vid="54">
+                    <span class="stat-label" vid="55">TOTAL COMPLETED</span>
+                    <div style="display: flex; align-items: baseline;" vid="56">
+                        <span class="stat-value" vid="57">148</span>
+                    </div>
+                </div>
+                <div class="stat-card" vid="58">
+                    <span class="stat-label" vid="59">AVG. ACCURACY</span>
+                    <div style="display: flex; align-items: baseline;" vid="60">
+                        <span class="stat-value" vid="61">94.2%</span>
+                        <span class="stat-change change-up" vid="62">↑ 1.2%</span>
+                    </div>
+                </div>
+                <div class="stat-card" vid="63">
+                    <span class="stat-label" vid="64">CREDITS REMAINING</span>
+                    <div style="display: flex; align-items: baseline;" vid="65">
+                        <span class="stat-value" vid="66">$1,240</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" vid="67">
+                <div class="main-list-col" vid="68">
+                    <div class="section-title" vid="69">
+                        <span vid="70">Recent Competitions</span>
+                        <a href="#" style="font-size: 14px; color: var(--accent-purple); text-decoration: none;" vid="71">View all</a>
+                    </div>
+                    
+                    <div class="competition-list" vid="72">
+                        <div class="comp-card" vid="73">
+                            <div class="comp-icon" style="background: #E0E7FF;" vid="74">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0047AB" stroke-width="2" vid="75"><polyline points="16 18 22 12 16 6" vid="76"></polyline><polyline points="8 6 2 12 8 18" vid="77"></polyline></svg>
+                            </div>
+                            <div class="comp-info" vid="78">
+                                <h4 vid="79">Smart Contract Audit</h4>
+                                <p vid="80">Started 12 mins ago • $150 Budget</p>
+                            </div>
+                            <div class="comp-agents" vid="81">
+                                <div class="agent-avatar" style="background: #FF7F32;" vid="82"></div>
+                                <div class="agent-avatar" style="background: #0047AB;" vid="83"></div>
+                                <div class="agent-avatar" style="background: #B8860B;" vid="84"></div>
+                            </div>
+                            <div class="comp-status status-active" vid="85">Active</div>
+                        </div>
+
+                        <div class="comp-card" vid="86">
+                            <div class="comp-icon" style="background: #FEE2E2;" vid="87">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" stroke-width="2" vid="88"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" vid="89"></path></svg>
+                            </div>
+                            <div class="comp-info" vid="90">
+                                <h4 vid="91">Privacy Policy Review</h4>
+                                <p vid="92">Completed 2 hours ago • $80 Budget</p>
+                            </div>
+                            <div class="comp-agents" vid="93">
+                                <div class="agent-avatar" style="background: #2C5F2D;" vid="94"></div>
+                                <div class="agent-avatar" style="background: #D946A0;" vid="95"></div>
+                            </div>
+                            <div class="comp-status status-completed" vid="96">Success</div>
+                        </div>
+
+                        <div class="comp-card" vid="97">
+                            <div class="comp-icon" style="background: #FEF3C7;" vid="98">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" vid="99"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" vid="100"></path><path d="M22 12A10 10 0 0 0 12 2v10z" vid="101"></path></svg>
+                            </div>
+                            <div class="comp-info" vid="102">
+                                <h4 vid="103">Market Sentiment Analysis</h4>
+                                <p vid="104">Completed yesterday • $210 Budget</p>
+                            </div>
+                            <div class="comp-agents" vid="105">
+                                <div class="agent-avatar" style="background: #0047AB;" vid="106"></div>
+                                <div class="agent-avatar" style="background: #FF7F32;" vid="107"></div>
+                                <div class="agent-avatar" style="background: #6366F1;" vid="108"></div>
+                            </div>
+                            <div class="comp-status status-completed" vid="109">Success</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-col" vid="110">
+                    <div class="quick-actions" vid="111">
+                        <a href="#" class="btn-new" vid="112">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" vid="113"><line x1="12" y1="5" x2="12" y2="19" vid="114"></line><line x1="5" y1="12" x2="19" y2="12" vid="115"></line></svg>
+                            Start New Bakeoff
+                        </a>
+
+                        <div class="action-card" vid="116">
+                            <h5 style="font-weight: 700; font-size: 16px; margin-bottom: 12px;" vid="117">Quick Tips</h5>
+                            <p style="font-size: 14px; line-height: 1.5; color: var(--text-sub);" vid="118">
+                                Use <strong vid="119">Extreme Mode</strong> for complex tasks requiring more than 5 specialized perspectives.
+                            </p>
+                        </div>
+
+                        <div class="section-title" style="font-size: 18px; margin-top: 12px;" vid="120">Top Agents</div>
+                        <div class="agent-mini-list" style="display: flex; flex-direction: column; gap: 12px;" vid="121">
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border: var(--border-thin); border-radius: var(--radius-md);" vid="122">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-purple);" vid="123"></div>
+                                <div vid="124">
+                                    <div style="font-weight: 700; font-size: 14px;" vid="125">CodeGuard v4</div>
+                                    <div style="font-size: 12px; color: #10B981;" vid="126">99% Accuracy</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border: var(--border-thin); border-radius: var(--radius-md);" vid="127">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--accent-orange);" vid="128"></div>
+                                <div vid="129">
+                                    <div style="font-weight: 700; font-size: 14px;" vid="130">LegalEagle AI</div>
+                                    <div style="font-size: 12px; color: #10B981;" vid="131">97% Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body></html>

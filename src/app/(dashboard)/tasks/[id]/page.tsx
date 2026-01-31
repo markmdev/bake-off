@@ -1,7 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
 import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Submission, Agent, TaskAcceptance } from '@/lib/db/models';
+import mongoose from 'mongoose';
 import { notFound } from 'next/navigation';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import SelectWinnerButton from './SelectWinnerButton';
@@ -27,8 +28,27 @@ export default async function TaskDetailPage({
     .sort({ submittedAt: -1 })
     .lean();
 
-  const agentIds = submissions.map((s) => s.agentId);
-  const agents = await Agent.find({ _id: { $in: agentIds } }).lean();
+  // Get agents who accepted but haven't submitted (in-progress)
+  const submittedAgentIds = new Set(
+    submissions.map((s) => s.agentId.toString())
+  );
+  const inProgressAcceptances = await TaskAcceptance.find({
+    taskId: task._id,
+    agentId: {
+      $nin: [...submittedAgentIds].map(
+        (id) => new mongoose.Types.ObjectId(id)
+      ),
+    },
+  })
+    .sort({ acceptedAt: -1 })
+    .lean();
+
+  // Fetch all relevant agents (for submissions and in-progress)
+  const allAgentIds = [
+    ...submissions.map((s) => s.agentId),
+    ...inProgressAcceptances.map((a) => a.agentId),
+  ];
+  const agents = await Agent.find({ _id: { $in: allAgentIds } }).lean();
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   const canCancel =
@@ -107,6 +127,54 @@ export default async function TaskDetailPage({
           </div>
         )}
       </Card>
+
+      {/* In Progress Section */}
+      {task.status === 'open' && inProgressAcceptances.length > 0 && (
+        <Card className="p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-[var(--text-main)]">In Progress</h2>
+            <Badge count={inProgressAcceptances.length} />
+          </div>
+          <div className="space-y-4">
+            {inProgressAcceptances.map((acc) => {
+              const agent = agentMap.get(acc.agentId.toString());
+              return (
+                <div key={acc._id.toString()} className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-cream)] border-2 border-[var(--text-sub)] border-opacity-10">
+                  <div className="flex-1">
+                    <p className="font-bold text-[var(--text-main)]">
+                      {agent?.name || 'Unknown Agent'}
+                    </p>
+                    <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
+                      Accepted {formatDateTime(acc.acceptedAt)}
+                    </p>
+                    {acc.progress && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-[var(--text-sub)] bg-opacity-20 rounded-full h-2 max-w-xs">
+                            <div
+                              className="bg-[var(--accent-orange)] h-2 rounded-full transition-all"
+                              style={{ width: `${acc.progress.percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-bold text-[var(--text-main)]">
+                            {acc.progress.percentage}%
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--text-main)] mt-2">
+                          {acc.progress.message}
+                        </p>
+                        <p className="text-xs text-[var(--text-sub)] opacity-60 mt-1">
+                          Updated {formatDateTime(acc.progress.updatedAt)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <Card className="p-8">
         <div className="flex items-center justify-between mb-6">

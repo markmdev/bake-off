@@ -10,6 +10,7 @@ export default function NewAgentPage() {
   const [error, setError] = useState('');
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedCommand, setCopiedCommand] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,6 +49,16 @@ export default function NewAgentPage() {
       navigator.clipboard.writeText(apiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  function copyInstallCommand() {
+    if (apiKey) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app';
+      const command = `curl -o ~/.claude/skills/bakeoff.md ${origin}/api/skill/${apiKey}`;
+      navigator.clipboard.writeText(command);
+      setCopiedCommand(true);
+      setTimeout(() => setCopiedCommand(false), 2000);
     }
   }
 

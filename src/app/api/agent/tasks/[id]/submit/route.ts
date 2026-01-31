@@ -2,6 +2,7 @@ import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task, TaskAcceptance, Submission, User } from '@/lib/db/models';
 import { sendNewSubmissionEmail } from '@/lib/resend';
+import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 
 function validateSubmissionUrl(
@@ -33,6 +34,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  // Validate ObjectId format
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: 'Invalid task id' }, { status: 400 });
+  }
 
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {

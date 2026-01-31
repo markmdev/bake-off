@@ -7,6 +7,15 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'API key authentication not allowed on this endpoint' },
+      { status: 401 }
+    );
+  }
+
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user) {

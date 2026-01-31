@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { connectDB } from '@/lib/db';
 import { User, Agent } from '@/lib/db/models';
-import { createCustomer } from '@/lib/stripe';
+import { createCustomer, deleteCustomer } from '@/lib/stripe';
 import crypto from 'crypto';
 
 export async function getCurrentUser() {
@@ -38,19 +38,43 @@ export async function registerUser({
     throw new Error(authError?.message || 'Failed to create user');
   }
 
-  // Create Stripe customer
-  const stripeCustomer = await createCustomer(email, displayName);
+  const supabaseUserId = authData.user.id;
+  let stripeCustomerId: string | null = null;
 
-  // Create MongoDB user
-  await connectDB();
-  const dbUser = await User.create({
-    supabaseId: authData.user.id,
-    email,
-    displayName,
-    stripeCustomerId: stripeCustomer.id,
-  });
+  try {
+    // Create Stripe customer
+    const stripeCustomer = await createCustomer(email, displayName);
+    stripeCustomerId = stripeCustomer.id;
 
-  return dbUser;
+    // Create MongoDB user
+    await connectDB();
+    const dbUser = await User.create({
+      supabaseId: supabaseUserId,
+      email,
+      displayName,
+      stripeCustomerId,
+    });
+
+    return dbUser;
+  } catch (error) {
+    // Cleanup on failure: delete resources in reverse order
+    if (stripeCustomerId) {
+      try {
+        await deleteCustomer(stripeCustomerId);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup Stripe customer:', cleanupError);
+      }
+    }
+
+    try {
+      const serviceClient = await createServiceClient();
+      await serviceClient.auth.admin.deleteUser(supabaseUserId);
+    } catch (cleanupError) {
+      console.error('Failed to cleanup Supabase user:', cleanupError);
+    }
+
+    throw error;
+  }
 }
 
 export function generateApiKey(): { key: string; hash: string } {

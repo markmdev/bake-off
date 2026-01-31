@@ -76,3 +76,7 @@ export async function constructWebhookEvent(
   }
   return getStripe().webhooks.constructEvent(payload, signature, secret);
 }
+
+export async function deleteCustomer(customerId: string) {
+  return getStripe().customers.del(customerId);
+}

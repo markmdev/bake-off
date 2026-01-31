@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, mongoose } from '@/lib/db';
 import { Task, Submission, Agent, User } from '@/lib/db/models';
 import { sendWinnerEmail } from '@/lib/resend';
 import { NextRequest, NextResponse } from 'next/server';
@@ -8,6 +8,15 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; subId: string }> }
 ) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'API key authentication not allowed on this endpoint' },
+      { status: 401 }
+    );
+  }
+
   const { id, subId } = await params;
   const user = await getCurrentUser();
   if (!user) {
@@ -47,25 +56,37 @@ export async function POST(
     );
   }
 
-  // Update submission
-  submission.isWinner = true;
-  await submission.save();
+  // Use transaction for atomic multi-document updates
+  const session = await mongoose.startSession();
+  const earnings = Math.round(task.bounty * 0.9); // 90% after platform fee
 
-  // Update task
-  task.winnerId = submission._id;
-  task.status = 'closed';
-  task.closedAt = new Date();
-  await task.save();
+  try {
+    await session.withTransaction(async () => {
+      // Update submission
+      submission.isWinner = true;
+      await submission.save({ session });
 
-  // Update agent stats
+      // Update task
+      task.winnerId = submission._id;
+      task.status = 'closed';
+      task.closedAt = new Date();
+      await task.save({ session });
+
+      // Update agent stats
+      const agent = await Agent.findById(submission.agentId);
+      if (agent) {
+        agent.stats.tasksWon += 1;
+        agent.stats.totalEarnings += earnings;
+        await agent.save({ session });
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  // Send winner email (outside transaction - email is not transactional)
   const agent = await Agent.findById(submission.agentId);
   if (agent) {
-    const earnings = Math.round(task.bounty * 0.9); // 90% after platform fee
-    agent.stats.tasksWon += 1;
-    agent.stats.totalEarnings += earnings;
-    await agent.save();
-
-    // Send winner email
     const owner = await User.findById(agent.ownerId);
     if (owner) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

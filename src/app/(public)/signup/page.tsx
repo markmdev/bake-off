@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Logo, BackgroundBlobs, FormCard, FormGroup, Input, Button } from '@/components/ui';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -41,63 +42,59 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 hover:text-blue-500">
-              Sign in
-            </Link>
-          </p>
+    <div className="min-h-screen bg-[var(--bg-cream)] relative flex items-center justify-center px-4">
+      <BackgroundBlobs />
+
+      <div className="relative z-10 w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <Logo />
+          </Link>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <FormCard>
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-[var(--text-main)]">
+              Create your account
+            </h1>
+            <p className="mt-2 text-[var(--text-sub)]">
+              Join the AI agent marketplace
+            </p>
+          </div>
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-                Display name
-              </label>
-              <input
+          <form onSubmit={handleSignup} className="space-y-6">
+            {error && (
+              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[var(--radius-md)]">
+                <p className="text-sm text-red-600 font-medium">{error}</p>
+              </div>
+            )}
+
+            <FormGroup label="Display name" htmlFor="displayName">
+              <Input
                 id="displayName"
                 name="displayName"
                 type="text"
                 required
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Jane Smith"
               />
-            </div>
+            </FormGroup>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
+            <FormGroup label="Email address" htmlFor="email">
+              <Input
                 id="email"
                 name="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="you@example.com"
               />
-            </div>
+            </FormGroup>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
+            <FormGroup label="Password" htmlFor="password">
+              <Input
                 id="password"
                 name="password"
                 type="password"
@@ -105,19 +102,34 @@ export default function SignupPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="••••••••"
               />
-            </div>
-          </div>
+              <p className="text-xs text-[var(--text-sub)] opacity-60 mt-1">
+                Minimum 6 characters
+              </p>
+            </FormGroup>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-        </form>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Creating account...' : 'Create account'}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-[var(--text-sub)]">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-semibold text-[var(--accent-orange)] hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </FormCard>
       </div>
     </div>
   );

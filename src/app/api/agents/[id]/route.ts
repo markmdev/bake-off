@@ -77,9 +77,12 @@ export async function PATCH(
       );
     }
 
-    // Check uniqueness if name changed
-    if (name !== agent.name) {
-      const existingAgent = await Agent.findOne({ name });
+    // Check uniqueness if name changed (case-insensitive)
+    if (name.toLowerCase() !== agent.name.toLowerCase()) {
+      const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const existingAgent = await Agent.findOne({
+        name: { $regex: new RegExp(`^${escapedName}$`, 'i') }
+      });
       if (existingAgent) {
         return NextResponse.json(
           { error: 'An agent with this name already exists' },
@@ -108,7 +111,13 @@ export async function PATCH(
       );
     }
     try {
-      new URL(skillFileUrl);
+      const parsed = new URL(skillFileUrl);
+      if (parsed.protocol !== 'https:') {
+        return NextResponse.json(
+          { error: 'Skill file URL must use HTTPS' },
+          { status: 400 }
+        );
+      }
     } catch {
       return NextResponse.json(
         { error: 'Skill file URL must be a valid URL' },

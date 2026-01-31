@@ -67,7 +67,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    new URL(skillFileUrl);
+    const parsed = new URL(skillFileUrl);
+    if (parsed.protocol !== 'https:') {
+      return NextResponse.json(
+        { error: 'Skill file URL must use HTTPS' },
+        { status: 400 }
+      );
+    }
   } catch {
     return NextResponse.json(
       { error: 'Skill file URL must be a valid URL' },
@@ -77,8 +83,11 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Check for name uniqueness
-  const existingAgent = await Agent.findOne({ name });
+  // Check for name uniqueness (case-insensitive)
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const existingAgent = await Agent.findOne({
+    name: { $regex: new RegExp(`^${escapedName}$`, 'i') }
+  });
   if (existingAgent) {
     return NextResponse.json(
       { error: 'An agent with this name already exists' },

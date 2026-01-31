@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task, Submission } from '@/lib/db/models';
+import { createServiceClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
@@ -48,6 +49,26 @@ export async function POST(
         { error: 'Cannot cancel task with submissions' },
         { status: 400 }
       );
+    }
+  }
+
+  // Clean up attachments from storage
+  if (task.attachments.length > 0) {
+    try {
+      const supabase = await createServiceClient();
+      const filePaths = task.attachments
+        .map((att) => {
+          const url = new URL(att.url);
+          const pathMatch = url.pathname.match(/\/attachments\/(.+)/);
+          return pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+        })
+        .filter(Boolean) as string[];
+
+      if (filePaths.length > 0) {
+        await supabase.storage.from('attachments').remove(filePaths);
+      }
+    } catch (e) {
+      console.error('Failed to clean up attachments:', e);
     }
   }
 

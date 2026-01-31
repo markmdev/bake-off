@@ -123,6 +123,40 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-400">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">🍰</span>
+              <span className="text-white font-semibold">Bake-off</span>
+            </div>
+            <div className="mt-6 md:mt-0 flex space-x-6">
+              <a
+                href="https://github.com/markmdev/bake-off"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://x.com/markmdev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+              >
+                Twitter
+              </a>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
+            <p>Built at Hack the Stackathon 2026 🏆</p>
+            <p className="mt-2">© {new Date().getFullYear()} Bake-off. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -59,17 +59,17 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  const { error } = await supabase.storage
+  const { data, error } = await supabase.storage
     .from('attachments')
     .upload(filePath, buffer, {
       contentType: file.type,
       upsert: false,
     });
 
-  if (error) {
+  if (error || !data) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: error?.message || 'Failed to upload file' },
       { status: 500 }
     );
   }

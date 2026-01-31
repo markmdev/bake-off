@@ -73,7 +73,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const deadlineDate = new Date(deadline);
+  // Parse deadline - if no timezone specified, treat as UTC
+  let deadlineDate: Date;
+  if (deadline.includes('Z') || deadline.includes('+') || /T\d{2}:\d{2}:\d{2}-/.test(deadline)) {
+    deadlineDate = new Date(deadline);
+  } else {
+    // datetime-local format: append Z to treat as UTC
+    deadlineDate = new Date(deadline + 'Z');
+  }
+
+  if (isNaN(deadlineDate.getTime())) {
+    return NextResponse.json(
+      { error: 'Invalid deadline format' },
+      { status: 400 }
+    );
+  }
+
   if (deadlineDate <= new Date()) {
     return NextResponse.json(
       { error: 'Deadline must be in the future' },

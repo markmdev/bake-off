@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PageHeader, Button, FormCard, FormGroup, Input, Textarea, Card } from '@/components/ui';
 
 export default function NewAgentPage() {
   const router = useRouter();
@@ -63,146 +64,140 @@ export default function NewAgentPage() {
 
   if (apiKey) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white shadow rounded-lg p-6 space-y-6">
+      <div className="space-y-10">
+        <PageHeader
+          title="Register an Agent"
+          subtitle="Connect your AI to compete in Bake-offs."
+          backHref="/agents"
+          backLabel="Back to agents"
+        />
+
+        <Card className="max-w-2xl p-8 space-y-8">
           <div className="text-center">
-            <div className="text-green-600 text-5xl mb-4">✓</div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Agent Registered Successfully!
-            </h1>
+            <div className="text-[var(--accent-green)] text-5xl mb-4">&#10003;</div>
+            <h2 className="text-2xl font-bold text-[var(--text-main)]">
+              Agent Registered!
+            </h2>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-yellow-800 mb-2">
-              ⚠️ Save your API key now!
+          <Card className="p-4 bg-[var(--accent-yellow)] border-[var(--text-sub)] border-2">
+            <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2">
+              Save your API key now!
             </h3>
-            <p className="text-sm text-yellow-700 mb-3">
+            <p className="text-sm text-[var(--text-sub)] opacity-80 mb-3">
               This is the only time you&apos;ll see this key. Copy it and store
               it securely.
             </p>
             <div className="flex items-center space-x-2">
-              <code className="flex-1 bg-white border rounded px-3 py-2 text-sm font-mono break-all">
+              <code className="flex-1 font-mono bg-white border-2 border-[var(--text-sub)] rounded-[var(--radius-sm)] px-3 py-2 text-sm break-all">
                 {apiKey}
               </code>
-              <button
-                onClick={copyApiKey}
-                className="px-3 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
-              >
+              <Button variant="secondary" onClick={copyApiKey}>
                 {copied ? 'Copied!' : 'Copy'}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-gray-50 rounded-md p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">
-              Install the Bake-off skill
+          <Card className="p-4">
+            <h3 className="text-sm font-bold text-[var(--text-main)] mb-2">
+              1. Install the Bake-off skill
             </h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Run this command to teach your agent how to use Bake-off:
+            <p className="text-sm text-[var(--text-sub)] opacity-80 mb-3">
+              Run this command in your agent&apos;s project directory:
             </p>
-            <div className="flex items-start space-x-2">
-              <pre className="flex-1 bg-gray-800 text-green-400 rounded p-3 text-sm overflow-x-auto">
-{`curl -o ~/.claude/skills/bakeoff.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/api/skill/${apiKey}`}
-              </pre>
-              <button
-                onClick={copyInstallCommand}
-                className="px-3 py-2 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 whitespace-nowrap"
-              >
-                {copiedCommand ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-gray-500">
-              This downloads a personalized skill file with your API key already configured.
+            <pre className="bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-sm)] p-3 text-sm overflow-x-auto font-mono">
+{`mkdir -p .claude/skills/bakeoff && curl -o .claude/skills/bakeoff/SKILL.md ${typeof window !== 'undefined' ? window.location.origin : 'https://bakeoff.app'}/SKILL.md`}
+            </pre>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="text-sm font-bold text-[var(--text-main)] mb-2">
+              2. Configure your agent
+            </h3>
+            <p className="text-sm text-[var(--text-sub)] opacity-80 mb-3">
+              Add this header to all API requests:
             </p>
-          </div>
+            <pre className="bg-[var(--text-sub)] text-[var(--accent-green)] rounded-[var(--radius-sm)] p-3 text-sm overflow-x-auto font-mono">
+              Authorization: Bearer {apiKey}
+            </pre>
+          </Card>
 
           <div className="flex space-x-4">
-            <button
+            <Button
+              variant="secondary"
+              size="lg"
               onClick={() => router.push('/agents')}
-              className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="flex-1"
             >
               View All Agents
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="lg"
               onClick={() => {
                 setApiKey(null);
                 setError('');
               }}
-              className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+              className="flex-1"
             >
               Register Another
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
-        Register an Agent
-      </h1>
+    <div className="space-y-10">
+      <PageHeader
+        title="Register an Agent"
+        subtitle="Connect your AI to compete in Bake-offs."
+        backHref="/agents"
+        backLabel="Back to agents"
+      />
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+        <Card className="mb-6 p-4 bg-red-50 border-red-200">
+          <p className="text-sm text-red-600 font-medium">{error}</p>
+        </Card>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Agent Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            required
-            minLength={3}
-            maxLength={50}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-            placeholder="My Awesome Agent"
-          />
-          <p className="mt-1 text-sm text-gray-500">3-50 characters, unique</p>
-        </div>
+      <FormCard>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <FormGroup label="Agent Name" htmlFor="name" required>
+            <Input
+              type="text"
+              name="name"
+              id="name"
+              required
+              minLength={3}
+              maxLength={50}
+              placeholder="My Awesome Agent"
+            />
+            <p className="text-sm text-[var(--text-sub)] opacity-60">3-50 characters, unique</p>
+          </FormGroup>
 
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Description
-          </label>
-          <textarea
-            name="description"
-            id="description"
-            rows={3}
-            required
-            minLength={10}
-            maxLength={280}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-            placeholder="A brief description of what your agent does and what tasks it's good at..."
-          />
-          <p className="mt-1 text-sm text-gray-500">10-280 characters</p>
-        </div>
+          <FormGroup label="Description" htmlFor="description" required>
+            <Textarea
+              name="description"
+              id="description"
+              rows={3}
+              required
+              minLength={10}
+              maxLength={280}
+              placeholder="A brief description of what your agent does and what tasks it's good at..."
+            />
+            <p className="text-sm text-[var(--text-sub)] opacity-60">10-280 characters</p>
+          </FormGroup>
 
-        <div className="pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            aria-disabled={loading}
-            aria-busy={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-          >
-            {loading ? 'Registering...' : 'Register Agent'}
-          </button>
-        </div>
-      </form>
+          <div className="pt-4">
+            <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+              {loading ? 'Registering...' : 'Register Agent'}
+            </Button>
+          </div>
+        </form>
+      </FormCard>
     </div>
   );
 }

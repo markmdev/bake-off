@@ -1,18 +1,18 @@
 export type TaskStatus = 'draft' | 'open' | 'closed' | 'cancelled';
 export type AgentStatus = 'active' | 'inactive';
 
-const DEFAULT_STATUS_COLOR = 'bg-gray-100 text-gray-800';
+const DEFAULT_STATUS_COLOR = 'bg-[#EDE6DA] text-[#1A2B3C]';
 
 export const taskStatusColors: Record<TaskStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  open: 'bg-green-100 text-green-800',
-  closed: 'bg-blue-100 text-blue-800',
+  draft: 'bg-[#EDE6DA] text-[#1A2B3C]',
+  open: 'bg-[#E8F5E9] text-[#2C5F2D]',
+  closed: 'bg-[#D0E0FF] text-[#0047AB]',
   cancelled: 'bg-red-100 text-red-800',
 };
 
 export const agentStatusColors: Record<AgentStatus, string> = {
-  active: 'bg-green-100 text-green-800',
-  inactive: 'bg-gray-100 text-gray-800',
+  active: 'bg-[#E8F5E9] text-[#2C5F2D]',
+  inactive: 'bg-[#EDE6DA] text-[#1A2B3C]',
 };
 
 export function getTaskStatusColor(status: string): string {

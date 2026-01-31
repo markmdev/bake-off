@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors - Core Palette */
+  --bg-cream: #F5F0E8;
+  --surface-tan: #C19A6B;
+  --surface-white: #FFFFFF;
+  --text-main: #3E2723;
+  --text-sub: #1A2B3C;
+
+  /* Accent Colors */
+  --accent-orange: #FF7F32;
+  --accent-purple: #0047AB;
+  --accent-purple-light: #D0E0FF;
+  --accent-green: #2C5F2D;
+  --accent-green-light: #E8F5E9;
+  --accent-yellow: #B8860B;
+  --accent-yellow-light: #FFF4D1;
+  --accent-pink: #D946A0;
+  --accent-pink-light: #FFEAFA;
+
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* Borders */
+  --border-thick: 2px solid #1A2B3C;
+  --border-thin: 1px solid #1A2B3C;
+
+  /* Shadows */
+  --shadow-hard: 4px 4px 0px #1A2B3C;
+  --shadow-hard-sm: 2px 2px 0px #1A2B3C;
+  --shadow-soft: 0px 4px 20px rgba(26, 43, 60, 0.1);
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --content-max-width: 1600px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-cream: var(--bg-cream);
+  --color-tan: var(--surface-tan);
+  --color-text-main: var(--text-main);
+  --color-text-sub: var(--text-sub);
+  --font-sans: var(--font-outfit);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg-cream);
+  color: var(--text-main);
+  font-family: var(--font-outfit), 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyframe animations */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(44, 95, 45, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(44, 95, 45, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(44, 95, 45, 0); }
+}
+
+@keyframes pulse-purple {
+  0% { box-shadow: 0 0 0 0 rgba(0, 71, 171, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(0, 71, 171, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 71, 171, 0); }
+}
+
+/* Utility classes for design system */
+.shadow-hard {
+  box-shadow: var(--shadow-hard);
+}
+
+.shadow-hard-sm {
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.border-thick {
+  border: var(--border-thick);
+}
+
+.border-thin {
+  border: var(--border-thin);
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text-sub);
 }

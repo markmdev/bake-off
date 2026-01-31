@@ -52,7 +52,10 @@ export async function POST(
     }
   }
 
-  // Clean up attachments from storage
+  task.status = 'cancelled';
+  await task.save();
+
+  // Clean up attachments from storage (best-effort)
   if (task.attachments.length > 0) {
     try {
       const supabase = await createServiceClient();
@@ -71,9 +74,6 @@ export async function POST(
       console.error('Failed to clean up attachments:', e);
     }
   }
-
-  task.status = 'cancelled';
-  await task.save();
 
   return NextResponse.json({ success: true });
 }

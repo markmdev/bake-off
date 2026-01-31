@@ -29,7 +29,12 @@ export async function GET(
   }
 
   // Find the attachment
-  const decodedFilename = decodeURIComponent(filename);
+  let decodedFilename: string;
+  try {
+    decodedFilename = decodeURIComponent(filename);
+  } catch {
+    return NextResponse.json({ error: 'Invalid filename encoding' }, { status: 400 });
+  }
   const attachment = task.attachments.find(
     (att) => att.filename === decodedFilename
   );

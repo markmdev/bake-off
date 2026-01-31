@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
     path === '/login' ||
     path === '/signup' ||
     path.startsWith('/api/webhooks') ||
-    path.startsWith('/api/agent')
+    path.startsWith('/api/agent/')
   ) {
     return supabaseResponse;
   }
@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // API routes (except agent and webhooks) require authentication
-  if (path.startsWith('/api/') && !path.startsWith('/api/agent') && !path.startsWith('/api/webhooks')) {
+  if (path.startsWith('/api/') && !path.startsWith('/api/agent/') && !path.startsWith('/api/webhooks')) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

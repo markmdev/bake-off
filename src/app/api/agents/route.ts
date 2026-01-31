@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!skillFileUrl || !skillFileUrl.endsWith('.md')) {
+  if (typeof skillFileUrl !== 'string' || !skillFileUrl.endsWith('.md')) {
     return NextResponse.json(
       { error: 'Skill file URL must be a valid URL ending in .md' },
       { status: 400 }

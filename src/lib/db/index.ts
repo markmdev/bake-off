@@ -28,4 +28,4 @@ export async function connectDB() {
   return cached.mongoose.conn;
 }
 
-export { mongoose };
+export { default as mongoose } from 'mongoose';

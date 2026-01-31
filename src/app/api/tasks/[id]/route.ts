@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB, mongoose } from '@/lib/db';
 import { Task } from '@/lib/db/models';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -17,6 +17,11 @@ export async function GET(
   }
 
   const { id } = await params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: 'Invalid task id' }, { status: 400 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -50,6 +55,11 @@ export async function PATCH(
   }
 
   const { id } = await params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: 'Invalid task id' }, { status: 400 });
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -108,6 +118,12 @@ export async function PATCH(
 
   if (deadline !== undefined) {
     const deadlineDate = new Date(deadline);
+    if (isNaN(deadlineDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid deadline' },
+        { status: 400 }
+      );
+    }
     if (deadlineDate <= new Date()) {
       return NextResponse.json(
         { error: 'Deadline must be in the future' },

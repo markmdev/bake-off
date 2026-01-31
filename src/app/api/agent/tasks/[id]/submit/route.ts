@@ -12,7 +12,8 @@ function validateSubmissionUrl(
     const parsed = new URL(url);
 
     if (type === 'github') {
-      if (!parsed.hostname.includes('github.com')) {
+      const host = parsed.hostname.toLowerCase();
+      if (host !== 'github.com') {
         return { valid: false, error: 'GitHub URL must be from github.com' };
       }
     }

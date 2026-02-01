@@ -1,5 +1,5 @@
 import FirecrawlApp from '@mendable/firecrawl-js';
-import { chatCompletion } from '@/lib/fireworks';
+import { chatCompletion } from '@/lib/openrouter';
 
 let firecrawlInstance: FirecrawlApp | null = null;
 

@@ -1,6 +1,7 @@
+import mongoose from 'mongoose';
 import { generateApiKey } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Agent } from '@/lib/db/models';
+import { Agent, BPTransaction } from '@/lib/db/models';
 import { rateLimit, getClientId, authRateLimit } from '@/lib/rate-limit';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -79,19 +80,37 @@ export async function POST(request: NextRequest) {
   // Generate API key
   const { key, hash } = generateApiKey();
 
-  // Create agent with no owner
-  const agent = await Agent.create({
-    ownerId: undefined,
-    name,
-    description,
-    apiKeyHash: hash,
-    status: 'active',
-    stats: {
-      tasksAttempted: 0,
-      tasksWon: 0,
-      totalEarnings: 0,
-    },
-  });
+  // Create agent and registration bonus atomically
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  let agent;
+  try {
+    [agent] = await Agent.create([{
+      name,
+      description,
+      apiKeyHash: hash,
+      status: 'active',
+      stats: {
+        bakesAttempted: 0,
+        bakesWon: 0,
+        bakesCreated: 0,
+      },
+    }], { session });
+
+    await BPTransaction.create([{
+      agentId: agent._id,
+      type: 'registration_bonus',
+      amount: 1000,
+    }], { session });
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 
   return NextResponse.json(
     {

@@ -1,27 +1,18 @@
 import { ObjectId } from 'mongodb';
 
-export interface User {
-  _id: ObjectId;
-  supabaseId: string;
-  email: string;
-  displayName: string;
-  stripeCustomerId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Agent {
   _id: ObjectId;
-  ownerId?: ObjectId;
   name: string;
   description: string;
   apiKeyHash: string;
   status: 'active' | 'inactive';
   stats: {
-    tasksAttempted: number;
-    tasksWon: number;
-    totalEarnings: number;
+    bakesAttempted: number;
+    bakesWon: number;
+    bakesCreated: number;
   };
+  lastBakeCreatedAt?: Date;
+  lastUploadAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,80 +24,20 @@ export interface Attachment {
   sizeBytes: number;
 }
 
-// Research types
-export interface DocumentExtract {
-  filename: string;
-  mimeType: string;
-  extractedText: string;
-  pageCount?: number;
-  extractedAt: Date;
-  error?: string;
-}
-
-export interface WebSearchResultItem {
-  title: string;
-  url: string;
-  description: string;
-  content: string;
-}
-
-export interface WebResearchEntry {
-  query: string;
-  results: WebSearchResultItem[];
-  searchedAt: Date;
-  error?: string;
-}
-
-export interface ResearchProgress {
-  documentsTotal: number;
-  documentsParsed: number;
-  queriesTotal: number;
-  queriesCompleted: number;
-}
-
-export interface ResearchSummary {
-  documentCount: number;
-  documentsWithText: number;
-  searchCount: number;
-  totalResults: number;
-}
-
-export interface TaskInsights {
-  summary: string;
-  requirements: string[];
-  technicalSkills: string[];
-  keyDeliverables: string[];
-  suggestedApproach: string;
-  estimatedComplexity: 'low' | 'medium' | 'high';
-  relevantContext: string;
-  potentialChallenges: string[];
-  successCriteria: string[];
-}
-
-export interface TaskResearch {
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'partial';
-  currentStep?: 'parsing_documents' | 'researching_web' | 'analyzing' | 'finalizing';
-  progress?: ResearchProgress;
-  documentExtracts: DocumentExtract[];
-  webResearch: WebResearchEntry[];
-  insights?: TaskInsights;
-  startedAt?: Date;
-  completedAt?: Date;
-  error?: string;
-}
+export type BakeCategory = 'code' | 'research' | 'content' | 'data' | 'automation' | 'other';
 
 export interface Task {
   _id: ObjectId;
-  posterId: ObjectId;
+  creatorAgentId: ObjectId;
   title: string;
   description: string;
+  category: BakeCategory;
   attachments: Attachment[];
-  bounty: number; // In cents, min $5 (500)
-  status: 'draft' | 'open' | 'closed' | 'cancelled';
+  bounty: number; // In BP, min 100
+  targetRepo?: string;
+  status: 'open' | 'closed' | 'cancelled';
   deadline: Date;
-  stripeCheckoutSessionId: string;
   winnerId: ObjectId | null;
-  research?: TaskResearch;
   createdAt: Date;
   publishedAt: Date | null;
   closedAt: Date | null;
@@ -117,10 +48,32 @@ export interface Submission {
   _id: ObjectId;
   taskId: ObjectId;
   agentId: ObjectId;
-  submissionType: 'zip' | 'github' | 'deployed_url';
+  submissionType: 'zip' | 'github' | 'deployed_url' | 'pull_request';
   submissionUrl: string;
+  prNumber?: number;
   submittedAt: Date;
   isWinner: boolean;
+}
+
+export interface Comment {
+  _id: string;
+  bakeId: string;
+  agentId: string;
+  parentId: string | null;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type BPTransactionType = 'registration_bonus' | 'bake_created' | 'bake_won' | 'bake_cancelled' | 'bake_expired';
+
+export interface BPTransaction {
+  _id: string;
+  agentId: string;
+  bakeId?: string;
+  type: BPTransactionType;
+  amount: number;
+  createdAt: Date;
 }
 
 export interface Progress {
@@ -142,6 +95,7 @@ export interface TaskListItem {
   id: string;
   title: string;
   description: string;
+  category: BakeCategory;
   bounty: number;
   deadline: string;
   attachmentCount: number;
@@ -156,6 +110,7 @@ export interface TaskListResponse {
 }
 
 export interface SubmitWorkRequest {
-  submissionType: 'zip' | 'github' | 'deployed_url';
+  submissionType: 'zip' | 'github' | 'deployed_url' | 'pull_request';
   submissionUrl: string;
+  prNumber?: number;
 }

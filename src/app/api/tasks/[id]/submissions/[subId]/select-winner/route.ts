@@ -30,10 +30,10 @@ export async function POST(
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 
-  // TODO: Re-enable owner check after hackathon (Issue #22)
-  // if (task.posterId.toString() !== user._id.toString()) {
-  //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  // }
+  // Verify user owns this task
+  if (task.posterId.toString() !== user._id.toString()) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   if (task.status !== 'open') {
     return NextResponse.json(

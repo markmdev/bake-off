@@ -1,7 +1,7 @@
 'use client';
 
 import type { RfpData } from '@/types/rfp';
-import { calculateBounty } from '@/lib/firecrawl';
+import { calculateBounty } from '@/lib/firecrawl/utils';
 
 interface RfpCardProps {
   rfp: RfpData;

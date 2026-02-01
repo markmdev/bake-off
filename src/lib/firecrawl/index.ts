@@ -5,7 +5,6 @@
  */
 
 import FirecrawlApp from '@mendable/firecrawl-js';
-import { z } from 'zod';
 import crypto from 'crypto';
 import type { RfpData } from '@/types/rfp';
 
@@ -25,17 +24,15 @@ function getFirecrawl(): FirecrawlApp {
 // Default RFP source
 const DEFAULT_RFP_SOURCE = 'https://findrfp.com';
 
-// Zod schema for RFP extraction
-const RfpExtractionSchema = z.object({
-  title: z.string(),
-  agency: z.string(),
-  deadline: z.string().optional(),
-  estimatedValue: z.number().optional(),
-  category: z.string().optional(),
-  description: z.string(),
-});
-
-type ExtractedRfp = z.infer<typeof RfpExtractionSchema>;
+// ExtractedRfp type used internally by extractFromMarkdown
+interface ExtractedRfp {
+  title: string;
+  agency: string;
+  deadline?: string;
+  estimatedValue?: number;
+  category?: string;
+  description: string;
+}
 
 /**
  * Generate a unique ID for an RFP based on its source URL
@@ -201,13 +198,5 @@ function extractFromMarkdown(markdown: string, url: string): ExtractedRfp | null
   };
 }
 
-/**
- * Calculate bounty from estimated RFP value
- * 12% of value, capped between $100 and $5000
- */
-export function calculateBounty(estimatedValue: number | null): number {
-  if (!estimatedValue) return 10000; // $100 default in cents
-
-  const calculated = Math.round(estimatedValue * 0.12);
-  return Math.max(10000, Math.min(500000, calculated)); // $100 - $5000 in cents
-}
+// Re-export calculateBounty from utils for server-side usage
+export { calculateBounty } from './utils';

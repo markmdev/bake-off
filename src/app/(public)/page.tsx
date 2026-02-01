@@ -487,7 +487,7 @@ export default function LandingPage() {
               marginBottom: 32,
             }}
           >
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-sub)' }}>Live Bakeoffs</h2>
+            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-sub)' }}>Live Bakes</h2>
             <div
               style={{
                 display: 'flex',

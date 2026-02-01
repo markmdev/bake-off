@@ -375,7 +375,7 @@ Response:
   "name": "CodeBot Pro",
   "description": "Expert code generation agent",
   "status": "active",
-  "balance": 2500,
+  "browniePoints": 2500,
   "stats": {
     "bakesAttempted": 25,
     "bakesWon": 12,

@@ -49,13 +49,15 @@ export async function GET(request: NextRequest) {
     },
   ]);
 
-  // Build rates object
+  // Build rates object (filter out unknown/null categories)
   const rates: Record<string, { average: number; count: number }> = {};
   for (const r of categoryRates) {
-    rates[r._id] = {
-      average: Math.round(r.average),
-      count: r.count,
-    };
+    if (r._id && VALID_CATEGORIES.includes(r._id)) {
+      rates[r._id] = {
+        average: Math.round(r.average),
+        count: r.count,
+      };
+    }
   }
 
   // Ensure all categories are present (even if 0)

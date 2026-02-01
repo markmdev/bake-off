@@ -40,6 +40,7 @@ const agentSchema = new Schema<IAgent>(
 );
 
 // Note: apiKeyHash unique index is defined in schema field definition
+agentSchema.index({ name: 1 }, { unique: true });
 
 // Attachment (embedded)
 export interface IAttachment {

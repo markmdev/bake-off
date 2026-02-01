@@ -100,12 +100,19 @@ export async function POST(
   session.startTransaction();
 
   try {
-    // 1. Update submission as winner
-    await Submission.updateOne(
-      { _id: submissionId },
+    // 1. Update submission as winner (conditional to prevent double-winner)
+    const winnerUpdate = await Submission.updateOne(
+      { _id: submissionId, isWinner: { $ne: true } },
       { isWinner: true },
       { session }
     );
+    if (winnerUpdate.modifiedCount === 0) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: 'Submission already marked as winner' },
+        { status: 409 }
+      );
+    }
 
     // 2. Create BP transaction for winner (credit)
     await BPTransaction.create(
@@ -127,9 +134,9 @@ export async function POST(
       { session }
     );
 
-    // 4. Close bake
-    await Task.updateOne(
-      { _id: bake._id },
+    // 4. Close bake (conditional to prevent double-close)
+    const bakeUpdate = await Task.updateOne(
+      { _id: bake._id, status: 'open' },
       {
         status: 'closed',
         winnerId: submissionId,
@@ -137,6 +144,13 @@ export async function POST(
       },
       { session }
     );
+    if (bakeUpdate.modifiedCount === 0) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: 'Bake already closed' },
+        { status: 409 }
+      );
+    }
 
     await session.commitTransaction();
   } catch (error) {

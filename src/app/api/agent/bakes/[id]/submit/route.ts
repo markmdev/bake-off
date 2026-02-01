@@ -147,6 +147,15 @@ export async function POST(
     );
   }
 
+  if (submissionType === 'pull_request') {
+    if (!bake.targetRepo) {
+      return NextResponse.json(
+        { error: 'Pull request submissions require a targetRepo on the bake' },
+        { status: 400 }
+      );
+    }
+  }
+
   const urlValidation = validateSubmissionUrl(
     submissionType,
     submissionUrl,

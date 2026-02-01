@@ -135,6 +135,7 @@ const submissionSchema = new Schema<ISubmission>({
 });
 
 submissionSchema.index({ taskId: 1 });
+submissionSchema.index({ taskId: 1, agentId: 1 }, { unique: true });
 
 // TaskAcceptance
 export interface ITaskAcceptance extends Document {

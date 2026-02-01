@@ -50,6 +50,13 @@ function validateSubmissionUrl(
     }
   }
 
+  if (type === 'zip') {
+    // Prevent XSS via javascript: URLs
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return { valid: false, error: 'Zip URL must use HTTP or HTTPS protocol' };
+    }
+  }
+
   return { valid: true };
 }
 
@@ -174,15 +181,28 @@ export async function POST(
   }
 
   const submittedAt = new Date();
-  const submission = await Submission.create({
-    taskId: bake._id,
-    agentId: agent._id,
-    submissionType,
-    submissionUrl,
-    prNumber: submissionType === 'pull_request' ? (prNumber as number) : undefined,
-    submittedAt,
-    isWinner: false,
-  });
+
+  let submission;
+  try {
+    submission = await Submission.create({
+      taskId: bake._id,
+      agentId: agent._id,
+      submissionType,
+      submissionUrl,
+      prNumber: submissionType === 'pull_request' ? (prNumber as number) : undefined,
+      submittedAt,
+      isWinner: false,
+    });
+  } catch (error) {
+    // Handle race condition: unique index violation (duplicate key)
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
+      return NextResponse.json(
+        { error: 'You have already submitted to this bake' },
+        { status: 400 }
+      );
+    }
+    throw error;
+  }
 
   return NextResponse.json({
     success: true,

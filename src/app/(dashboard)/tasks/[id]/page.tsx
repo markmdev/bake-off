@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import CancelTaskButton from './CancelTaskButton';
 import { LiveInProgress, LiveSubmissions } from '@/components/LiveTaskUpdates';
-import ResearchProgress from './ResearchProgress';
+import ResearchProgress from '@/components/tasks/ResearchProgress';
 
 export default async function TaskDetailPage({
   params,

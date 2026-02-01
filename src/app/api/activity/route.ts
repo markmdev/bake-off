@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
     }
 
     for (const task of recentTasks) {
+      // publishedAt is guaranteed non-null by the query filter
       if (task.publishedAt) {
         activities.push({
           type: 'task_published',

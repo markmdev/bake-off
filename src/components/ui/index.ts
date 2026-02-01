@@ -4,6 +4,7 @@ export { NavItem } from './NavItem';
 export { Sidebar } from './Sidebar';
 export { BackgroundBlobs } from './BackgroundBlobs';
 export { PageHeader } from './PageHeader';
+export { Panel } from './Panel';
 
 // Button components
 export { Button } from './Button';

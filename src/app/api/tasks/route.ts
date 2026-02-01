@@ -1,8 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
-import { runTaskResearch } from '@/lib/research';
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   // Reject API key auth on user routes
@@ -125,18 +124,6 @@ export async function POST(request: NextRequest) {
         queriesCompleted: 0,
       },
     },
-  });
-
-  const taskId = task._id.toString();
-
-  // Start research immediately after task creation
-  after(async () => {
-    console.log('[Tasks API] Starting research for new task:', taskId);
-    try {
-      await runTaskResearch(taskId);
-    } catch (err) {
-      console.error('[Tasks API] Research failed for task:', taskId, err);
-    }
   });
 
   return NextResponse.json(task, { status: 201 });

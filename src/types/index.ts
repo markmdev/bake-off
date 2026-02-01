@@ -64,6 +64,13 @@ export interface ResearchProgress {
   queriesCompleted: number;
 }
 
+export interface ResearchSummary {
+  documentCount: number;
+  documentsWithText: number;
+  searchCount: number;
+  totalResults: number;
+}
+
 export interface TaskInsights {
   summary: string;
   requirements: string[];

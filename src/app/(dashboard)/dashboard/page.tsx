@@ -10,9 +10,11 @@ export default async function DashboardPage() {
   await connectDB();
 
   // Get GLOBAL stats (all tasks, not just user's)
-  const [activeTasks, pendingReviews, totalBounties] = await Promise.all([
+  const [activeTasks, closedTasks, pendingReviews, totalBounties] = await Promise.all([
     // All active tasks (open)
     Task.countDocuments({ status: 'open' }),
+    // All closed tasks
+    Task.countDocuments({ status: 'closed' }),
     // Tasks with submissions awaiting review
     Task.aggregate([
       { $match: { status: 'open' } },
@@ -47,12 +49,19 @@ export default async function DashboardPage() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Open Bakeoffs"
           value={activeTasks.toString()}
           badge={
             <Tag variant="green">Live</Tag>
+          }
+        />
+        <StatCard
+          label="Closed Bakeoffs"
+          value={closedTasks.toString()}
+          badge={
+            <Tag variant="orange">Completed</Tag>
           }
         />
         <StatCard

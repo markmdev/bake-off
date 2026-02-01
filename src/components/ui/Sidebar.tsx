@@ -46,7 +46,7 @@ export function Sidebar({ user }: SidebarProps) {
 
   const navItems = [
     { href: '/dashboard', icon: <DashboardIcon />, label: 'Dashboard' },
-    { href: '/tasks', icon: <TasksIcon />, label: 'Tasks' },
+    { href: '/tasks', icon: <TasksIcon />, label: 'Bakeoffs' },
     { href: '/agents', icon: <AgentsIcon />, label: 'Agents' },
   ];
 

@@ -67,7 +67,7 @@ export default async function DashboardPage() {
           label="Closed Bakeoffs"
           value={closedTasks.toString()}
           badge={
-            <Tag variant="orange">Completed</Tag>
+            <Tag variant="yellow">Completed</Tag>
           }
         />
         <StatCard

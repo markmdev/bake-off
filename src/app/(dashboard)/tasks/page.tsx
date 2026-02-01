@@ -1,8 +1,8 @@
 import { getCurrentUser } from '@/lib/auth';
-import { formatDate } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
 import { Task, Submission } from '@/lib/db/models';
-import { PageHeader, Button, Badge, TaskCard, Card } from '@/components/ui';
+import type { TaskCategory } from '@/lib/constants/categories';
+import { PageHeader, Button, BakeoffFilters } from '@/components/ui';
 
 // Map task status to TaskCard status
 function mapStatus(status: string): 'running' | 'reviewing' | 'finished' | 'draft' | 'cancelled' {
@@ -28,19 +28,15 @@ export default async function TasksPage() {
   if (!user) return null;
 
   await connectDB();
-  // For demo: show all tasks (open + closed), not just user's own
-  // Sort by status (open first) then by publishedAt descending
-  const tasks = await Task.find({ status: { $in: ['open', 'closed'] } })
-    .sort({ publishedAt: -1 })
-    .lean()
-    .then(tasks => {
-      // Sort: open first, then closed
-      return tasks.sort((a, b) => {
-        if (a.status === 'open' && b.status !== 'open') return -1;
-        if (a.status !== 'open' && b.status === 'open') return 1;
-        return 0; // Keep publishedAt order within same status
-      });
-    });
+  // Fetch all public tasks (open + closed) plus user's own drafts
+  const tasks = await Task.find({
+    $or: [
+      { status: { $in: ['open', 'closed'] } },
+      { posterId: user._id, status: 'draft' },
+    ],
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
   const taskIds = tasks.map((t) => t._id);
   const submissionCounts = await Submission.aggregate([
@@ -52,48 +48,32 @@ export default async function TasksPage() {
     submissionCounts.map((s) => [s._id.toString(), s.count])
   );
 
+  // Transform tasks for the client component
+  const taskData = tasks.map((task) => ({
+    id: task._id.toString(),
+    title: task.title,
+    category: (task.category || 'engineering') as TaskCategory,
+    bounty: task.bounty,
+    deadline: task.deadline.toISOString(),
+    publishedAt: task.publishedAt?.toISOString() || task.createdAt.toISOString(),
+    agentCount: countMap.get(task._id.toString()) || 0,
+    status: mapStatus(task.status),
+    isOwner: String(task.posterId) === String(user._id),
+  }));
+
   return (
     <div className="space-y-10">
       <PageHeader
-        title="All Bakeoffs"
-        subtitle="Browse tasks and compete for bounties."
+        title="Bakeoffs"
+        subtitle="Browse competitions and compete for bounties."
         action={
           <Button href="/tasks/new" variant="primary" size="md">
-            + New Task
+            + New Bakeoff
           </Button>
         }
       />
 
-      {/* Section header with count */}
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-          <h2 className="text-2xl font-bold text-(--text-main)">All Tasks</h2>
-          <Badge count={tasks.length} />
-        </div>
-
-        {tasks.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-(--text-sub) text-lg">No open bakeoffs yet. Be the first to post one!</p>
-            <Button href="/tasks/new" variant="primary" size="md" className="mt-4">
-              Create Your First Task
-            </Button>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task._id.toString()}
-                id={task._id.toString()}
-                title={task.title}
-                meta={`$${(task.bounty / 100).toFixed(2)} bounty • Deadline: ${formatDate(task.deadline)}`}
-                agentCount={countMap.get(task._id.toString()) || 0}
-                status={mapStatus(task.status)}
-                href={`/tasks/${task._id.toString()}`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <BakeoffFilters tasks={taskData} />
     </div>
   );
 }

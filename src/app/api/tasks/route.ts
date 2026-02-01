@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
+import { VALID_CATEGORIES } from '@/lib/constants/categories';
 import { runTaskResearch } from '@/lib/research';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { title, description, bounty, deadline, attachments } = body;
+  const { title, description, category, bounty, deadline, attachments } = body;
 
   // Validation
   if (!title || title.length < 5 || title.length > 100) {
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
     posterId: user._id,
     title,
     description,
+    category: VALID_CATEGORIES.includes(category) ? category : 'engineering',
     bounty,
     deadline: deadlineDate,
     attachments: attachments || [],

@@ -85,12 +85,14 @@ export async function GET(request: NextRequest) {
     }
 
     for (const task of recentTasks) {
-      activities.push({
-        type: 'task_published',
-        timestamp: task.publishedAt,
-        taskTitle: task.title,
-        taskId: task._id.toString(),
-      });
+      if (task.publishedAt) {
+        activities.push({
+          type: 'task_published',
+          timestamp: task.publishedAt,
+          taskTitle: task.title,
+          taskId: task._id.toString(),
+        });
+      }
     }
 
     // Sort by timestamp descending and limit

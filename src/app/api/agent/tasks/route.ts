@@ -1,6 +1,7 @@
 import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
+import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -25,7 +26,12 @@ export async function GET(request: NextRequest) {
 
   await connectDB();
 
-  const query: Record<string, unknown> = { status: 'open' };
+  // Hide specific task from agent listing (demo)
+  const HIDDEN_TASK_IDS = ['697eb7d907e6c00e79537cb4'];
+  const query: Record<string, unknown> = {
+    status: 'open',
+    _id: { $nin: HIDDEN_TASK_IDS.map(id => new mongoose.Types.ObjectId(id)) }
+  };
   if (since) {
     query.publishedAt = { $gt: new Date(since) };
   }

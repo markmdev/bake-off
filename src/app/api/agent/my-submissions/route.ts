@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
@@ -57,16 +58,30 @@ export async function GET(request: NextRequest) {
 
   await connectDB();
 
-  // Build query for submissions
-  const query: Record<string, unknown> = { agentId: agent._id };
-  if (winnerParam === 'true') query.isWinner = true;
-  if (winnerParam === 'false') query.isWinner = false;
+  // Build base query for submissions
+  const baseQuery: Record<string, unknown> = { agentId: agent._id };
+  if (winnerParam === 'true') baseQuery.isWinner = true;
+  if (winnerParam === 'false') baseQuery.isWinner = false;
 
-  const submissions = await Submission.find(query)
-    .sort({ submittedAt: -1 })
-    .skip(offset)
-    .limit(limit)
-    .lean();
+  // If status filter is provided, find matching bake IDs first
+  let taskIdFilter: mongoose.Types.ObjectId[] | null = null;
+  if (statusParam) {
+    const matchingBakes = await Task.find({ status: statusParam }).select('_id').lean();
+    taskIdFilter = matchingBakes.map((b) => b._id);
+  }
+
+  const query = taskIdFilter
+    ? { ...baseQuery, taskId: { $in: taskIdFilter } }
+    : baseQuery;
+
+  const [submissions, total] = await Promise.all([
+    Submission.find(query)
+      .sort({ submittedAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean(),
+    Submission.countDocuments(query),
+  ]);
 
   // Get unique task IDs from submissions
   const taskIds = [...new Set(submissions.map((s) => s.taskId.toString()))];
@@ -82,31 +97,8 @@ export async function GET(request: NextRequest) {
     .lean();
   const creatorMap = new Map(creators.map((c) => [c._id.toString(), c.name]));
 
-  // Filter submissions based on bake status if status filter provided
-  let filteredSubmissions = submissions;
-  if (statusParam) {
-    filteredSubmissions = submissions.filter((s) => {
-      const task = taskMap.get(s.taskId.toString());
-      return task && task.status === statusParam;
-    });
-  }
-
-  // Count total (respecting winner filter but before status filter for pagination accuracy)
-  // For accurate pagination with status filter, we need to count differently
-  let total: number;
-  if (statusParam) {
-    // When filtering by status, we need to count submissions whose bake matches
-    const allSubmissionsForCount = await Submission.find(query).select('taskId').lean();
-    total = allSubmissionsForCount.filter((s) => {
-      const task = taskMap.get(s.taskId.toString());
-      return task && task.status === statusParam;
-    }).length;
-  } else {
-    total = await Submission.countDocuments(query);
-  }
-
-  // Build response
-  const responseSubmissions = filteredSubmissions.map((s) => {
+  // Map submissions to response format (no more in-memory filtering needed)
+  const responseSubmissions = submissions.map((s) => {
     const task = taskMap.get(s.taskId.toString());
     const creatorName = task ? creatorMap.get(task.creatorAgentId.toString()) : null;
 

@@ -40,8 +40,9 @@ async function getBakes(params: {
   } else if (params.status === 'closed') {
     query.status = 'closed';
   } else {
-    // Default: show open bakes
+    // Default: show open bakes (exclude expired)
     query.status = 'open';
+    query.deadline = { $gt: new Date() };
   }
 
   // Determine sort order

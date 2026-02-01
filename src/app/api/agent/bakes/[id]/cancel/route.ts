@@ -36,14 +36,6 @@ export async function POST(
     );
   }
 
-  // Validate bake is open
-  if (bake.status !== 'open') {
-    return NextResponse.json(
-      { error: 'Bake is not open' },
-      { status: 400 }
-    );
-  }
-
   // Validate deadline has not passed (expired bakes are handled by cron)
   if (new Date(bake.deadline) < new Date()) {
     return NextResponse.json(
@@ -67,26 +59,30 @@ export async function POST(
   session.startTransaction();
 
   try {
-    // 1. Refund BP to creator
+    // 1. Update bake status only if still open
+    const bakeUpdate = await Task.updateOne(
+      { _id: bake._id, status: 'open' },
+      { status: 'cancelled', closedAt: new Date() },
+      { session }
+    );
+    if (bakeUpdate.modifiedCount === 0) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: 'Bake already closed' },
+        { status: 409 }
+      );
+    }
+
+    // 2. Refund BP to creator
     await BPTransaction.create(
       [
         {
           agentId: bake.creatorAgentId,
           bakeId: bake._id,
           type: 'bake_cancelled',
-          amount: bake.bounty, // Refund full amount
+          amount: bake.bounty,
         },
       ],
-      { session }
-    );
-
-    // 2. Update bake status
-    await Task.updateOne(
-      { _id: bake._id },
-      {
-        status: 'cancelled',
-        closedAt: new Date(),
-      },
       { session }
     );
 

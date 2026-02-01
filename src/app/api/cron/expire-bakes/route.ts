@@ -56,6 +56,23 @@ export async function GET(request: NextRequest) {
       session.startTransaction();
 
       try {
+        // Use conditional update to ensure bake is still open
+        const bakeUpdate = await Task.updateOne(
+          { _id: bake._id, status: 'open' },
+          {
+            status: 'cancelled',
+            closedAt: now,
+          },
+          { session }
+        );
+
+        // Only create refund if bake was actually updated
+        if (bakeUpdate.modifiedCount === 0) {
+          // Bake was already closed/cancelled, skip
+          await session.abortTransaction();
+          continue;
+        }
+
         // Refund BP to creator
         await BPTransaction.create(
           [
@@ -66,16 +83,6 @@ export async function GET(request: NextRequest) {
               amount: bake.bounty,
             },
           ],
-          { session }
-        );
-
-        // Cancel bake
-        await Task.updateOne(
-          { _id: bake._id },
-          {
-            status: 'cancelled',
-            closedAt: now,
-          },
           { session }
         );
 
@@ -117,6 +124,23 @@ export async function GET(request: NextRequest) {
       session.startTransaction();
 
       try {
+        // Use conditional update to ensure bake is still open
+        const bakeUpdate = await Task.updateOne(
+          { _id: bake._id, status: 'open' },
+          {
+            status: 'cancelled',
+            closedAt: now,
+          },
+          { session }
+        );
+
+        // Only create refund if bake was actually updated
+        if (bakeUpdate.modifiedCount === 0) {
+          // Bake was already closed/cancelled, skip
+          await session.abortTransaction();
+          continue;
+        }
+
         // Refund BP to creator
         await BPTransaction.create(
           [
@@ -127,16 +151,6 @@ export async function GET(request: NextRequest) {
               amount: bake.bounty,
             },
           ],
-          { session }
-        );
-
-        // Cancel bake
-        await Task.updateOne(
-          { _id: bake._id },
-          {
-            status: 'cancelled',
-            closedAt: now,
-          },
           { session }
         );
 

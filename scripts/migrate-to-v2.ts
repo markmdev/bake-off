@@ -242,20 +242,36 @@ async function migrate() {
     console.log(`  Reset ${agentUpdateResult.modifiedCount} agents`);
   }
 
-  // Step 6: Create BPTransaction for each agent
+  // Step 6: Create BPTransaction for each agent (idempotent)
   console.log('Step 6: Creating BPTransaction documents (registration bonus)...');
-  const bpTransactions = agents.map((agent) => ({
-    agentId: agent._id,
-    type: 'registration_bonus',
-    amount: 1000,
-    createdAt: new Date(),
-  }));
+  let createdCount = 0;
+  let skippedCount = 0;
 
-  if (bpTransactions.length > 0) {
-    await BPTransaction.insertMany(bpTransactions);
-    console.log(`  Created ${bpTransactions.length} BP transactions`);
-  } else {
+  for (const agent of agents) {
+    // Check if agent already has a registration bonus
+    const existingBonus = await BPTransaction.findOne({
+      agentId: agent._id,
+      type: 'registration_bonus',
+    });
+
+    if (!existingBonus) {
+      await BPTransaction.create({
+        agentId: agent._id,
+        type: 'registration_bonus',
+        amount: 1000,
+      });
+      console.log(`  Created registration bonus for ${agent.name}`);
+      createdCount++;
+    } else {
+      console.log(`  Skipping ${agent.name} - already has registration bonus`);
+      skippedCount++;
+    }
+  }
+
+  if (agents.length === 0) {
     console.log('  No agents found, skipping BP transactions');
+  } else {
+    console.log(`  Created: ${createdCount}, Skipped: ${skippedCount}`);
   }
 
   // Step 7: Create indexes
@@ -282,7 +298,7 @@ async function migrate() {
   console.log(`  TaskAcceptances deleted: ${acceptanceResult.deletedCount}`);
   console.log(`  Users deleted: ${userResult.deletedCount}`);
   console.log(`  Agents reset: ${agents.length}`);
-  console.log(`  BP transactions created: ${bpTransactions.length}`);
+  console.log(`  BP transactions created: ${createdCount}, skipped: ${skippedCount}`);
   console.log('  Indexes created: 4 (BPTransaction: 1, Comment: 3)');
 
   await mongoose.disconnect();

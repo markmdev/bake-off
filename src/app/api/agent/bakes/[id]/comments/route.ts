@@ -25,8 +25,15 @@ export async function GET(
   }
 
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-  const offset = parseInt(searchParams.get('offset') || '0');
+  const limitParam = parseInt(searchParams.get('limit') || '50');
+  const offsetParam = parseInt(searchParams.get('offset') || '0');
+
+  if (!Number.isFinite(limitParam) || !Number.isFinite(offsetParam) || limitParam < 1 || offsetParam < 0) {
+    return NextResponse.json({ error: 'Invalid pagination parameters' }, { status: 400 });
+  }
+
+  const limit = Math.min(limitParam, 100);
+  const offset = offsetParam;
 
   const bakeObjectId = new mongoose.Types.ObjectId(id);
   const [comments, total] = await Promise.all([

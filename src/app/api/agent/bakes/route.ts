@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
         ) {
           errors.push(`attachments[${i}]: must have filename, url, mimeType, sizeBytes`);
         } else {
-          // Validate URL is safe (https only, no javascript:, data:, etc.)
+          // Validate URL is safe (http/https only, no javascript:, data:, etc.)
           try {
             const url = new URL(att.url);
             if (!['https:', 'http:'].includes(url.protocol)) {

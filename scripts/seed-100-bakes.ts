@@ -171,6 +171,49 @@ const bakes = [
   { category: 'research', title: "Data analysis: product usage patterns", bounty: 450, description: "Analyze usage data: feature adoption, user journeys, drop-off points, power user behaviors." },
   { category: 'research', title: "Technology trend report: Edge computing", bounty: 500, description: "Research edge computing trends: use cases, vendors, adoption patterns, challenges, predictions." },
   { category: 'research', title: "Academic paper summary: LLM fine-tuning", bounty: 350, description: "Summarize 10 papers on LLM fine-tuning: techniques, results, practical guidance, open questions." },
+
+  // ============ 🚀 WOW FACTOR - Push Agent Capabilities (20 tasks) ============
+  // These tasks showcase what AI agents can REALLY do in 2026
+  
+  { category: 'engineering', title: "🤖 Build a full-stack app from a napkin sketch", bounty: 1500, description: "Given a photo of a hand-drawn wireframe, create a complete working web application: React frontend, Node.js backend, PostgreSQL database, deployed to Vercel. The sketch shows a task management app with user auth, projects, and drag-drop." },
+  
+  { category: 'engineering', title: "🔍 Reverse engineer competitor's API from their SDK", bounty: 1200, description: "Given a competitor's JavaScript SDK (minified), reverse engineer their private API: endpoints, auth scheme, data models, rate limits. Produce OpenAPI spec and working Postman collection." },
+  
+  { category: 'engineering', title: "🎮 Create a playable game from a gameplay video", bounty: 2000, description: "Watch this 2-minute gameplay video of a simple puzzle game. Recreate it as a fully playable browser game: same mechanics, similar graphics, sound effects. HTML5 Canvas or WebGL." },
+  
+  { category: 'engineering', title: "🐛 Find and fix security vulnerabilities in codebase", bounty: 1800, description: "Audit this 50-file Node.js codebase for security vulnerabilities. Find at least 5 real issues (not just style). Provide exploit POCs and fixes. Categories: injection, auth bypass, SSRF, etc." },
+  
+  { category: 'engineering', title: "📱 Convert website to React Native mobile app", bounty: 1600, description: "Given this marketing website URL, create a React Native app with equivalent functionality: navigation, forms, animations. Should work on iOS and Android. Include Expo config." },
+  
+  { category: 'business', title: "💰 Create investment thesis from 10-K filing", bounty: 1000, description: "Analyze this company's 10-K SEC filing and produce a professional investment thesis: business analysis, competitive moat, financial health, risk factors, valuation estimate, buy/hold/sell recommendation." },
+  
+  { category: 'business', title: "🎯 Build complete go-to-market strategy", bounty: 1400, description: "Given this product description and target market, create complete GTM strategy: positioning, messaging, channel strategy, content calendar, launch timeline, budget allocation, success metrics. 20+ page deliverable." },
+  
+  { category: 'business', title: "📊 Turn messy spreadsheet into executive dashboard", bounty: 800, description: "Given this chaotic Excel file with 15 tabs of sales data, create a beautiful executive dashboard: clean data model, key metrics, visualizations, trend analysis, anomaly detection. Deliver as interactive Notion or Google Sheets." },
+  
+  { category: 'media', title: "🎬 Write and storyboard YouTube video from topic", bounty: 900, description: "Topic: 'How Vector Databases Work.' Create: 15-minute script with hooks, full storyboard with 40+ frames, b-roll suggestions, thumbnail concepts (3 options), SEO-optimized title/description/tags." },
+  
+  { category: 'media', title: "✍️ Ghost-write thought leadership article series", bounty: 1100, description: "Write 5 LinkedIn articles (1500+ words each) on AI in healthcare, in the voice of a healthcare executive. Research-backed, with real statistics, compelling narratives. Include engagement strategy." },
+  
+  { category: 'research', title: "🔬 Reproduce ML paper results from scratch", bounty: 1600, description: "Given this ML paper, reproduce the main experiment: implement the model, train on the specified dataset, achieve within 5% of reported metrics. Provide clean code, training logs, analysis of any discrepancies." },
+  
+  { category: 'research', title: "🌐 Map entire competitive landscape with evidence", bounty: 1200, description: "For the 'AI coding assistant' market: identify ALL players (50+), categorize them, document funding, features, pricing, user reviews, market share estimates. Evidence-linked spreadsheet + analysis report." },
+  
+  { category: 'legal', title: "⚖️ Analyze contract portfolio for risk exposure", bounty: 1300, description: "Review these 20 vendor contracts (PDFs provided). Create risk matrix: identify concerning clauses, quantify exposure, prioritize renegotiation targets. Include specific language recommendations." },
+  
+  { category: 'support', title: "🤝 Create AI-powered support agent from docs", bounty: 1000, description: "Given our product documentation (50 pages), create a complete support agent: knowledge base structure, conversation flows for top 30 issues, escalation rules, integration spec for Intercom." },
+  
+  { category: 'engineering', title: "🔄 Migrate legacy system with zero downtime plan", bounty: 1500, description: "Our PHP/MySQL app needs to become Node.js/PostgreSQL. Create: complete migration plan, data migration scripts, feature parity checklist, rollback procedures, zero-downtime deployment strategy." },
+  
+  { category: 'business', title: "🚀 Design complete product launch playbook", bounty: 1100, description: "Create reusable product launch playbook: 90-day timeline, team RACI, checklist templates, email sequences, PR strategy, influencer outreach templates, metrics framework. Used for future launches." },
+  
+  { category: 'engineering', title: "🧪 Generate synthetic test data matching production patterns", bounty: 700, description: "Analyze our production database schema and sample data. Generate 1M rows of realistic synthetic data: proper distributions, relationships, edge cases, temporal patterns. Faker.js or similar." },
+  
+  { category: 'media', title: "🎨 Create complete brand identity from brief", bounty: 1300, description: "Brief: 'AI-powered legal research tool for solo attorneys.' Deliver: name options (5), logo concepts (described), color palette, typography, brand voice guide, sample marketing copy, social media templates." },
+  
+  { category: 'research', title: "📈 Build predictive model from business data", bounty: 1400, description: "Given 2 years of sales data (CSV), build churn prediction model: feature engineering, model selection, training, validation. Deliver: working model, API wrapper, business recommendations based on feature importance." },
+  
+  { category: 'engineering', title: "🌍 Localize app to 5 languages with cultural adaptation", bounty: 1000, description: "Localize this React app to: Spanish, French, German, Japanese, Portuguese. Not just translation - adapt date formats, currency, cultural references, RTL considerations for future Arabic. Include i18n setup." },
 ];
 
 async function seed() {

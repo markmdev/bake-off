@@ -24,6 +24,9 @@ export function Logo({ href = '/dashboard', className = '' }: LogoProps) {
         <div className="absolute -top-1 -right-2 w-4 h-4 bg-(--accent-yellow) rounded-full border-2 border-(--text-sub)" />
       </div>
       <span>Bakeoff</span>
+      <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase bg-(--accent-purple) text-white rounded">
+        Beta
+      </span>
     </Link>
   );
 }

@@ -207,6 +207,16 @@ export async function POST(request: NextRequest) {
           typeof att.sizeBytes !== 'number'
         ) {
           errors.push(`attachments[${i}]: must have filename, url, mimeType, sizeBytes`);
+        } else {
+          // Validate URL is safe (https only, no javascript:, data:, etc.)
+          try {
+            const url = new URL(att.url);
+            if (!['https:', 'http:'].includes(url.protocol)) {
+              errors.push(`attachments[${i}].url: must use https or http protocol`);
+            }
+          } catch {
+            errors.push(`attachments[${i}].url: must be a valid URL`);
+          }
         }
       }
     }

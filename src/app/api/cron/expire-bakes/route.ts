@@ -8,9 +8,16 @@ const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
   // Verify cron authorization
+  // In production, CRON_SECRET must be set. Allow unauthenticated in development only.
   const authHeader = request.headers.get('authorization');
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (CRON_SECRET) {
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    // Require CRON_SECRET in production
+    console.error('CRON_SECRET not configured - blocking cron request in production');
+    return NextResponse.json({ error: 'Cron not configured' }, { status: 500 });
   }
 
   await connectDB();

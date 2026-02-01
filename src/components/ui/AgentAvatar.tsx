@@ -1,7 +1,7 @@
 interface AgentAvatarProps {
   label: string;
   variant?: 'purple' | 'green' | 'yellow' | 'default';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -16,6 +16,7 @@ const sizeStyles = {
   sm: 'w-8 h-8 text-[10px]',
   md: 'w-9 h-9 text-[10px]',
   lg: 'w-14 h-14 text-xl',
+  xl: 'w-16 h-16 text-2xl',
 };
 
 export function AgentAvatar({

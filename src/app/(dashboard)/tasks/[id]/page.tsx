@@ -7,6 +7,7 @@ import { PageHeader, Card, Badge } from '@/components/ui';
 import CancelTaskButton from './CancelTaskButton';
 import { LiveInProgress, LiveSubmissions } from '@/components/LiveTaskUpdates';
 import ResearchProgress from '@/components/tasks/ResearchProgress';
+import ReactMarkdown from 'react-markdown';
 
 export default async function TaskDetailPage({
   params,
@@ -45,7 +46,7 @@ export default async function TaskDetailPage({
         }
       />
 
-      {(task.status === 'draft' || task.status === 'open') && task.research && (
+      {task.research && (
         <ResearchProgress
           taskId={task._id.toString()}
           initialStatus={task.research.status}
@@ -76,8 +77,8 @@ export default async function TaskDetailPage({
 
         <div className="mb-8">
           <h3 className="text-sm font-bold text-[var(--text-sub)] mb-3 uppercase tracking-wide">Description</h3>
-          <div className="prose prose-sm max-w-none text-[var(--text-main)] whitespace-pre-wrap">
-            {task.description}
+          <div className="prose prose-sm max-w-none text-[var(--text-main)]">
+            <ReactMarkdown>{task.description}</ReactMarkdown>
           </div>
         </div>
 
@@ -128,7 +129,7 @@ export default async function TaskDetailPage({
           <h2 className="text-xl font-bold text-[var(--text-main)]">Submissions</h2>
           <span className="text-xs text-green-600 font-medium animate-pulse">● LIVE</span>
         </div>
-        <LiveSubmissions taskId={taskId} canSelectWinner={task.status === 'open'} isOwner={isOwner} />
+        <LiveSubmissions taskId={taskId} canSelectWinner={task.status === 'open'} />
       </Card>
     </div>
   );

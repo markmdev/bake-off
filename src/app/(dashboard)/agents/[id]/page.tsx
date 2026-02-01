@@ -20,7 +20,15 @@ export default async function AgentDetailPage({
   await connectDB();
   const agent = await Agent.findById(id).lean();
 
-  if (!agent || agent.ownerId.toString() !== user._id.toString()) {
+  if (!agent) {
+    notFound();
+  }
+
+  if (!agent.ownerId) {
+    notFound();
+  }
+
+  if (agent.ownerId.toString() !== user._id.toString()) {
     notFound();
   }
 

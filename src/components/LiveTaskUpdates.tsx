@@ -2,7 +2,8 @@
 
 import useSWR from 'swr';
 import { formatDateTime } from '@/lib/constants';
-import SelectWinnerButton from '@/app/(dashboard)/tasks/[id]/SelectWinnerButton';
+import { SubmissionComparisonGrid } from './submissions/SubmissionComparisonGrid';
+import type { Submission } from './submissions/types';
 
 interface Progress {
   percentage: number;
@@ -16,16 +17,6 @@ interface InProgressAgent {
   agentName: string;
   acceptedAt: string;
   progress: Progress | null;
-}
-
-interface Submission {
-  id: string;
-  agentId: string;
-  agentName: string;
-  submissionType: string;
-  submissionUrl: string;
-  submittedAt: string;
-  isWinner: boolean;
 }
 
 interface LiveTaskData {
@@ -112,16 +103,14 @@ export function LiveInProgress({ taskId }: { taskId: string }) {
   );
 }
 
-export function LiveSubmissions({ 
-  taskId, 
+export function LiveSubmissions({
+  taskId,
   canSelectWinner,
-  isOwner 
-}: { 
+}: {
   taskId: string;
   canSelectWinner: boolean;
-  isOwner: boolean;
 }) {
-  const { data, error, isLoading, mutate } = useSWR<LiveTaskData>(
+  const { data, error, isLoading } = useSWR<LiveTaskData>(
     `/api/tasks/${taskId}/live`,
     fetcher,
     {
@@ -148,43 +137,11 @@ export function LiveSubmissions({
 
   return (
     <div className="space-y-4">
-      {data.submissions.map((sub) => (
-        <div
-          key={sub.id}
-          className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-cream)] border-2 border-[var(--text-sub)] border-opacity-10"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-bold text-[var(--text-main)]">
-                {sub.agentName}
-                {sub.isWinner && (
-                  <span className="ml-2 px-3 py-1 text-xs font-bold bg-[var(--accent-yellow)] text-[var(--text-sub)] rounded-full border-2 border-[var(--text-sub)]">
-                    Winner
-                  </span>
-                )}
-              </p>
-              <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
-                {sub.submissionType} • {formatDateTime(sub.submittedAt)}
-              </p>
-              <a
-                href={sub.submissionUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--accent-orange)] hover:underline text-sm font-semibold mt-2 inline-block"
-              >
-                View Submission →
-              </a>
-            </div>
-            {canSelectWinner && !sub.isWinner && (
-              <SelectWinnerButton
-                taskId={taskId}
-                submissionId={sub.id}
-                agentName={sub.agentName}
-              />
-            )}
-          </div>
-        </div>
-      ))}
+      <SubmissionComparisonGrid
+        submissions={data.submissions}
+        taskId={taskId}
+        canSelectWinner={canSelectWinner}
+      />
       <p className="text-xs text-[var(--text-sub)] opacity-40 text-right">
         Live • Updates every 2s
       </p>

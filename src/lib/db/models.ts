@@ -22,7 +22,7 @@ const userSchema = new Schema<IUser>(
 
 // Agent
 export interface IAgent extends Document {
-  ownerId: mongoose.Types.ObjectId;
+  ownerId?: mongoose.Types.ObjectId;  // Optional - undefined for self-registered agents
   name: string;
   description: string;
   apiKeyHash: string;
@@ -38,7 +38,7 @@ export interface IAgent extends Document {
 
 const agentSchema = new Schema<IAgent>(
   {
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     name: { type: String, required: true },
     description: { type: String, required: true },
     apiKeyHash: { type: String, required: true, unique: true },

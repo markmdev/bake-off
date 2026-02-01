@@ -62,6 +62,61 @@ interface IAttachment {
   sizeBytes: number;
 }
 
+// Research types (embedded)
+interface IDocumentExtract {
+  filename: string;
+  mimeType: string;
+  extractedText: string;
+  pageCount?: number;
+  extractedAt: Date;
+  error?: string;
+}
+
+interface IWebSearchResult {
+  title: string;
+  url: string;
+  description: string;
+  content: string;
+}
+
+interface IWebResearch {
+  query: string;
+  results: IWebSearchResult[];
+  searchedAt: Date;
+  error?: string;
+}
+
+interface IResearchProgress {
+  documentsTotal: number;
+  documentsParsed: number;
+  queriesTotal: number;
+  queriesCompleted: number;
+}
+
+interface ITaskInsights {
+  summary: string;
+  requirements: string[];
+  technicalSkills: string[];
+  keyDeliverables: string[];
+  suggestedApproach: string;
+  estimatedComplexity: 'low' | 'medium' | 'high';
+  relevantContext: string;
+  potentialChallenges: string[];
+  successCriteria: string[];
+}
+
+interface ITaskResearch {
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'partial';
+  currentStep?: 'parsing_documents' | 'researching_web' | 'analyzing' | 'finalizing';
+  progress?: IResearchProgress;
+  documentExtracts: IDocumentExtract[];
+  webResearch: IWebResearch[];
+  insights?: ITaskInsights;
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+}
+
 // Task
 export interface ITask extends Document {
   posterId: mongoose.Types.ObjectId;
@@ -73,6 +128,7 @@ export interface ITask extends Document {
   deadline: Date;
   stripeCheckoutSessionId: string;
   winnerId: mongoose.Types.ObjectId | null;
+  research?: ITaskResearch;
   publishedAt: Date | null;
   closedAt: Date | null;
   createdAt: Date;
@@ -85,6 +141,89 @@ const attachmentSchema = new Schema<IAttachment>(
     url: { type: String, required: true },
     mimeType: { type: String, required: true },
     sizeBytes: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
+const webSearchResultSchema = new Schema<IWebSearchResult>(
+  {
+    title: { type: String, default: '' },
+    url: { type: String, default: '' },
+    description: { type: String, default: '' },
+    content: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const documentExtractSchema = new Schema<IDocumentExtract>(
+  {
+    filename: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    extractedText: { type: String, default: '' },
+    pageCount: { type: Number },
+    extractedAt: { type: Date, default: Date.now },
+    error: { type: String },
+  },
+  { _id: false }
+);
+
+const webResearchSchema = new Schema<IWebResearch>(
+  {
+    query: { type: String, required: true },
+    results: { type: [webSearchResultSchema], default: [] },
+    searchedAt: { type: Date, default: Date.now },
+    error: { type: String },
+  },
+  { _id: false }
+);
+
+const researchProgressSchema = new Schema<IResearchProgress>(
+  {
+    documentsTotal: { type: Number, default: 0 },
+    documentsParsed: { type: Number, default: 0 },
+    queriesTotal: { type: Number, default: 0 },
+    queriesCompleted: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+const taskInsightsSchema = new Schema<ITaskInsights>(
+  {
+    summary: { type: String, default: '' },
+    requirements: { type: [String], default: [] },
+    technicalSkills: { type: [String], default: [] },
+    keyDeliverables: { type: [String], default: [] },
+    suggestedApproach: { type: String, default: '' },
+    estimatedComplexity: {
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'medium',
+    },
+    relevantContext: { type: String, default: '' },
+    potentialChallenges: { type: [String], default: [] },
+    successCriteria: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
+const researchSchema = new Schema<ITaskResearch>(
+  {
+    status: {
+      type: String,
+      enum: ['pending', 'processing', 'completed', 'failed', 'partial'],
+      default: 'pending',
+    },
+    currentStep: {
+      type: String,
+      enum: ['parsing_documents', 'researching_web', 'analyzing', 'finalizing'],
+    },
+    progress: { type: researchProgressSchema },
+    documentExtracts: { type: [documentExtractSchema], default: [] },
+    webResearch: { type: [webResearchSchema], default: [] },
+    insights: { type: taskInsightsSchema },
+    startedAt: { type: Date },
+    completedAt: { type: Date },
+    error: { type: String },
   },
   { _id: false }
 );
@@ -104,6 +243,7 @@ const taskSchema = new Schema<ITask>(
     deadline: { type: Date, required: true },
     stripeCheckoutSessionId: { type: String, default: '' },
     winnerId: { type: Schema.Types.ObjectId, ref: 'Submission', default: null },
+    research: { type: researchSchema },
     publishedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },
   },

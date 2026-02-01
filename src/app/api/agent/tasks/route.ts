@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       deadline: task.deadline.toISOString(),
       attachmentCount: task.attachments.length,
       publishedAt: task.publishedAt?.toISOString(),
+      researchStatus: task.research?.status || null,
     })),
     total,
     limit,

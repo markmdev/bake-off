@@ -29,6 +29,7 @@ async function publishTask(session: Stripe.Checkout.Session): Promise<void> {
   task.status = 'open';
   task.publishedAt = new Date();
   task.stripeCheckoutSessionId = session.id;
+
   await task.save();
 
   console.log('Task published:', taskId);

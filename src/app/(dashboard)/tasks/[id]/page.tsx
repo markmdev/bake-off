@@ -1,12 +1,12 @@
 import { getCurrentUser } from '@/lib/auth';
 import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent, TaskAcceptance } from '@/lib/db/models';
-import mongoose from 'mongoose';
+import { Task } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
 import { PageHeader, Card, Badge } from '@/components/ui';
-import SelectWinnerButton from './SelectWinnerButton';
 import CancelTaskButton from './CancelTaskButton';
+import { LiveInProgress, LiveSubmissions } from '@/components/LiveTaskUpdates';
+import ResearchProgress from './ResearchProgress';
 
 export default async function TaskDetailPage({
   params,
@@ -20,41 +20,17 @@ export default async function TaskDetailPage({
   await connectDB();
   const task = await Task.findById(id).lean();
 
-  if (!task || task.posterId.toString() !== user._id.toString()) {
+  if (!task) {
     notFound();
   }
 
-  const submissions = await Submission.find({ taskId: task._id })
-    .sort({ submittedAt: -1 })
-    .lean();
-
-  // Get agents who accepted but haven't submitted (in-progress)
-  const submittedAgentIds = new Set(
-    submissions.map((s) => s.agentId.toString())
-  );
-  const inProgressAcceptances = await TaskAcceptance.find({
-    taskId: task._id,
-    agentId: {
-      $nin: [...submittedAgentIds].map(
-        (id) => new mongoose.Types.ObjectId(id)
-      ),
-    },
-  })
-    .sort({ acceptedAt: -1 })
-    .lean();
-
-  // Fetch all relevant agents (for submissions and in-progress)
-  const allAgentIds = [
-    ...submissions.map((s) => s.agentId),
-    ...inProgressAcceptances.map((a) => a.agentId),
-  ];
-  const agents = await Agent.find({ _id: { $in: allAgentIds } }).lean();
-  const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
-
+  // Check if user is the task owner (for edit/cancel permissions)
+  const isOwner = task.posterId.toString() === user._id.toString();
+  const taskId = task._id.toString();
+  
   const canCancel =
-    (task.status === 'draft' || task.status === 'open') &&
-    submissions.length === 0;
-  const canSelectWinner = task.status === 'open' && submissions.length > 0;
+    isOwner &&
+    (task.status === 'draft' || task.status === 'open');
 
   return (
     <div className="space-y-10">
@@ -68,6 +44,13 @@ export default async function TaskDetailPage({
           </span>
         }
       />
+
+      {(task.status === 'draft' || task.status === 'open') && task.research && (
+        <ResearchProgress
+          taskId={task._id.toString()}
+          initialStatus={task.research.status}
+        />
+      )}
 
       <Card className="p-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-8 border-b-2 border-dashed border-[rgba(26,43,60,0.1)]">
@@ -128,100 +111,24 @@ export default async function TaskDetailPage({
         )}
       </Card>
 
-      {/* In Progress Section */}
-      {task.status === 'open' && inProgressAcceptances.length > 0 && (
+      {/* In Progress Section - Live Updates */}
+      {task.status === 'open' && (
         <Card className="p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[var(--text-main)]">In Progress</h2>
-            <Badge count={inProgressAcceptances.length} />
+            <span className="text-xs text-green-600 font-medium animate-pulse">● LIVE</span>
           </div>
-          <div className="space-y-4">
-            {inProgressAcceptances.map((acc) => {
-              const agent = agentMap.get(acc.agentId.toString());
-              return (
-                <div key={acc._id.toString()} className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-cream)] border-2 border-[var(--text-sub)] border-opacity-10">
-                  <div className="flex-1">
-                    <p className="font-bold text-[var(--text-main)]">
-                      {agent?.name || 'Unknown Agent'}
-                    </p>
-                    <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
-                      Accepted {formatDateTime(acc.acceptedAt)}
-                    </p>
-                    {acc.progress && (
-                      <div className="mt-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-[var(--text-sub)] bg-opacity-20 rounded-full h-2 max-w-xs">
-                            <div
-                              className="bg-[var(--accent-orange)] h-2 rounded-full transition-all"
-                              style={{ width: `${acc.progress.percentage}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-bold text-[var(--text-main)]">
-                            {acc.progress.percentage}%
-                          </span>
-                        </div>
-                        <p className="text-sm text-[var(--text-main)] mt-2">
-                          {acc.progress.message}
-                        </p>
-                        <p className="text-xs text-[var(--text-sub)] opacity-60 mt-1">
-                          Updated {formatDateTime(acc.progress.updatedAt)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <LiveInProgress taskId={taskId} />
         </Card>
       )}
 
+      {/* Submissions Section - Live Updates */}
       <Card className="p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[var(--text-main)]">Submissions</h2>
-          <Badge count={submissions.length} />
+          <span className="text-xs text-green-600 font-medium animate-pulse">● LIVE</span>
         </div>
-
-        {submissions.length === 0 ? (
-          <p className="text-[var(--text-sub)] opacity-60">No submissions yet.</p>
-        ) : (
-          <div className="space-y-4">
-            {submissions.map((sub) => {
-              const agent = agentMap.get(sub.agentId.toString());
-              return (
-                <div key={sub._id.toString()} className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-cream)] border-2 border-[var(--text-sub)] border-opacity-10">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-bold text-[var(--text-main)]">
-                        {agent?.name || 'Unknown Agent'}
-                        {sub.isWinner && (
-                          <span className="ml-2 px-3 py-1 text-xs font-bold bg-[var(--accent-yellow)] text-[var(--text-sub)] rounded-full border-2 border-[var(--text-sub)]">Winner</span>
-                        )}
-                      </p>
-                      <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
-                        {sub.submissionType} • {formatDateTime(sub.submittedAt)}
-                      </p>
-                      <a
-                        href={sub.submissionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[var(--accent-orange)] hover:underline text-sm font-semibold mt-2 inline-block"
-                      >
-                        View Submission →
-                      </a>
-                    </div>
-                    {canSelectWinner && !sub.isWinner && (
-                      <SelectWinnerButton
-                        taskId={task._id.toString()}
-                        submissionId={sub._id.toString()}
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <LiveSubmissions taskId={taskId} canSelectWinner={task.status === 'open'} isOwner={isOwner} />
       </Card>
     </div>
   );

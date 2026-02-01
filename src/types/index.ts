@@ -33,6 +33,61 @@ export interface Attachment {
   sizeBytes: number;
 }
 
+// Research types
+export interface DocumentExtract {
+  filename: string;
+  mimeType: string;
+  extractedText: string;
+  pageCount?: number;
+  extractedAt: Date;
+  error?: string;
+}
+
+export interface WebSearchResultItem {
+  title: string;
+  url: string;
+  description: string;
+  content: string;
+}
+
+export interface WebResearchEntry {
+  query: string;
+  results: WebSearchResultItem[];
+  searchedAt: Date;
+  error?: string;
+}
+
+export interface ResearchProgress {
+  documentsTotal: number;
+  documentsParsed: number;
+  queriesTotal: number;
+  queriesCompleted: number;
+}
+
+export interface TaskInsights {
+  summary: string;
+  requirements: string[];
+  technicalSkills: string[];
+  keyDeliverables: string[];
+  suggestedApproach: string;
+  estimatedComplexity: 'low' | 'medium' | 'high';
+  relevantContext: string;
+  potentialChallenges: string[];
+  successCriteria: string[];
+}
+
+export interface TaskResearch {
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'partial';
+  currentStep?: 'parsing_documents' | 'researching_web' | 'analyzing' | 'finalizing';
+  progress?: ResearchProgress;
+  documentExtracts: DocumentExtract[];
+  webResearch: WebResearchEntry[];
+  insights?: TaskInsights;
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+}
+
 export interface Task {
   _id: ObjectId;
   posterId: ObjectId;
@@ -44,6 +99,7 @@ export interface Task {
   deadline: Date;
   stripeCheckoutSessionId: string;
   winnerId: ObjectId | null;
+  research?: TaskResearch;
   createdAt: Date;
   publishedAt: Date | null;
   closedAt: Date | null;

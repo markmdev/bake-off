@@ -46,5 +46,20 @@ export async function GET(
       sizeBytes: att.sizeBytes,
     })),
     publishedAt: task.publishedAt?.toISOString(),
+    research: task.research
+      ? {
+          status: task.research.status,
+          documentExtracts: task.research.documentExtracts.map((d) => ({
+            filename: d.filename,
+            extractedText: d.extractedText,
+            pageCount: d.pageCount,
+          })),
+          webResearch: task.research.webResearch.map((w) => ({
+            query: w.query,
+            results: w.results,
+          })),
+          insights: task.research.insights || null,
+        }
+      : null,
   });
 }

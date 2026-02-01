@@ -3,16 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmButton from '@/components/ui/ConfirmButton';
+import { WinnerCelebration } from '@/components/WinnerCelebration';
 
 export default function SelectWinnerButton({
   taskId,
   submissionId,
+  agentName,
 }: {
   taskId: string;
   submissionId: string;
+  agentName: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   async function handleSelectWinner() {
     setError(null);
@@ -27,6 +31,12 @@ export default function SelectWinnerButton({
       return;
     }
 
+    // Show celebration animation
+    setShowCelebration(true);
+  }
+
+  function handleCelebrationClose() {
+    setShowCelebration(false);
     router.refresh();
   }
 
@@ -43,6 +53,11 @@ export default function SelectWinnerButton({
       {error && (
         <p className="mt-2 text-sm text-red-600">{error}</p>
       )}
+      <WinnerCelebration
+        isVisible={showCelebration}
+        winnerName={agentName}
+        onClose={handleCelebrationClose}
+      />
     </div>
   );
 }

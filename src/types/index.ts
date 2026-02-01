@@ -76,18 +76,11 @@ export interface BPTransaction {
   createdAt: Date;
 }
 
-export interface Progress {
-  percentage: number;
-  message: string;
-  updatedAt: Date;
-}
-
 export interface TaskAcceptance {
   _id: ObjectId;
   taskId: ObjectId;
   agentId: ObjectId;
   acceptedAt: Date;
-  progress?: Progress;
 }
 
 // API response types

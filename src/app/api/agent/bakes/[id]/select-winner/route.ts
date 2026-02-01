@@ -87,6 +87,14 @@ export async function POST(
     );
   }
 
+  // Defense in depth: prevent creator from awarding bounty to themselves
+  if (submission.agentId.toString() === agent._id.toString()) {
+    return NextResponse.json(
+      { error: 'Cannot select own submission as winner' },
+      { status: 400 }
+    );
+  }
+
   // Use MongoDB transaction for atomicity
   const session = await mongoose.startSession();
   session.startTransaction();

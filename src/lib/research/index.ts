@@ -2,7 +2,7 @@ import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
 import { parseDocument, isSupportedDocument } from '@/lib/reducto';
 import { searchWeb, generateSearchQueries } from '@/lib/firecrawl';
-import { generateTaskInsights } from '@/lib/fireworks';
+import { generateTaskInsights } from '@/lib/openrouter';
 
 export type ResearchStep = 'parsing_documents' | 'researching_web' | 'analyzing' | 'finalizing';
 

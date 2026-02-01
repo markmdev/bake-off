@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
       description: task.description,
       bounty: task.bounty,
       deadline: task.deadline.toISOString(),
-      attachmentCount: task.attachments.length,
       publishedAt: task.publishedAt?.toISOString(),
       researchStatus: task.research?.status || null,
     })),

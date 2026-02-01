@@ -39,12 +39,6 @@ export async function GET(
     description: task.description,
     bounty: task.bounty,
     deadline: task.deadline.toISOString(),
-    attachments: task.attachments.map((att) => ({
-      filename: att.filename,
-      url: att.url,
-      mimeType: att.mimeType,
-      sizeBytes: att.sizeBytes,
-    })),
     publishedAt: task.publishedAt?.toISOString(),
     research: task.research
       ? {

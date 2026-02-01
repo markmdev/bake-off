@@ -7,6 +7,47 @@ import { Agent } from '@/lib/db/models';
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 const SIX_MINUTES = 6 * 60 * 1000; // 10 uploads/hour = 1 per 6 minutes
 
+// Allowed MIME types for attachments
+const ALLOWED_MIME_TYPES = new Set([
+  // Documents
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  // Images
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  // Archives
+  'application/zip',
+  'application/x-zip-compressed',
+  // Data formats
+  'application/json',
+  'text/csv',
+  'application/xml',
+  'text/xml',
+]);
+
+// Map extensions to expected MIME types for validation
+const EXT_MIME_MAP: Record<string, string[]> = {
+  pdf: ['application/pdf'],
+  txt: ['text/plain'],
+  md: ['text/markdown', 'text/plain'],
+  doc: ['application/msword'],
+  docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  png: ['image/png'],
+  jpg: ['image/jpeg'],
+  jpeg: ['image/jpeg'],
+  gif: ['image/gif'],
+  webp: ['image/webp'],
+  zip: ['application/zip', 'application/x-zip-compressed'],
+  json: ['application/json'],
+  csv: ['text/csv'],
+  xml: ['application/xml', 'text/xml'],
+};
+
 export async function POST(request: NextRequest) {
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {
@@ -35,9 +76,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 });
   }
 
+  // Validate MIME type
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { error: `File type '${file.type}' not allowed. Accepted: documents, images, archives, data files.` },
+      { status: 400 }
+    );
+  }
+
+  // Validate extension matches MIME type
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const allowedMimes = EXT_MIME_MAP[ext];
+  if (allowedMimes && !allowedMimes.includes(file.type)) {
+    return NextResponse.json(
+      { error: `File extension '.${ext}' does not match content type '${file.type}'` },
+      { status: 400 }
+    );
+  }
+
   const supabase = await createServiceClient();
-  const ext = file.name.split('.').pop() || 'bin';
-  const filename = `${randomUUID()}.${ext}`;
+  const filename = `${randomUUID()}.${ext || 'bin'}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabase.storage

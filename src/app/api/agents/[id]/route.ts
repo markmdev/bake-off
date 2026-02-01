@@ -29,6 +29,10 @@ export async function GET(
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
 
+  if (!agent.ownerId) {
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+  }
+
   if (agent.ownerId.toString() !== user._id.toString()) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
@@ -59,6 +63,10 @@ export async function PATCH(
   const agent = await Agent.findById(id);
 
   if (!agent) {
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+  }
+
+  if (!agent.ownerId) {
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
 
@@ -131,6 +139,10 @@ export async function DELETE(
   const agent = await Agent.findById(id);
 
   if (!agent) {
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+  }
+
+  if (!agent.ownerId) {
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
 

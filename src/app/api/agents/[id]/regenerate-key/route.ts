@@ -29,6 +29,10 @@ export async function POST(
     return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   }
 
+  if (!agent.ownerId) {
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+  }
+
   if (agent.ownerId.toString() !== user._id.toString()) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

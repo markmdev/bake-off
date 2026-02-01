@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { useState } from 'react';
 
-interface ResearchProgress {
+interface ResearchProgressData {
   documentsTotal: number;
   documentsParsed: number;
   queriesTotal: number;
@@ -31,7 +32,7 @@ interface TaskInsights {
 interface ResearchStatusResponse {
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'partial' | null;
   currentStep: 'parsing_documents' | 'researching_web' | 'analyzing' | 'finalizing' | null;
-  progress: ResearchProgress | null;
+  progress: ResearchProgressData | null;
   error: string | null;
   summary: ResearchSummary;
   insights: TaskInsights | null;
@@ -43,82 +44,83 @@ interface ResearchProgressProps {
 }
 
 const complexityColors = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800',
+  low: 'bg-[var(--accent-green-light)] text-[var(--accent-green)]',
+  medium: 'bg-[var(--accent-yellow-light)] text-[var(--accent-yellow)]',
+  high: 'bg-[var(--accent-pink-light)] text-[var(--accent-pink)]',
 };
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+function isTerminalStatus(status: ResearchStatusResponse['status']): boolean {
+  return status === 'completed' || status === 'failed' || status === 'partial' || status === null;
+}
 
 export default function ResearchProgress({
   taskId,
   initialStatus,
 }: ResearchProgressProps) {
-  const [data, setData] = useState<ResearchStatusResponse | null>(null);
-  const [isPolling, setIsPolling] = useState(
-    initialStatus === 'pending' || initialStatus === 'processing'
-  );
   const [showFullInsights, setShowFullInsights] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch(`/api/tasks/${taskId}/research-status`);
-        if (!res.ok || cancelled) return;
-
-        const json: ResearchStatusResponse = await res.json();
-        if (cancelled) return;
-
-        setData(json);
-
-        // Stop polling when complete or failed
-        if (
-          json.status === 'completed' ||
-          json.status === 'failed' ||
-          json.status === 'partial' ||
-          json.status === null
-        ) {
-          setIsPolling(false);
+  const { data, error, isLoading } = useSWR<ResearchStatusResponse>(
+    `/api/tasks/${taskId}/research-status`,
+    fetcher,
+    {
+      // Poll every 2s while in progress, stop when terminal
+      refreshInterval: (latestData) => {
+        if (!latestData) {
+          // Initial load - poll if initialStatus suggests we should
+          return initialStatus === 'pending' || initialStatus === 'processing' ? 2000 : 0;
         }
-      } catch (err) {
-        console.error('Failed to fetch research status:', err);
-      }
-    };
+        return isTerminalStatus(latestData.status) ? 0 : 2000;
+      },
+      revalidateOnFocus: true,
+    }
+  );
 
-    // Initial fetch
-    fetchStatus();
+  // Don't render anything if loading initial data or no research data
+  if (isLoading) {
+    return null;
+  }
 
-    if (!isPolling) return;
+  // Show error state if fetch failed
+  if (error) {
+    return (
+      <div className="bg-[var(--accent-pink-light)] border-2 border-[var(--accent-pink)] rounded-[var(--radius-md)] p-6 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <span className="text-2xl">!</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-[var(--text-main)]">Unable to load research status</h3>
+            <p className="text-sm text-[var(--text-sub)]">
+              Failed to fetch research progress. Please refresh the page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    // Poll every 2 seconds
-    const interval = setInterval(fetchStatus, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [taskId, isPolling]);
-
-  // Don't render anything if no research data
   if (!data || data.status === null) {
     return null;
   }
 
-  const { status, currentStep, progress, error, summary, insights } = data;
+  const { status, currentStep, progress, error: researchError, summary, insights } = data;
 
   // Completed state with insights
   if (status === 'completed' || status === 'partial') {
     return (
-      <div className="bg-white shadow rounded-lg p-6 mb-6 space-y-4">
+      <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-6 mb-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <span className="text-2xl">{status === 'completed' ? '✓' : '⚠'}</span>
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-bold text-[var(--text-main)]">
                 {status === 'completed' ? 'Research complete' : 'Research partially complete'}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[var(--text-sub)] opacity-80">
                 {summary.documentsWithText} document{summary.documentsWithText !== 1 ? 's' : ''} parsed
                 {' • '}
                 {summary.totalResults} source{summary.totalResults !== 1 ? 's' : ''} found
@@ -126,7 +128,7 @@ export default function ResearchProgress({
             </div>
           </div>
           {insights && insights.estimatedComplexity && (
-            <span className={`px-2 py-1 text-xs font-medium rounded ${complexityColors[insights.estimatedComplexity]}`}>
+            <span className={`px-2 py-1 text-xs font-bold rounded-[var(--radius-sm)] border-2 border-[var(--text-sub)] ${complexityColors[insights.estimatedComplexity]}`}>
               {insights.estimatedComplexity.charAt(0).toUpperCase() + insights.estimatedComplexity.slice(1)} complexity
             </span>
           )}
@@ -134,14 +136,14 @@ export default function ResearchProgress({
 
         {/* AI Insights Summary */}
         {insights && insights.summary && (
-          <div className="border-t pt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">AI Analysis</h4>
-            <p className="text-sm text-gray-600 mb-3">{insights.summary}</p>
+          <div className="border-t-2 border-dashed border-[rgba(26,43,60,0.1)] pt-4">
+            <h4 className="text-sm font-bold text-[var(--text-sub)] mb-2">AI Analysis</h4>
+            <p className="text-sm text-[var(--text-main)] mb-3">{insights.summary}</p>
 
             {!showFullInsights && (
               <button
                 onClick={() => setShowFullInsights(true)}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-[var(--accent-orange)] hover:underline font-bold"
               >
                 Show full analysis →
               </button>
@@ -151,10 +153,10 @@ export default function ResearchProgress({
               <div className="space-y-4 mt-4">
                 {insights.requirements.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Requirements
                     </h5>
-                    <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
                       {insights.requirements.map((req, i) => (
                         <li key={i}>{req}</li>
                       ))}
@@ -164,14 +166,14 @@ export default function ResearchProgress({
 
                 {insights.technicalSkills.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Technical Skills Needed
                     </h5>
                     <div className="flex flex-wrap gap-1">
                       {insights.technicalSkills.map((skill, i) => (
                         <span
                           key={i}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                          className="px-2 py-0.5 bg-[var(--bg-cream)] text-[var(--text-main)] text-xs rounded-[var(--radius-sm)] border border-[var(--text-sub)] border-opacity-20"
                         >
                           {skill}
                         </span>
@@ -182,10 +184,10 @@ export default function ResearchProgress({
 
                 {insights.keyDeliverables.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Key Deliverables
                     </h5>
-                    <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
                       {insights.keyDeliverables.map((item, i) => (
                         <li key={i}>{item}</li>
                       ))}
@@ -195,19 +197,19 @@ export default function ResearchProgress({
 
                 {insights.suggestedApproach && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Suggested Approach
                     </h5>
-                    <p className="text-sm text-gray-600">{insights.suggestedApproach}</p>
+                    <p className="text-sm text-[var(--text-main)]">{insights.suggestedApproach}</p>
                   </div>
                 )}
 
                 {insights.potentialChallenges.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Potential Challenges
                     </h5>
-                    <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
                       {insights.potentialChallenges.map((challenge, i) => (
                         <li key={i}>{challenge}</li>
                       ))}
@@ -217,10 +219,10 @@ export default function ResearchProgress({
 
                 {insights.successCriteria.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Success Criteria
                     </h5>
-                    <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
                       {insights.successCriteria.map((criterion, i) => (
                         <li key={i}>{criterion}</li>
                       ))}
@@ -230,16 +232,16 @@ export default function ResearchProgress({
 
                 {insights.relevantContext && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
                       Relevant Context
                     </h5>
-                    <p className="text-sm text-gray-600">{insights.relevantContext}</p>
+                    <p className="text-sm text-[var(--text-main)]">{insights.relevantContext}</p>
                   </div>
                 )}
 
                 <button
                   onClick={() => setShowFullInsights(false)}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="text-sm text-[var(--text-sub)] opacity-60 hover:opacity-100"
                 >
                   ← Hide details
                 </button>
@@ -254,15 +256,15 @@ export default function ResearchProgress({
   // Failed state
   if (status === 'failed') {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+      <div className="bg-[var(--accent-pink-light)] border-2 border-[var(--accent-pink)] rounded-[var(--radius-md)] p-6 mb-6">
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">
             <span className="text-2xl">✗</span>
           </div>
           <div>
-            <h3 className="text-lg font-medium text-red-800">Research failed</h3>
-            <p className="text-sm text-red-600">
-              {error || 'An error occurred while researching your task.'}
+            <h3 className="text-lg font-bold text-[var(--text-main)]">Research failed</h3>
+            <p className="text-sm text-[var(--text-sub)]">
+              {researchError || 'An error occurred while researching your task.'}
             </p>
           </div>
         </div>
@@ -302,8 +304,8 @@ export default function ResearchProgress({
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
+    <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-6 mb-6">
+      <h3 className="text-lg font-bold text-[var(--text-main)] mb-4">
         Preparing your task...
       </h3>
 
@@ -327,20 +329,20 @@ export default function ResearchProgress({
             <div key={step.key} className="flex items-center gap-3">
               <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                 {isComplete ? (
-                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="text-[var(--accent-green)] font-bold">✓</span>
                 ) : isActive ? (
-                  <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-[var(--accent-purple)] border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span className="w-3 h-3 rounded-full bg-gray-300" />
+                  <span className="w-3 h-3 rounded-full bg-[var(--text-sub)] opacity-30" />
                 )}
               </div>
               <span
                 className={`text-sm ${
                   isActive
-                    ? 'text-gray-900 font-medium'
+                    ? 'text-[var(--text-main)] font-bold'
                     : isComplete
-                      ? 'text-gray-500'
-                      : 'text-gray-400'
+                      ? 'text-[var(--text-sub)] opacity-60'
+                      : 'text-[var(--text-sub)] opacity-40'
                 }`}
               >
                 {step.label} {stepDetail}
@@ -351,12 +353,15 @@ export default function ResearchProgress({
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-[var(--text-sub)] bg-opacity-20 rounded-full h-2">
         <div
-          className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+          className="bg-[var(--accent-orange)] h-2 rounded-full transition-all duration-500"
           style={{ width: `${Math.min(overallProgress, 100)}%` }}
         />
       </div>
+      <p className="text-xs text-[var(--text-sub)] opacity-40 text-right mt-2">
+        Live • Updates every 2s
+      </p>
     </div>
   );
 }

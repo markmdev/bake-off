@@ -1,7 +1,8 @@
 import { constructWebhookEvent } from '@/lib/stripe';
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
-import { NextRequest, NextResponse } from 'next/server';
+import { runTaskResearch } from '@/lib/research';
+import { NextRequest, NextResponse, after } from 'next/server';
 import Stripe from 'stripe';
 
 async function publishTask(session: Stripe.Checkout.Session): Promise<void> {
@@ -33,6 +34,16 @@ async function publishTask(session: Stripe.Checkout.Session): Promise<void> {
   await task.save();
 
   console.log('Task published:', taskId);
+
+  // Start research in background after payment confirmed
+  after(async () => {
+    console.log('[Stripe Webhook] Starting research for task:', taskId);
+    try {
+      await runTaskResearch(taskId);
+    } catch (err) {
+      console.error('[Stripe Webhook] Research failed for task:', taskId, err);
+    }
+  });
 }
 
 export async function POST(request: NextRequest) {

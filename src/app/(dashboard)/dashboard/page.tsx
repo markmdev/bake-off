@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
 import { PageHeader, Button, StatCard, Card, Tag } from '@/components/ui';
 import { RfpImportButton } from '@/components/rfp';
+import { HackathonCountdown } from '@/components/countdown-timer';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -51,6 +52,11 @@ export default async function DashboardPage() {
           </div>
         }
       />
+
+      {/* Hackathon Countdown */}
+      <div className="bg-zinc-800/50 border-4 border-zinc-700 rounded-none">
+        <HackathonCountdown />
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

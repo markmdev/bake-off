@@ -1,3 +1,6 @@
+import { TaskInsights } from '@/types';
+import { stripMarkdownJson } from '@/lib/utils/json';
+
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 function getApiKey(): string {
@@ -38,48 +41,51 @@ export async function chatCompletion(
 
   console.log('[OpenRouter] Calling API with model:', model);
 
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getApiKey()}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.ink',
-      'X-Title': 'Bake-off',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      messages,
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[OpenRouter] API error:', response.status, errorText);
-    throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+  try {
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getApiKey()}`,
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.ink',
+        'X-Title': 'Bake-off',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        messages,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[OpenRouter] API error:', response.status, errorText);
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+    }
+
+    const data: ChatCompletionResponse = await response.json();
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('No response from OpenRouter API');
+    }
+
+    console.log('[OpenRouter] API call successful');
+    return data.choices[0].message.content;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[OpenRouter] Request timed out');
+      throw new Error('OpenRouter request timed out after 60 seconds');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const data: ChatCompletionResponse = await response.json();
-
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error('No response from OpenRouter API');
-  }
-
-  console.log('[OpenRouter] API call successful');
-  return data.choices[0].message.content;
 }
 
-export interface TaskInsights {
-  summary: string;
-  requirements: string[];
-  technicalSkills: string[];
-  keyDeliverables: string[];
-  suggestedApproach: string;
-  estimatedComplexity: 'low' | 'medium' | 'high';
-  relevantContext: string;
-  potentialChallenges: string[];
-  successCriteria: string[];
-}
 
 export async function generateTaskInsights(input: {
   title: string;
@@ -156,19 +162,8 @@ Respond with the JSON analysis only, no additional text.`;
       { maxTokens: 4096 }
     );
 
-    // Parse JSON response, handling potential markdown code blocks
-    let jsonStr = response.trim();
-    if (jsonStr.startsWith('```json')) {
-      jsonStr = jsonStr.slice(7);
-    } else if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.slice(3);
-    }
-    if (jsonStr.endsWith('```')) {
-      jsonStr = jsonStr.slice(0, -3);
-    }
-    jsonStr = jsonStr.trim();
-
-    const insights = JSON.parse(jsonStr) as TaskInsights;
+    const cleaned = stripMarkdownJson(response);
+    const insights = JSON.parse(cleaned) as TaskInsights;
 
     console.log('[OpenRouter] Successfully generated insights');
 

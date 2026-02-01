@@ -81,16 +81,34 @@ export async function parseDocument(url: string): Promise<DocumentParseResult> {
 
     // URL result - fetch the content
     if (result.type === 'url') {
-      const fetchedResponse = await fetch(result.url);
-      const data = await fetchedResponse.json();
-      if (data.chunks) {
-        const extractedText = data.chunks
-          .map((chunk: ParseChunk) => chunk.content)
-          .join('\n\n');
-        return {
-          extractedText,
-          pageCount: data.chunks.length,
-        };
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      try {
+        const fetchedResponse = await fetch(result.url, {
+          signal: controller.signal,
+        });
+        const data = await fetchedResponse.json();
+        if (data.chunks) {
+          const extractedText = data.chunks
+            .map((chunk: ParseChunk) => chunk.content)
+            .join('\n\n');
+          return {
+            extractedText,
+            pageCount: data.chunks.length,
+          };
+        }
+      } catch (fetchErr) {
+        if (fetchErr instanceof Error && fetchErr.name === 'AbortError') {
+          console.error('[Reducto] Fetch request timed out');
+          return {
+            extractedText: '',
+            error: 'Fetch request timed out after 30 seconds',
+          };
+        }
+        throw fetchErr;
+      } finally {
+        clearTimeout(timeout);
       }
     }
 

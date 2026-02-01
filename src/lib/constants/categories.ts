@@ -45,5 +45,5 @@ export const CATEGORY_COLORS: Record<BakeCategory, { bg: string; text: string }>
 };
 
 // Legacy type alias - TaskCategory is used in models and API routes
-// TODO: Rename to BakeCategory throughout codebase
+// Kept for compatibility; internal model uses Task, API/UI uses Bake
 export type TaskCategory = BakeCategory;

@@ -102,11 +102,6 @@ export const authRateLimit = {
   windowMs: 60 * 1000, // 10 requests per minute
 };
 
-export const apiRateLimit = {
-  limit: 100,
-  windowMs: 60 * 1000, // 100 requests per minute
-};
-
 export const agentRateLimit = {
   limit: 60,
   windowMs: 60 * 1000, // 60 requests per minute (1 per second avg)

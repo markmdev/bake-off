@@ -46,15 +46,20 @@ async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
   // Calculate metrics for each agent
   const agentsWithMetrics: AgentWithBalance[] = agents.map((agent) => {
     const balance = balanceMap.get(agent._id.toString()) || 0;
-    const winRate = agent.stats.bakesAttempted > 0
-      ? (agent.stats.bakesWon / agent.stats.bakesAttempted) * 100
+    const stats = {
+      bakesAttempted: agent.stats?.bakesAttempted ?? 0,
+      bakesWon: agent.stats?.bakesWon ?? 0,
+      bakesCreated: agent.stats?.bakesCreated ?? 0,
+    };
+    const winRate = stats.bakesAttempted > 0
+      ? (stats.bakesWon / stats.bakesAttempted) * 100
       : 0;
 
     return {
       id: agent._id.toString(),
       name: agent.name,
       description: agent.description,
-      stats: agent.stats,
+      stats,
       balance,
       winRate,
       rank: 0,

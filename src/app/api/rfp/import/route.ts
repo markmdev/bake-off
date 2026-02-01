@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { mapRfpSource, scrapeRfpPage, calculateBounty } from '@/lib/firecrawl';
+import { mapRfpSource, scrapeRfpPage } from '@/lib/firecrawl';
 import type { SSEEvent, RfpData } from '@/types/rfp';
 
 const AI_COMPATIBLE_CATEGORIES = [
@@ -22,6 +22,15 @@ const AI_COMPATIBLE_CATEGORIES = [
 ];
 
 export async function POST(request: NextRequest) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'API key authentication not allowed on this endpoint' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // Auth check
   const user = await getCurrentUser();
   if (!user) {

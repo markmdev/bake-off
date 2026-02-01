@@ -14,6 +14,15 @@ import { calculateBounty } from '@/lib/firecrawl';
 import type { CreateTasksRequest, CreateTasksResponse, RfpData } from '@/types/rfp';
 
 export async function POST(request: NextRequest) {
+  // Reject API key auth on user routes
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return NextResponse.json(
+      { error: 'API key authentication not allowed on this endpoint' },
+      { status: 401 }
+    );
+  }
+
   // Auth check
   const user = await getCurrentUser();
   if (!user) {

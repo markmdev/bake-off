@@ -320,7 +320,7 @@ export function RfpImportPanel({
             >
               {state.status === 'importing'
                 ? 'Importing...'
-                : `Import ${state.selectedIds.size} as Bakeoffs`}
+                : `Import ${state.selectedIds.size} as Bakes`}
             </Button>
           </div>
         )}

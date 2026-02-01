@@ -61,14 +61,14 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Open Bakeoffs"
+          label="Open Bakes"
           value={activeTasks.toString()}
           badge={
             <Tag variant="green">Live</Tag>
           }
         />
         <StatCard
-          label="Closed Bakeoffs"
+          label="Closed Bakes"
           value={closedTasks.toString()}
           badge={
             <Tag variant="yellow">Completed</Tag>

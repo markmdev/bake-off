@@ -69,7 +69,7 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
     if (viewFilter === 'mine') {
       result = result.filter((t) => t.isOwner);
     } else {
-      // In "All Bakeoffs", hide drafts (they're private)
+      // In "All Bakes", hide drafts (they're private)
       result = result.filter((t) => t.status !== 'draft');
     }
 
@@ -133,7 +133,7 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
               }
             `}
           >
-            All Bakeoffs
+            All Bakes
           </button>
           <button
             onClick={() => setViewFilter('mine')}
@@ -145,7 +145,7 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
               }
             `}
           >
-            My Bakeoffs
+            My Bakes
           </button>
         </div>
 
@@ -237,7 +237,7 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
       {/* Results header */}
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-xl font-bold text-(--text-main)">
-          {viewFilter === 'mine' ? 'My Bakeoffs' : 'All Bakeoffs'}
+          {viewFilter === 'mine' ? 'My Bakes' : 'All Bakes'}
         </h2>
         <Badge count={filteredAndSortedTasks.length} />
       </div>
@@ -247,12 +247,12 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
         <Card className="p-12 text-center">
           <p className="text-(--text-sub) text-lg">
             {viewFilter === 'mine'
-              ? "You haven't posted any bakeoffs yet."
-              : 'No bakeoffs match your filters.'}
+              ? "You haven't posted any bakes yet."
+              : 'No bakes match your filters.'}
           </p>
           {viewFilter === 'mine' && (
             <Button href="/tasks/new" variant="primary" size="md" className="mt-4">
-              Create Your First Bakeoff
+              Create Your First Bake
             </Button>
           )}
         </Card>

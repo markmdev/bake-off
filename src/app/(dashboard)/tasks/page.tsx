@@ -64,11 +64,11 @@ export default async function TasksPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        title="Bakeoffs"
+        title="Bakes"
         subtitle="Browse competitions and compete for bounties."
         action={
           <Button href="/tasks/new" variant="primary" size="md">
-            + New Bakeoff
+            + New Bake
           </Button>
         }
       />

@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Task, Submission } from '@/lib/db/models';
+import { Task } from '@/lib/db/models';
 import { PageHeader, Button, StatCard, Card, Tag } from '@/components/ui';
 
 export default async function DashboardPage() {
@@ -9,33 +9,27 @@ export default async function DashboardPage() {
 
   await connectDB();
 
-  // Get real stats
-  const [activeTasks, pendingReviews, totalPaidOut] = await Promise.all([
-    // Active tasks (open)
-    Task.countDocuments({ posterId: user._id, status: 'open' }),
-    // Pending reviews (tasks with submissions but no winner yet)
-    Task.countDocuments({
-      posterId: user._id,
-      status: 'open',
-    }).then(async () => {
-      const tasksWithSubmissions = await Task.aggregate([
-        { $match: { posterId: user._id, status: 'open' } },
-        {
-          $lookup: {
-            from: 'submissions',
-            localField: '_id',
-            foreignField: 'taskId',
-            as: 'submissions',
-          },
-        },
-        { $match: { 'submissions.0': { $exists: true } } },
-        { $count: 'count' },
-      ]);
-      return tasksWithSubmissions[0]?.count || 0;
-    }),
-    // Total bounties paid (closed tasks)
+  // Get GLOBAL stats (all tasks, not just user's)
+  const [activeTasks, pendingReviews, totalBounties] = await Promise.all([
+    // All active tasks (open)
+    Task.countDocuments({ status: 'open' }),
+    // Tasks with submissions awaiting review
     Task.aggregate([
-      { $match: { posterId: user._id, status: 'closed' } },
+      { $match: { status: 'open' } },
+      {
+        $lookup: {
+          from: 'submissions',
+          localField: '_id',
+          foreignField: 'taskId',
+          as: 'submissions',
+        },
+      },
+      { $match: { 'submissions.0': { $exists: true } } },
+      { $count: 'count' },
+    ]).then((result) => result[0]?.count || 0),
+    // Total bounties (all open + closed tasks)
+    Task.aggregate([
+      { $match: { status: { $in: ['open', 'closed'] } } },
       { $group: { _id: null, total: { $sum: '$bounty' } } },
     ]).then((result) => result[0]?.total || 0),
   ]);
@@ -55,23 +49,23 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <StatCard
-          label="Active Tasks"
+          label="Open Bakeoffs"
           value={activeTasks.toString()}
           badge={
-            <Tag variant="green">Active</Tag>
+            <Tag variant="green">Live</Tag>
           }
         />
         <StatCard
-          label="Pending Reviews"
+          label="Awaiting Review"
           value={pendingReviews.toString()}
           badge={
-            <Tag variant="purple">Needs Action</Tag>
+            <Tag variant="purple">Has Submissions</Tag>
           }
         />
         <StatCard
           label="Total Bounties"
-          value={`$${(totalPaidOut / 100).toFixed(2)}`}
-          subtext="paid out"
+          value={`$${(totalBounties / 100).toLocaleString()}`}
+          subtext="up for grabs"
         />
       </div>
 

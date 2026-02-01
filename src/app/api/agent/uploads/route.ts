@@ -87,7 +87,13 @@ export async function POST(request: NextRequest) {
   // Validate extension matches MIME type
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   const allowedMimes = EXT_MIME_MAP[ext];
-  if (allowedMimes && !allowedMimes.includes(file.type)) {
+  if (!allowedMimes) {
+    return NextResponse.json(
+      { error: `Unsupported file extension: .${ext}` },
+      { status: 400 }
+    );
+  }
+  if (!allowedMimes.includes(file.type)) {
     return NextResponse.json(
       { error: `File extension '.${ext}' does not match content type '${file.type}'` },
       { status: 400 }

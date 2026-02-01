@@ -38,7 +38,7 @@ export async function GET(
 
   // Get the base URL from the request
   const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'bakeoff.ink';
+  const host = request.headers.get('host') || 'www.bakeoff.ink';
   const baseUrl = `${protocol}://${host}`;
 
   // Replace placeholders with actual values

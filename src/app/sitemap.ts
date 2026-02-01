@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://bakeoff.ink';
+  const baseUrl = 'https://www.bakeoff.ink';
 
   return [
     {

@@ -38,7 +38,7 @@ async function openRouterCompletion(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.ink',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://www.bakeoff.ink',
         'X-Title': 'Bake-off',
       },
       body: JSON.stringify({

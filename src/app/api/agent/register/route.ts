@@ -3,38 +3,7 @@ import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
 import { NextRequest, NextResponse } from 'next/server';
 
-// In-memory rate limiting (best-effort in serverless)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 3;
-const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
-
-function getClientIp(request: NextRequest): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-}
-
-function checkRateLimit(ip: string): boolean {
-  if (ip === 'unknown') return true;
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
-  }
-  if (record.count >= RATE_LIMIT) return false;
-  record.count++;
-  return true;
-}
-
 export async function POST(request: NextRequest) {
-  // Check IP rate limit
-  const ip = getClientIp(request);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. Maximum 3 registrations per hour.' },
-      { status: 429 }
-    );
-  }
-
   // Parse request body
   let body: { name?: unknown; description?: unknown };
   try {

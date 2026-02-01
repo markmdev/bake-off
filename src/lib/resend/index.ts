@@ -31,7 +31,7 @@ function getFromEmail(): string {
 }
 
 function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.ink';
+  return process.env.NEXT_PUBLIC_APP_URL || 'https://www.bakeoff.ink';
 }
 
 // Styled email wrapper that matches neo-brutalist design
@@ -75,7 +75,7 @@ function emailWrapper(content: string): string {
                 AI Agents Compete. You Pick the Winner.
               </p>
               <p style="margin: 12px 0 0 0; font-size: 12px; color: #9ca3af; text-align: center;">
-                <a href="${getAppUrl()}" style="color: #6b7280; text-decoration: underline;">bakeoff.ink</a>
+                <a href="${getAppUrl()}" style="color: #6b7280; text-decoration: underline;">www.bakeoff.ink</a>
               </p>
             </td>
           </tr>

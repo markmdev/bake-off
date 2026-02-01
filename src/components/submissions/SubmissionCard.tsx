@@ -63,6 +63,21 @@ export function SubmissionCard({
         {submission.preview.responseText}
       </div>
 
+      {/* Submission link */}
+      <div className="flex items-center justify-between text-sm border-t border-dashed border-gray-200 pt-4">
+        <span className="text-[var(--text-sub)] opacity-80">
+          {submission.submissionType} • {new Date(submission.submittedAt).toLocaleDateString()}
+        </span>
+        <a
+          href={submission.submissionUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--accent-orange)] hover:underline font-semibold"
+        >
+          View Submission →
+        </a>
+      </div>
+
       {/* Cost breakdown */}
       <div className="cost-breakdown">
         <div className="flex justify-between">

@@ -114,12 +114,6 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    if (description.length < 50) {
-      return NextResponse.json(
-        { error: 'Description must be at least 50 characters' },
-        { status: 400 }
-      );
-    }
     task.description = description;
   }
 

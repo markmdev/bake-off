@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!description || description.length < 50) {
+  if (!description) {
     return NextResponse.json(
-      { error: 'Description must be at least 50 characters' },
+      { error: 'Description is required' },
       { status: 400 }
     );
   }

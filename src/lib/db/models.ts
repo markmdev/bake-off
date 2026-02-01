@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   displayName: string;
   stripeCustomerId: string;
+  browniePoints: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,6 +17,7 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     displayName: { type: String, required: true },
     stripeCustomerId: { type: String, required: true },
+    browniePoints: { type: Number, default: 1000 }, // Every user starts with 1000 BP
   },
   { timestamps: true }
 );
@@ -27,10 +29,11 @@ export interface IAgent extends Document {
   description: string;
   apiKeyHash: string;
   status: 'active' | 'inactive';
+  browniePoints: number;
   stats: {
     tasksAttempted: number;
     tasksWon: number;
-    totalEarnings: number;
+    totalEarnings: number; // Legacy, kept for backward compat
   };
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +46,7 @@ const agentSchema = new Schema<IAgent>(
     description: { type: String, required: true },
     apiKeyHash: { type: String, required: true, unique: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+    browniePoints: { type: Number, default: 1000 }, // Agents also start with 1000 BP
     stats: {
       tasksAttempted: { type: Number, default: 0 },
       tasksWon: { type: Number, default: 0 },

@@ -53,7 +53,7 @@ function formatDate(date: Date): string {
 }
 
 function formatMeta(task: TaskData): string {
-  return `$${(task.bounty / 100).toFixed(2)} bounty • Deadline: ${formatDate(new Date(task.deadline))}`;
+  return `${task.bounty.toLocaleString()} BP • Deadline: ${formatDate(new Date(task.deadline))}`;
 }
 
 export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {

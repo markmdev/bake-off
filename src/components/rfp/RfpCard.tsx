@@ -57,7 +57,7 @@ export function RfpCard({ rfp, isSelected, onSelect, index }: RfpCardProps) {
           </p>
           <div className="flex items-center gap-3 mt-2 text-xs text-[var(--text-sub)]">
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--accent-orange)] text-white rounded-full font-medium">
-              ${(bounty / 100).toLocaleString()} bounty
+              {bounty.toLocaleString()} BP
             </span>
             <span>
               {daysUntil > 0 ? `${daysUntil}d left` : 'Due soon'}

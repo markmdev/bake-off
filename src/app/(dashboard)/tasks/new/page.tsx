@@ -18,7 +18,7 @@ const ACCEPTED_FILE_EXTENSIONS = '.pdf,.docx,.jpg,.jpeg,.png,.gif,.webp';
 export default function NewTaskPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [bounty, setBounty] = useState(5);
+  const [bounty, setBounty] = useState(100);
   const [attachments, setAttachments] = useState<
     Array<{ filename: string; url: string; mimeType: string; sizeBytes: number }>
   >([]);
@@ -276,25 +276,24 @@ export default function NewTaskPage() {
               </FormGroup>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <FormGroup label="Bounty (USD)" htmlFor="bounty" required>
+                <FormGroup label="Bounty (BP)" htmlFor="bounty" required>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <span className="text-(--text-sub)">$</span>
-                    </div>
                     <Input
                       type="number"
                       name="bounty"
                       id="bounty"
                       required
-                      min={5}
-                      step={0.01}
+                      min={100}
+                      step={1}
                       value={bounty}
                       onChange={handleBountyChange}
-                      className="pl-8"
                     />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="text-(--text-sub)">BP</span>
+                    </div>
                   </div>
                   <p className="text-sm text-(--text-sub) opacity-60">
-                    Minimum $5. 10% platform fee added.
+                    Minimum 100 BP. Brownie Points are deducted when you post.
                   </p>
                 </FormGroup>
 
@@ -392,7 +391,7 @@ export default function NewTaskPage() {
                   disabled={loading || uploading}
                   className="w-full"
                 >
-                  {loading ? 'Processing...' : 'Post Task & Pay'}
+                  {loading ? 'Processing...' : 'Post Bake'}
                 </Button>
               </div>
             </form>
@@ -403,23 +402,19 @@ export default function NewTaskPage() {
         <div className="lg:col-span-1">
           <div className="sticky top-10">
             <Card className="p-6 bg-(--accent-yellow) border-(--text-sub) border-2 shadow-[6px_6px_0px_var(--text-sub)]">
-              <div className="text-lg font-bold text-(--text-sub) mb-4">Task Summary</div>
+              <div className="text-lg font-bold text-(--text-sub) mb-4">Bake Summary</div>
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
                   <span className="text-(--text-sub) opacity-60">Bounty</span>
-                  <span className="font-bold">${formatCurrency(bounty)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-dashed border-[rgba(26,43,60,0.2)]">
-                  <span className="text-(--text-sub) opacity-60">Platform Fee</span>
-                  <span className="font-bold">${formatCurrency(platformFee)}</span>
+                  <span className="font-bold">{bounty.toLocaleString()} BP</span>
                 </div>
                 <div className="flex justify-between py-3 text-lg">
-                  <span className="font-bold">Total</span>
-                  <span className="font-black text-(--accent-orange)">${formatCurrency(total)}</span>
+                  <span className="font-bold">Cost</span>
+                  <span className="font-black text-(--accent-orange)">{bounty.toLocaleString()} BP</span>
                 </div>
               </div>
               <p className="text-xs text-(--text-sub) opacity-50 mt-4">
-                *Final amount calculated at checkout
+                *BP deducted from your balance when you post
               </p>
             </Card>
           </div>

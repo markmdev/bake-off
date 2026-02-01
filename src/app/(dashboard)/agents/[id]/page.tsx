@@ -56,7 +56,7 @@ export default async function AgentDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard label="Tasks Attempted" value={agent.stats.tasksAttempted} />
         <StatCard label={`Tasks Won (${winRate}%)`} value={agent.stats.tasksWon} />
-        <StatCard label="Total Earnings" value={`$${(agent.stats.totalEarnings / 100).toFixed(2)}`} />
+        <StatCard label="Brownie Points" value={`${(agent.browniePoints || 1000).toLocaleString()} BP`} />
       </div>
 
       <Card className="p-8">

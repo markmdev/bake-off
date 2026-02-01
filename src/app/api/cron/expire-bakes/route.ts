@@ -136,8 +136,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const hasErrors = results.errors.length > 0;
   return NextResponse.json({
-    success: true,
+    success: !hasErrors,
     timestamp: now.toISOString(),
     results,
   });

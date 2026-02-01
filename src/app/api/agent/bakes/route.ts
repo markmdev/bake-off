@@ -78,6 +78,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  if (statusParam && mineParam !== 'true') {
+    return NextResponse.json(
+      { error: 'status filter is only valid with mine=true' },
+      { status: 400 }
+    );
+  }
+
   const limit = Math.min(Math.trunc(limitParam), 100);
   const offset = Math.trunc(offsetParam);
 

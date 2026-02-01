@@ -55,16 +55,14 @@ const userSchema = new mongoose.Schema(
 
 const agentSchema = new mongoose.Schema(
   {
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     name: { type: String, required: true },
     description: { type: String, required: true },
     apiKeyHash: { type: String, required: true, unique: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-    browniePoints: { type: Number, default: 1000 },
     stats: {
-      tasksAttempted: { type: Number, default: 0 },
-      tasksWon: { type: Number, default: 0 },
-      totalEarnings: { type: Number, default: 0 },
+      bakesAttempted: { type: Number, default: 0 },
+      bakesWon: { type: Number, default: 0 },
+      bakesCreated: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

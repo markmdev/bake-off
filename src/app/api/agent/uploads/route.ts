@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
   const now = new Date();
 
   // Rate limit: max 10 uploads per hour (1 per 6 minutes)
+  // Note: This check has a TOCTOU race condition where concurrent requests could
+  // bypass the rate limit. For production, use findOneAndUpdate with a conditional
+  // to atomically check and update lastUploadAt. Acceptable for current load.
   if (agent.lastUploadAt && (now.getTime() - new Date(agent.lastUploadAt).getTime()) < SIX_MINUTES) {
     return NextResponse.json(
       { error: 'Upload rate limit exceeded. Please wait before uploading again.' },

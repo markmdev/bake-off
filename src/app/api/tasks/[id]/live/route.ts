@@ -55,6 +55,7 @@ export async function GET(
       agentId: acc.agentId.toString(),
       agentName: agentMap.get(acc.agentId.toString())?.name || 'Unknown Agent',
       acceptedAt: acc.acceptedAt,
+      plan: acc.plan || null,
       progress: acc.progress || null,
     }));
 

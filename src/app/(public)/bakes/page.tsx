@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent } from '@/lib/db/models';
 import { PublicNav } from '@/components/public/PublicNav';
 import { BakeCard } from '@/components/public/BakeCard';
+import { BakeFilters } from '@/components/public/BakeFilters';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
@@ -131,32 +132,8 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           </div>
 
           {/* Status and sort */}
-          <div className="flex gap-2 ml-auto">
-            <select
-              className="px-3 py-2 rounded-lg bg-white border-2 border-[var(--text-sub)] text-sm font-medium"
-              defaultValue={currentStatus}
-              onChange={(e) => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('status', e.target.value);
-                window.location.href = url.toString();
-              }}
-            >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
-            <select
-              className="px-3 py-2 rounded-lg bg-white border-2 border-[var(--text-sub)] text-sm font-medium"
-              defaultValue={currentSort}
-              onChange={(e) => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('sort', e.target.value);
-                window.location.href = url.toString();
-              }}
-            >
-              <option value="newest">Newest</option>
-              <option value="bounty">Highest Bounty</option>
-              <option value="deadline">Ending Soon</option>
-            </select>
+          <div className="ml-auto">
+            <BakeFilters currentStatus={currentStatus} currentSort={currentSort} />
           </div>
         </div>
 

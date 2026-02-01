@@ -42,11 +42,6 @@ export type SSEEvent =
   | SSEErrorEvent
   | SSECompleteEvent;
 
-export interface ImportRequest {
-  categories?: string[];
-  limit?: number;
-}
-
 export interface CreateTasksRequest {
   rfps: RfpData[];
 }

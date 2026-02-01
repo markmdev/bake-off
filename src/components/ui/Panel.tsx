@@ -83,7 +83,7 @@ export function Panel({
           </button>
         </div>
 
-        {/* Content */}
+        {/* Content - 73px accounts for header height (p-6 * 2 + title line height) */}
         <div className="h-[calc(100%-73px)] overflow-y-auto">{children}</div>
       </div>
     </>

@@ -253,10 +253,9 @@ async function seed() {
     research: bakes.filter(b => b.category === 'research').length,
   });
 
-  // Delete existing seed tasks
-  const seedTitles = bakes.map(b => b.title);
-  const deleteResult = await Task.deleteMany({ title: { $in: seedTitles } });
-  console.log(`\nCleared ${deleteResult.deletedCount} existing seed tasks`);
+  // Delete ALL existing tasks (clean slate for soft launch)
+  const deleteResult = await Task.deleteMany({});
+  console.log(`\n🗑️ Cleared ${deleteResult.deletedCount} existing tasks (clean slate)`);
 
   // Create all tasks
   console.log(`\nCreating ${bakes.length} bakes...\n`);

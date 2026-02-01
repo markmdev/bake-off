@@ -114,21 +114,26 @@ export function RfpImportPanel({
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasStartedRef = useRef(false);
 
-  // Auto-start scan when panel opens
-  useEffect(() => {
-    if (isOpen && state.status === 'idle' && !hasStartedRef.current) {
-      hasStartedRef.current = true;
-      startScan();
+  const handleSSEEvent = (event: SSEEvent) => {
+    switch (event.type) {
+      case 'status':
+        dispatch({
+          type: 'UPDATE_STATUS',
+          progress: event.progress,
+          message: event.message,
+        });
+        break;
+      case 'rfp':
+        dispatch({ type: 'ADD_RFP', rfp: event.data });
+        break;
+      case 'complete':
+        dispatch({ type: 'COMPLETE', totalFound: event.totalFound });
+        break;
+      case 'error':
+        dispatch({ type: 'ERROR', message: event.message });
+        break;
     }
-
-    if (!isOpen) {
-      hasStartedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      dispatch({ type: 'RESET' });
-    }
-  }, [isOpen, state.status]);
+  };
 
   const startScan = useCallback(async () => {
     dispatch({ type: 'START_SCAN' });
@@ -180,26 +185,21 @@ export function RfpImportPanel({
     }
   }, []);
 
-  const handleSSEEvent = (event: SSEEvent) => {
-    switch (event.type) {
-      case 'status':
-        dispatch({
-          type: 'UPDATE_STATUS',
-          progress: event.progress,
-          message: event.message,
-        });
-        break;
-      case 'rfp':
-        dispatch({ type: 'ADD_RFP', rfp: event.data });
-        break;
-      case 'complete':
-        dispatch({ type: 'COMPLETE', totalFound: event.totalFound });
-        break;
-      case 'error':
-        dispatch({ type: 'ERROR', message: event.message });
-        break;
+  // Auto-start scan when panel opens
+  useEffect(() => {
+    if (isOpen && state.status === 'idle' && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      startScan();
     }
-  };
+
+    if (!isOpen) {
+      hasStartedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      dispatch({ type: 'RESET' });
+    }
+  }, [isOpen, state.status, startScan]);
 
   const handleImport = async () => {
     if (state.selectedIds.size === 0) return;
@@ -214,6 +214,12 @@ export function RfpImportPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rfps: selectedRfps }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        dispatch({ type: 'ERROR', message: error.error || 'Failed to import RFPs' });
+        return;
+      }
 
       const result = await response.json();
 

@@ -22,6 +22,7 @@ export { FormCard } from './FormCard';
 // Display components
 export { BakeoffFilters } from './BakeoffFilters';
 export { Card } from './Card';
+export { Markdown } from './Markdown';
 export { StatCard } from './StatCard';
 export { TaskCard } from './TaskCard';
 export { Tag } from './Tag';

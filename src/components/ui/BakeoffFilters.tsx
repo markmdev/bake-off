@@ -159,13 +159,15 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
             className="
-              px-3 py-2
+              px-4 py-2.5
               bg-white
-              border border-(--text-sub) border-opacity-30
-              rounded-(--radius-sm)
-              text-sm text-(--text-main)
+              border border-(--text-sub)
+              rounded-(--radius-md)
+              text-sm text-(--text-main) font-medium
               outline-none
+              transition-all duration-200
               focus:border-(--accent-orange)
+              focus:shadow-[0_0_0_4px_rgba(255,127,50,0.1)]
               cursor-pointer
             "
           >
@@ -184,13 +186,15 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             className="
-              px-3 py-2
+              px-4 py-2.5
               bg-white
-              border border-(--text-sub) border-opacity-30
-              rounded-(--radius-sm)
-              text-sm text-(--text-main)
+              border border-(--text-sub)
+              rounded-(--radius-md)
+              text-sm text-(--text-main) font-medium
               outline-none
+              transition-all duration-200
               focus:border-(--accent-orange)
+              focus:shadow-[0_0_0_4px_rgba(255,127,50,0.1)]
               cursor-pointer
             "
           >

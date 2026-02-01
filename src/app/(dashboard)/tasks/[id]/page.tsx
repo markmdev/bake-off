@@ -3,7 +3,7 @@ import { getTaskStatusColor, formatDate, formatDateTime } from '@/lib/constants'
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
 import { notFound } from 'next/navigation';
-import { PageHeader, Card, Badge } from '@/components/ui';
+import { PageHeader, Card, Badge, Markdown } from '@/components/ui';
 import CancelTaskButton from './CancelTaskButton';
 import { LiveInProgress, LiveSubmissions } from '@/components/LiveTaskUpdates';
 import ResearchProgress from '@/components/tasks/ResearchProgress';
@@ -76,9 +76,7 @@ export default async function TaskDetailPage({
 
         <div className="mb-8">
           <h3 className="text-sm font-bold text-[var(--text-sub)] mb-3 uppercase tracking-wide">Description</h3>
-          <div className="prose prose-sm max-w-none text-[var(--text-main)] whitespace-pre-wrap">
-            {task.description}
-          </div>
+          <Markdown>{task.description}</Markdown>
         </div>
 
         {task.attachments.length > 0 && (

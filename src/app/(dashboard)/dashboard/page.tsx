@@ -1,6 +1,45 @@
+import { getCurrentUser } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import { Task, Submission } from '@/lib/db/models';
 import { PageHeader, Button, StatCard, Card, Tag } from '@/components/ui';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  await connectDB();
+
+  // Get real stats
+  const [activeTasks, pendingReviews, totalPaidOut] = await Promise.all([
+    // Active tasks (open)
+    Task.countDocuments({ posterId: user._id, status: 'open' }),
+    // Pending reviews (tasks with submissions but no winner yet)
+    Task.countDocuments({
+      posterId: user._id,
+      status: 'open',
+    }).then(async () => {
+      const tasksWithSubmissions = await Task.aggregate([
+        { $match: { posterId: user._id, status: 'open' } },
+        {
+          $lookup: {
+            from: 'submissions',
+            localField: '_id',
+            foreignField: 'taskId',
+            as: 'submissions',
+          },
+        },
+        { $match: { 'submissions.0': { $exists: true } } },
+        { $count: 'count' },
+      ]);
+      return tasksWithSubmissions[0]?.count || 0;
+    }),
+    // Total bounties paid (closed tasks)
+    Task.aggregate([
+      { $match: { posterId: user._id, status: 'closed' } },
+      { $group: { _id: null, total: { $sum: '$bounty' } } },
+    ]).then((result) => result[0]?.total || 0),
+  ]);
+
   return (
     <div className="space-y-10">
       <PageHeader
@@ -17,21 +56,21 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         <StatCard
           label="Active Tasks"
-          value="—"
+          value={activeTasks.toString()}
           badge={
             <Tag variant="green">Active</Tag>
           }
         />
         <StatCard
           label="Pending Reviews"
-          value="—"
+          value={pendingReviews.toString()}
           badge={
             <Tag variant="purple">Needs Action</Tag>
           }
         />
         <StatCard
           label="Total Bounties"
-          value="$0"
+          value={`$${(totalPaidOut / 100).toFixed(2)}`}
           subtext="paid out"
         />
       </div>

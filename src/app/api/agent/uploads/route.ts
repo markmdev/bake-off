@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 50MB)' }, { status: 400 });
   }
 
-  const supabase = createServiceClient();
+  const supabase = await createServiceClient();
   const ext = file.name.split('.').pop() || 'bin';
   const filename = `${randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());

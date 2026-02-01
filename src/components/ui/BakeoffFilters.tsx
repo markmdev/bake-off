@@ -3,10 +3,8 @@
 import { useState, useMemo } from 'react';
 import { TaskCard } from './TaskCard';
 import { Badge } from './Badge';
-import { Tag } from './Tag';
 import { Card } from './Card';
-import { Button } from './Button';
-import { TASK_CATEGORIES, type TaskCategory } from '@/lib/constants/categories';
+import { VALID_CATEGORIES, BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 type TaskStatus = 'running' | 'reviewing' | 'finished' | 'draft' | 'cancelled';
 type SortOption = 'newest' | 'deadline' | 'bounty_high' | 'bounty_low' | 'trending';
@@ -16,7 +14,7 @@ type StatusFilter = 'all' | 'open' | 'closed' | 'draft';
 interface TaskData {
   id: string;
   title: string;
-  category?: TaskCategory;
+  category?: BakeCategory;
   bounty: number;
   deadline: string;
   publishedAt: string;
@@ -60,7 +58,7 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [categoryFilter, setCategoryFilter] = useState<TaskCategory | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<BakeCategory | 'all'>('all');
 
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks];
@@ -110,11 +108,11 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
     return result;
   }, [tasks, viewFilter, sortBy, statusFilter, categoryFilter]);
 
-  const getCategoryTag = (category?: TaskCategory) => {
+  const getCategoryTag = (category?: BakeCategory) => {
     if (!category) return null;
-    const cat = TASK_CATEGORIES.find((c) => c.value === category);
+    const cat = BAKE_CATEGORIES[category];
     if (!cat) return null;
-    return { text: cat.label, variant: cat.variant };
+    return { text: cat.label, variant: 'default' as const };
   };
 
   return (
@@ -217,21 +215,24 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
         >
           All Categories
         </button>
-        {TASK_CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setCategoryFilter(cat.value)}
-            className={`
-              px-3 py-1.5 text-xs font-semibold rounded-(--radius-pill) border transition-all
-              ${categoryFilter === cat.value
-                ? 'bg-(--accent-orange) text-white border-(--accent-orange)'
-                : 'bg-white text-(--text-sub) border-(--text-sub) border-opacity-20 hover:border-(--accent-orange)'
-              }
-            `}
-          >
-            {cat.label}
-          </button>
-        ))}
+        {VALID_CATEGORIES.map((catKey) => {
+          const cat = BAKE_CATEGORIES[catKey];
+          return (
+            <button
+              key={catKey}
+              onClick={() => setCategoryFilter(catKey)}
+              className={`
+                px-3 py-1.5 text-xs font-semibold rounded-(--radius-pill) border transition-all
+                ${categoryFilter === catKey
+                  ? 'bg-(--accent-orange) text-white border-(--accent-orange)'
+                  : 'bg-white text-(--text-sub) border-(--text-sub) border-opacity-20 hover:border-(--accent-orange)'
+                }
+              `}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Results header */}
@@ -247,14 +248,9 @@ export function BakeoffFilters({ tasks }: BakeoffFiltersProps) {
         <Card className="p-12 text-center">
           <p className="text-(--text-sub) text-lg">
             {viewFilter === 'mine'
-              ? "You haven't posted any bakes yet."
+              ? 'No bakes from agents you follow yet.'
               : 'No bakes match your filters.'}
           </p>
-          {viewFilter === 'mine' && (
-            <Button href="/tasks/new" variant="primary" size="md" className="mt-4">
-              Create Your First Bake
-            </Button>
-          )}
         </Card>
       ) : (
         <div className="space-y-4">

@@ -10,6 +10,7 @@
     "seed": "npx tsx scripts/seed-demo-data.ts"
   },
   "dependencies": {
+    "@mendable/firecrawl-js": "^4.12.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
     "agentation": "^1.3.2",

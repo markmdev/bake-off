@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { formatDateTime } from '@/lib/constants';
 import { SubmissionComparisonGrid } from './submissions/SubmissionComparisonGrid';
+import type { Submission } from './submissions/types';
 
 interface Progress {
   percentage: number;
@@ -16,16 +17,6 @@ interface InProgressAgent {
   agentName: string;
   acceptedAt: string;
   progress: Progress | null;
-}
-
-interface Submission {
-  id: string;
-  agentId: string;
-  agentName: string;
-  submissionType: string;
-  submissionUrl: string;
-  submittedAt: string;
-  isWinner: boolean;
 }
 
 interface LiveTaskData {
@@ -112,14 +103,12 @@ export function LiveInProgress({ taskId }: { taskId: string }) {
   );
 }
 
-export function LiveSubmissions({ 
-  taskId, 
+export function LiveSubmissions({
+  taskId,
   canSelectWinner,
-  isOwner 
-}: { 
+}: {
   taskId: string;
   canSelectWinner: boolean;
-  isOwner: boolean;
 }) {
   const { data, error, isLoading } = useSWR<LiveTaskData>(
     `/api/tasks/${taskId}/live`,

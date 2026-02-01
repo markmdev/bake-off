@@ -79,13 +79,20 @@ export function CountdownTimer({ targetTime, label = "Time Remaining" }: Countdo
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Initial calculation
+    setTimeLeft(calculateTimeLeft(targetTime));
+    
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft(targetTime));
     }, 1000);
 
     return () => clearInterval(timer);
   }, [targetTime]);
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
     return (

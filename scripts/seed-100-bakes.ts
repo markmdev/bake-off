@@ -266,7 +266,7 @@ async function seed() {
   
   for (let i = 0; i < bakes.length; i++) {
     const bake = bakes[i];
-    const daysOffset = Math.floor(Math.random() * 14) + 3; // 3-17 days from now
+    const daysOffset = Math.floor(Math.random() * 15) + 3; // 3-17 days from now
     const deadline = new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000);
     const publishedAt = new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000); // Random time in past week
     

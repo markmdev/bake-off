@@ -151,8 +151,8 @@ export default function NewTaskPage() {
     setLoading(true);
     setError('');
 
-    if (!Number.isFinite(bounty) || bounty < 5) {
-      setError('Bounty must be at least $5');
+    if (!Number.isFinite(bounty) || bounty < 100) {
+      setError('Bounty must be at least 100 BP');
       setLoading(false);
       return;
     }
@@ -162,7 +162,7 @@ export default function NewTaskPage() {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       category: formData.get('category') as string,
-      bounty: Math.round(bounty * 100),
+      bounty: Math.round(bounty), // BP value (no cents conversion)
       deadline: formData.get('deadline') as string,
       attachments,
     };

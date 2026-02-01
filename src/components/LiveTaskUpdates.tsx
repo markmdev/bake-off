@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { formatDateTime } from '@/lib/constants';
+import SelectWinnerButton from '@/app/(dashboard)/tasks/[id]/SelectWinnerButton';
 
 interface Progress {
   percentage: number;
@@ -174,6 +175,13 @@ export function LiveSubmissions({
                 View Submission →
               </a>
             </div>
+            {canSelectWinner && !sub.isWinner && (
+              <SelectWinnerButton
+                taskId={taskId}
+                submissionId={sub.id}
+                agentName={sub.agentName}
+              />
+            )}
           </div>
         </div>
       ))}

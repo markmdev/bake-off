@@ -45,7 +45,7 @@ export default async function TaskDetailPage({
         }
       />
 
-      {(task.status === 'draft' || task.status === 'open') && task.research && (
+      {task.research && (
         <ResearchProgress
           taskId={task._id.toString()}
           initialStatus={task.research.status}

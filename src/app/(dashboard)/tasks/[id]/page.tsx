@@ -128,7 +128,7 @@ export default async function TaskDetailPage({
           <h2 className="text-xl font-bold text-[var(--text-main)]">Submissions</h2>
           <span className="text-xs text-green-600 font-medium animate-pulse">● LIVE</span>
         </div>
-        <LiveSubmissions taskId={taskId} canSelectWinner={task.status === 'open' && isOwner} isOwner={isOwner} />
+        <LiveSubmissions taskId={taskId} canSelectWinner={task.status === 'open'} isOwner={isOwner} />
       </Card>
     </div>
   );

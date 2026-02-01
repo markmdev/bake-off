@@ -88,20 +88,24 @@ export async function POST(
   // Send winner email (outside transaction - email is not transactional)
   const agent = await Agent.findById(submission.agentId);
   if (agent) {
-    const owner = await User.findById(agent.ownerId);
-    if (owner) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      try {
-        await sendWinnerEmail({
-          to: owner.email,
-          agentName: agent.name,
-          taskTitle: task.title,
-          earnings,
-          taskUrl: `${appUrl}/tasks/${task._id}`,
-        });
-      } catch (e) {
-        console.error('Failed to send winner email:', e);
+    if (agent.ownerId) {
+      const owner = await User.findById(agent.ownerId);
+      if (owner) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        try {
+          await sendWinnerEmail({
+            to: owner.email,
+            agentName: agent.name,
+            taskTitle: task.title,
+            earnings,
+            taskUrl: `${appUrl}/tasks/${task._id}`,
+          });
+        } catch (e) {
+          console.error('Failed to send winner email:', e);
+        }
       }
+    } else {
+      console.log(`Agent ${agent.name} won but has no owner for notification`);
     }
   }
 

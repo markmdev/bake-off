@@ -12,7 +12,7 @@ export interface User {
 
 export interface Agent {
   _id: ObjectId;
-  ownerId: ObjectId;
+  ownerId?: ObjectId;
   name: string;
   description: string;
   apiKeyHash: string;

@@ -1,60 +1,48 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { TaskInsights } from '@/types';
 import { stripMarkdownJson } from '@/lib/utils/json';
 
+// Provider detection
+type Provider = 'openrouter' | 'anthropic';
+
+function getProvider(): Provider {
+  if (process.env.OPENROUTER_API_KEY) {
+    return 'openrouter';
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    return 'anthropic';
+  }
+  throw new Error('No AI provider configured. Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY.');
+}
+
+// OpenRouter implementation
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-function getApiKey(): string {
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) {
-    throw new Error('OPENROUTER_API_KEY environment variable is not defined');
-  }
-  return key;
-}
-
-interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface ChatCompletionResponse {
+interface OpenRouterResponse {
   choices: Array<{
-    message: {
-      content: string;
-    };
+    message: { content: string };
     finish_reason: string;
   }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
 }
 
-export async function chatCompletion(
+async function openRouterCompletion(
   messages: ChatMessage[],
-  options: {
-    maxTokens?: number;
-    model?: string;
-  } = {}
+  maxTokens: number
 ): Promise<string> {
-  const { maxTokens = 20000, model = 'anthropic/claude-sonnet-4' } = options;
-
-  console.log('[OpenRouter] Calling API with model:', model);
-
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const timeout = setTimeout(() => controller.abort(), 60000);
 
   try {
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${getApiKey()}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://bakeoff.ink',
         'X-Title': 'Bake-off',
       },
       body: JSON.stringify({
-        model,
+        model: 'anthropic/claude-sonnet-4',
         max_tokens: maxTokens,
         messages,
       }),
@@ -63,21 +51,18 @@ export async function chatCompletion(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[OpenRouter] API error:', response.status, errorText);
       throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
-    const data: ChatCompletionResponse = await response.json();
+    const data: OpenRouterResponse = await response.json();
 
     if (!data.choices || data.choices.length === 0) {
       throw new Error('No response from OpenRouter API');
     }
 
-    console.log('[OpenRouter] API call successful');
     return data.choices[0].message.content;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('[OpenRouter] Request timed out');
       throw new Error('OpenRouter request timed out after 60 seconds');
     }
     throw error;
@@ -86,6 +71,66 @@ export async function chatCompletion(
   }
 }
 
+// Anthropic SDK implementation
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return anthropicClient;
+}
+
+async function anthropicCompletion(
+  messages: ChatMessage[],
+  maxTokens: number
+): Promise<string> {
+  const client = getAnthropicClient();
+
+  const systemMessage = messages.find((m) => m.role === 'system')?.content;
+  const nonSystemMessages = messages
+    .filter((m) => m.role !== 'system')
+    .map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens,
+    system: systemMessage,
+    messages: nonSystemMessages,
+  });
+
+  const textBlock = response.content.find((block) => block.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('No text response from Anthropic API');
+  }
+
+  return textBlock.text;
+}
+
+// Public interface
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export async function chatCompletion(
+  messages: ChatMessage[],
+  options: { maxTokens?: number } = {}
+): Promise<string> {
+  const { maxTokens = 4096 } = options;
+  const provider = getProvider();
+
+  console.log(`[AI] Using ${provider} provider`);
+
+  if (provider === 'openrouter') {
+    return openRouterCompletion(messages, maxTokens);
+  } else {
+    return anthropicCompletion(messages, maxTokens);
+  }
+}
 
 export async function generateTaskInsights(input: {
   title: string;
@@ -104,17 +149,16 @@ export async function generateTaskInsights(input: {
     }>;
   }>;
 }): Promise<TaskInsights> {
-  console.log('[OpenRouter] Generating task insights for:', input.title);
+  const provider = getProvider();
+  console.log(`[AI] Generating task insights for: ${input.title}`);
 
   const { title, description, documentExtracts, webResearch } = input;
 
-  // Build context from documents
   const documentContext = documentExtracts
     .filter((d) => d.extractedText)
     .map((d) => `### Document: ${d.filename}\n${d.extractedText.slice(0, 3000)}`)
     .join('\n\n');
 
-  // Build context from web research
   const webContext = webResearch
     .flatMap((w) =>
       w.results.slice(0, 3).map((r) => `### ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 1500)}`)
@@ -165,9 +209,8 @@ Respond with the JSON analysis only, no additional text.`;
     const cleaned = stripMarkdownJson(response);
     const insights = JSON.parse(cleaned) as TaskInsights;
 
-    console.log('[OpenRouter] Successfully generated insights');
+    console.log(`[AI] Successfully generated insights using ${provider}`);
 
-    // Validate and normalize
     return {
       summary: insights.summary || '',
       requirements: Array.isArray(insights.requirements) ? insights.requirements : [],
@@ -184,8 +227,7 @@ Respond with the JSON analysis only, no additional text.`;
       successCriteria: Array.isArray(insights.successCriteria) ? insights.successCriteria : [],
     };
   } catch (err) {
-    console.error('[OpenRouter] Failed to generate task insights:', err);
-    // Return minimal insights on error
+    console.error(`[AI] Failed to generate task insights:`, err);
     return {
       summary: description.slice(0, 200),
       requirements: [],

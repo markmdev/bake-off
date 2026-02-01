@@ -39,16 +39,18 @@ export interface WebSearchResult {
   error?: string;
 }
 
+interface FirecrawlWebResult {
+  title?: string;
+  url?: string;
+  description?: string;
+  markdown?: string;
+}
+
+// Firecrawl API can return different response formats
 interface FirecrawlSearchResponse {
-  success: boolean;
-  data?: {
-    web?: Array<{
-      title?: string;
-      url?: string;
-      description?: string;
-      markdown?: string;
-    }>;
-  };
+  success?: boolean;
+  data?: FirecrawlWebResult[];
+  web?: FirecrawlWebResult[];
   error?: string;
 }
 
@@ -60,12 +62,17 @@ export async function searchWeb(query: string, limit: number = 5): Promise<WebSe
       limit,
     })) as unknown as FirecrawlSearchResponse;
 
-    console.log('[Firecrawl] Raw response type:', typeof response);
-    console.log('[Firecrawl] Raw response keys:', response ? Object.keys(response) : 'null');
+    // Handle different response formats from Firecrawl API
+    let webResults: FirecrawlWebResult[] = [];
 
-    if (!response.success) {
+    if (response.web && Array.isArray(response.web)) {
+      // Format: { web: [...] }
+      webResults = response.web;
+    } else if (response.data && Array.isArray(response.data)) {
+      // Format: { success: true, data: [...] }
+      webResults = response.data;
+    } else if (response.success === false) {
       console.error('[Firecrawl] Search failed:', response.error);
-      console.error('[Firecrawl] Full response:', JSON.stringify(response, null, 2));
       return {
         query,
         results: [],
@@ -73,7 +80,6 @@ export async function searchWeb(query: string, limit: number = 5): Promise<WebSe
       };
     }
 
-    const webResults = response.data?.web || [];
     console.log('[Firecrawl] Got', webResults.length, 'results for:', query.slice(0, 50));
 
     const results: SearchResult[] = webResults.map((item) => ({
@@ -89,7 +95,7 @@ export async function searchWeb(query: string, limit: number = 5): Promise<WebSe
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error during web search';
-    console.error('Firecrawl search error:', message);
+    console.error('[Firecrawl] Search error:', message);
     return {
       query,
       results: [],

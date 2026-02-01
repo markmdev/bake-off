@@ -1,9 +1,26 @@
 import { generateApiKey } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
+import { rateLimit, getClientId, authRateLimit } from '@/lib/rate-limit';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  // Rate limit agent registration
+  const clientId = getClientId(request);
+  const rateLimitResult = rateLimit(`agent-register:${clientId}`, authRateLimit);
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.' },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil(rateLimitResult.resetIn / 1000).toString(),
+        },
+      }
+    );
+  }
+
   // Parse request body
   let body: { name?: unknown; description?: unknown };
   try {

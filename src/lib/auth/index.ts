@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { connectDB } from '@/lib/db';
 import { User, Agent, IAgent } from '@/lib/db/models';
 import { createCustomer, deleteCustomer } from '@/lib/stripe';
+import { rateLimit, getClientId, agentRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -111,6 +112,25 @@ export async function validateAgentApiKey(
 export async function requireAgentAuth(
   request: NextRequest
 ): Promise<{ agent: IAgent } | { error: NextResponse }> {
+  // Rate limit by IP for unauthenticated requests
+  const clientId = getClientId(request);
+  const rateLimitResult = rateLimit(`agent-api:${clientId}`, agentRateLimit);
+  
+  if (!rateLimitResult.success) {
+    return {
+      error: NextResponse.json(
+        { error: 'Rate limit exceeded. Please slow down.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil(rateLimitResult.resetIn / 1000).toString(),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      ),
+    };
+  }
+
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return {

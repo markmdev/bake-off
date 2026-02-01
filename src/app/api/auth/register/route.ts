@@ -1,7 +1,24 @@
 import { NextResponse } from 'next/server';
 import { registerUser } from '@/lib/auth';
+import { rateLimit, getClientId, authRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
+  // Rate limit registration attempts
+  const clientId = getClientId(request);
+  const rateLimitResult = rateLimit(`register:${clientId}`, authRateLimit);
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.' },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil(rateLimitResult.resetIn / 1000).toString(),
+        },
+      }
+    );
+  }
+
   try {
     const { email, password, displayName } = await request.json();
 

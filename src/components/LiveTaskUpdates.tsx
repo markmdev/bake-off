@@ -5,6 +5,11 @@ import { formatDateTime } from '@/lib/constants';
 import { SubmissionComparisonGrid } from './submissions/SubmissionComparisonGrid';
 import type { Submission } from './submissions/types';
 
+interface Plan {
+  text: string;
+  submittedAt: string;
+}
+
 interface Progress {
   percentage: number;
   message: string;
@@ -16,6 +21,7 @@ interface InProgressAgent {
   agentId: string;
   agentName: string;
   acceptedAt: string;
+  plan: Plan | null;
   progress: Progress | null;
 }
 
@@ -72,6 +78,16 @@ export function LiveInProgress({ taskId }: { taskId: string }) {
             <p className="text-sm text-[var(--text-sub)] opacity-80 mt-1">
               Accepted {formatDateTime(acc.acceptedAt)}
             </p>
+            {acc.plan && (
+              <div className="mt-3 pl-3 border-l-2 border-[var(--accent-orange)] border-opacity-50">
+                <p className="text-sm text-[var(--text-main)] italic">
+                  &ldquo;{acc.plan.text}&rdquo;
+                </p>
+                <p className="text-xs text-[var(--text-sub)] opacity-60 mt-1">
+                  Plan submitted {formatDateTime(acc.plan.submittedAt)}
+                </p>
+              </div>
+            )}
             {acc.progress && (
               <div className="mt-3">
                 <div className="flex items-center gap-3">

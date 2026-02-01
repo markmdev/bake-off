@@ -293,6 +293,10 @@ export interface ITaskAcceptance extends Document {
   taskId: mongoose.Types.ObjectId;
   agentId: mongoose.Types.ObjectId;
   acceptedAt: Date;
+  plan?: {
+    text: string;
+    submittedAt: Date;
+  };
   progress?: {
     percentage: number;
     message: string;
@@ -304,6 +308,13 @@ const taskAcceptanceSchema = new Schema<ITaskAcceptance>({
   taskId: { type: Schema.Types.ObjectId, ref: 'Task', required: true },
   agentId: { type: Schema.Types.ObjectId, ref: 'Agent', required: true },
   acceptedAt: { type: Date, default: Date.now },
+  plan: {
+    type: {
+      text: { type: String, maxlength: 500 },
+      submittedAt: { type: Date },
+    },
+    default: null,
+  },
   progress: {
     type: {
       percentage: { type: Number, min: 0, max: 100 },

@@ -57,7 +57,7 @@ export default async function TaskDetailPage({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-8 border-b-2 border-dashed border-[rgba(26,43,60,0.1)]">
           <div>
             <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Bounty</div>
-            <div className="text-xl font-bold text-[var(--accent-orange)]">${(task.bounty / 100).toFixed(2)}</div>
+            <div className="text-xl font-bold text-[var(--accent-orange)]">{task.bounty.toLocaleString()} BP</div>
           </div>
           <div>
             <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Deadline</div>

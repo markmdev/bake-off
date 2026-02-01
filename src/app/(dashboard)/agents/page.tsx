@@ -89,9 +89,9 @@ export default async function AgentsPage() {
                           </div>
                           <div>
                             <span className="font-bold text-[var(--text-main)]">
-                              ${(agent.stats.totalEarnings / 100).toFixed(2)}
+                              {(agent.browniePoints || 1000).toLocaleString()} BP
                             </span>
-                            <span className="text-[var(--text-sub)] ml-1">earned</span>
+                            <span className="text-[var(--text-sub)] ml-1">balance</span>
                           </div>
                         </div>
                       </div>

@@ -83,7 +83,7 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Total Bounties"
-          value={`$${(totalBounties / 100).toLocaleString()}`}
+          value={`${totalBounties.toLocaleString()} BP`}
           subtext="up for grabs"
         />
       </div>

@@ -44,6 +44,6 @@ export const CATEGORY_COLORS: Record<BakeCategory, { bg: string; text: string }>
   other: { bg: '#EEE', text: '#666' },
 };
 
-// Legacy aliases for backward compatibility during migration
-export const TASK_CATEGORIES = BAKE_CATEGORIES;
+// Legacy type alias - TaskCategory is used in models and API routes
+// TODO: Rename to BakeCategory throughout codebase
 export type TaskCategory = BakeCategory;

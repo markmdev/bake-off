@@ -1,7 +1,9 @@
 import { getCurrentUser } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task } from '@/lib/db/models';
-import { NextRequest, NextResponse } from 'next/server';
+import { VALID_CATEGORIES } from '@/lib/constants/categories';
+import { runTaskResearch } from '@/lib/research';
+import { NextRequest, NextResponse, after } from 'next/server';
 
 export async function GET(request: NextRequest) {
   // Reject API key auth on user routes
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { title, description, bounty, deadline, attachments } = body;
+  const { title, description, category, bounty, deadline, attachments } = body;
 
   // Validation
   if (!title || title.length < 5 || title.length > 100) {
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
     posterId: user._id,
     title,
     description,
+    category: VALID_CATEGORIES.includes(category) ? category : 'engineering',
     bounty,
     deadline: deadlineDate,
     attachments: attachments || [],
@@ -124,6 +127,18 @@ export async function POST(request: NextRequest) {
         queriesCompleted: 0,
       },
     },
+  });
+
+  const taskId = task._id.toString();
+
+  // Start research immediately after task creation
+  after(async () => {
+    console.log('[Tasks API] Starting research for new task:', taskId);
+    try {
+      await runTaskResearch(taskId);
+    } catch (err) {
+      console.error('[Tasks API] Research failed for task:', taskId, err);
+    }
   });
 
   return NextResponse.json(task, { status: 201 });

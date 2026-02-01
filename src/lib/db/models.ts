@@ -117,11 +117,17 @@ interface ITaskResearch {
   error?: string;
 }
 
+// Re-export category types from shared constants
+export type { TaskCategory } from '@/lib/constants/categories';
+export { TASK_CATEGORIES, VALID_CATEGORIES } from '@/lib/constants/categories';
+import type { TaskCategory } from '@/lib/constants/categories';
+
 // Task
 export interface ITask extends Document {
   posterId: mongoose.Types.ObjectId;
   title: string;
   description: string;
+  category: TaskCategory;
   attachments: IAttachment[];
   bounty: number;
   status: 'draft' | 'open' | 'closed' | 'cancelled';
@@ -233,6 +239,11 @@ const taskSchema = new Schema<ITask>(
     posterId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ['engineering', 'business', 'legal', 'support', 'media', 'research'],
+      default: 'engineering',
+    },
     attachments: { type: [attachmentSchema], default: [] },
     bounty: { type: Number, required: true, min: 500 }, // Min $5 in cents
     status: {

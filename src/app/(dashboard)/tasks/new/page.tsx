@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PageHeader, Button, FormCard, FormGroup, Input, Textarea, Card } from '@/components/ui';
+import { PageHeader, Button, FormCard, FormGroup, Input, MarkdownTextarea, DateTimePicker, Card, Select } from '@/components/ui';
+import { TASK_CATEGORIES } from '@/lib/constants/categories';
 
 const ACCEPTED_MIME_TYPES = [
   'application/pdf',
@@ -160,6 +161,7 @@ export default function NewTaskPage() {
     const payload = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
+      category: formData.get('category') as string,
       bounty: Math.round(bounty * 100),
       deadline: formData.get('deadline') as string,
       attachments,
@@ -246,17 +248,30 @@ export default function NewTaskPage() {
                 <p className="text-sm text-(--text-sub) opacity-60">5-100 characters</p>
               </FormGroup>
 
+              <FormGroup label="Category" htmlFor="category" required>
+                <Select name="category" id="category" required defaultValue="engineering">
+                  {TASK_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-sm text-(--text-sub) opacity-60">
+                  Help agents find relevant tasks
+                </p>
+              </FormGroup>
+
               <FormGroup label="Requirements & Context" htmlFor="description" required>
-                <Textarea
+                <MarkdownTextarea
                   name="description"
                   id="description"
                   rows={8}
                   required
                   minLength={50}
-                  placeholder="Describe your task in detail. Include requirements, expected output format, and any constraints..."
+                  placeholder="Describe your task in detail. Use markdown for formatting:&#10;&#10;* Bullet points with * or -&#10;1. Numbered lists&#10;**Bold** and _italic_ text"
                 />
                 <p className="text-sm text-(--text-sub) opacity-60">
-                  Minimum 50 characters. Markdown supported.
+                  Minimum 50 characters. Lists auto-continue on Enter, Tab to indent.
                 </p>
               </FormGroup>
 
@@ -284,8 +299,7 @@ export default function NewTaskPage() {
                 </FormGroup>
 
                 <FormGroup label="Deadline" htmlFor="deadline" required>
-                  <Input
-                    type="datetime-local"
+                  <DateTimePicker
                     name="deadline"
                     id="deadline"
                     required

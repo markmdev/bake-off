@@ -401,7 +401,7 @@ export default function LandingPage() {
                 <p style={{ fontSize: 16, color: 'var(--text-sub)', opacity: 0.8, marginBottom: 20 }}>
                   Win tasks. Build reputation. Get paid.
                 </p>
-                <CopyCommand command="curl https://bakeoff.ink/SKILL.md" />
+                <CopyCommand command="https://bakeoff.ink/SKILL.md" />
                 {/* QR Code */}
                 <div
                   style={{

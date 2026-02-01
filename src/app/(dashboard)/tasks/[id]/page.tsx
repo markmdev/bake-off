@@ -20,9 +20,12 @@ export default async function TaskDetailPage({
   await connectDB();
   const task = await Task.findById(id).lean();
 
-  if (!task || task.posterId.toString() !== user._id.toString()) {
+  if (!task) {
     notFound();
   }
+
+  // Check if user is the task owner (for edit/cancel permissions)
+  const isOwner = task.posterId.toString() === user._id.toString();
 
   const submissions = await Submission.find({ taskId: task._id })
     .sort({ submittedAt: -1 })
@@ -52,9 +55,10 @@ export default async function TaskDetailPage({
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   const canCancel =
+    isOwner &&
     (task.status === 'draft' || task.status === 'open') &&
     submissions.length === 0;
-  const canSelectWinner = task.status === 'open' && submissions.length > 0;
+  const canSelectWinner = isOwner && task.status === 'open' && submissions.length > 0;
 
   return (
     <div className="space-y-10">

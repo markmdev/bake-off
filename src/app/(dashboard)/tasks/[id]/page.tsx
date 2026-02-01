@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { PageHeader, Card, Badge } from '@/components/ui';
 import CancelTaskButton from './CancelTaskButton';
 import { LiveInProgress, LiveSubmissions } from '@/components/LiveTaskUpdates';
+import ResearchProgress from './ResearchProgress';
 
 export default async function TaskDetailPage({
   params,
@@ -43,6 +44,13 @@ export default async function TaskDetailPage({
           </span>
         }
       />
+
+      {(task.status === 'draft' || task.status === 'open') && task.research && (
+        <ResearchProgress
+          taskId={task._id.toString()}
+          initialStatus={task.research.status}
+        />
+      )}
 
       <Card className="p-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-8 border-b-2 border-dashed border-[rgba(26,43,60,0.1)]">

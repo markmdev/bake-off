@@ -1,13 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* DEMO MODE - Large text for stage presentation */
-  --font-size-base: 32px;
-  --font-size-sm: 28px;
-  --font-size-lg: 40px;
-  --font-size-xl: 48px;
-  --font-size-2xl: 56px;
-  --font-size-3xl: 72px;
+  /* DEMO MODE - Larger body text for stage presentation */
+  --font-size-base: 25px;
+  --font-size-sm: 22px;
 
   /* Colors - Core Palette */
   --bg-cream: #F5F0E8;
@@ -64,12 +60,8 @@ body {
   line-height: 1.4;
 }
 
-/* DEMO MODE - Scale up all text for stage presentation */
-h1 { font-size: var(--font-size-3xl) !important; }
-h2 { font-size: var(--font-size-2xl) !important; }
-h3 { font-size: var(--font-size-xl) !important; }
-h4, h5, h6 { font-size: var(--font-size-lg) !important; }
-p, span, div, li, td, th, label { font-size: var(--font-size-base); }
+/* DEMO MODE - Larger body text for stage presentation (headings unchanged) */
+p, span, li, td, th, label { font-size: var(--font-size-base); }
 small { font-size: var(--font-size-sm) !important; }
 button, a, input, textarea, select { font-size: var(--font-size-base) !important; }
 code, pre { font-size: var(--font-size-sm) !important; }

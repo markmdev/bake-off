@@ -8,6 +8,7 @@ import {
   BPTransaction,
   Comment,
   TaskAcceptance,
+  Submission,
   getAgentBalance,
   VALID_CATEGORIES,
   TaskCategory,
@@ -24,25 +25,31 @@ interface AttachmentInput {
 }
 
 /**
- * GET /api/agent/bakes - List open bakes
+ * GET /api/agent/bakes - List bakes
  *
  * Query params:
  * - limit: number (default 20, max 100)
  * - offset: number (default 0)
  * - category: filter by category
+ * - mine: 'true' to show only bakes created by the authenticated agent
+ * - status: filter by status (open, closed, cancelled) - only valid with mine=true
  *
- * Returns open bakes where status === 'open' AND deadline > now
+ * Default: Returns open bakes where status === 'open' AND deadline > now
+ * With mine=true: Returns all bakes created by the agent (any status, including expired)
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {
     return authResult.error;
   }
+  const { agent } = authResult;
 
   const { searchParams } = new URL(request.url);
   const limitParam = Number(searchParams.get('limit') ?? 20);
   const offsetParam = Number(searchParams.get('offset') ?? 0);
   const categoryParam = searchParams.get('category');
+  const mineParam = searchParams.get('mine');
+  const statusParam = searchParams.get('status');
 
   if (
     !Number.isFinite(limitParam) ||
@@ -63,16 +70,35 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const VALID_STATUSES = ['open', 'closed', 'cancelled'] as const;
+  if (statusParam && !VALID_STATUSES.includes(statusParam as typeof VALID_STATUSES[number])) {
+    return NextResponse.json(
+      { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
   const limit = Math.min(Math.trunc(limitParam), 100);
   const offset = Math.trunc(offsetParam);
 
   await connectDB();
 
   const now = new Date();
-  const query: Record<string, unknown> = {
-    status: 'open',
-    deadline: { $gt: now },
-  };
+  const query: Record<string, unknown> = {};
+
+  if (mineParam === 'true') {
+    // Show bakes created by this agent
+    query.creatorAgentId = agent._id;
+    // When mine=true, show all statuses unless filtered
+    if (statusParam) {
+      query.status = statusParam;
+    }
+    // Do not filter by deadline - show expired bakes too
+  } else {
+    // Default behavior: only open, non-expired bakes
+    query.status = 'open';
+    query.deadline = { $gt: now };
+  }
 
   if (categoryParam) {
     query.category = categoryParam;
@@ -87,7 +113,7 @@ export async function GET(request: NextRequest) {
   const bakeIds = bakes.map((b) => b._id);
   const creatorIds = [...new Set(bakes.map((b) => b.creatorAgentId.toString()))];
 
-  const [creators, commentCounts, acceptedCounts] = await Promise.all([
+  const [creators, commentCounts, acceptedCounts, submissionCounts] = await Promise.all([
     Agent.find({ _id: { $in: creatorIds } })
       .select('_id name description')
       .lean(),
@@ -96,6 +122,10 @@ export async function GET(request: NextRequest) {
       { $group: { _id: '$bakeId', count: { $sum: 1 } } },
     ]),
     TaskAcceptance.aggregate([
+      { $match: { taskId: { $in: bakeIds } } },
+      { $group: { _id: '$taskId', count: { $sum: 1 } } },
+    ]),
+    Submission.aggregate([
       { $match: { taskId: { $in: bakeIds } } },
       { $group: { _id: '$taskId', count: { $sum: 1 } } },
     ]),
@@ -110,6 +140,9 @@ export async function GET(request: NextRequest) {
   const acceptedCountMap = new Map(
     acceptedCounts.map((a) => [a._id.toString(), a.count as number])
   );
+  const submissionCountMap = new Map(
+    submissionCounts.map((s) => [s._id.toString(), s.count as number])
+  );
 
   return NextResponse.json({
     bakes: bakes.map((bake) => ({
@@ -123,6 +156,7 @@ export async function GET(request: NextRequest) {
       attachmentCount: bake.attachments?.length ?? 0,
       commentCount: commentCountMap.get(bake._id.toString()) ?? 0,
       acceptedCount: acceptedCountMap.get(bake._id.toString()) ?? 0,
+      submissionCount: submissionCountMap.get(bake._id.toString()) ?? 0,
       creatorAgent: creatorMap.get(bake.creatorAgentId.toString()) ?? null,
       publishedAt: bake.publishedAt?.toISOString() ?? null,
     })),

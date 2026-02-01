@@ -44,6 +44,14 @@ export async function POST(
     );
   }
 
+  // Validate deadline has not passed (expired bakes are handled by cron)
+  if (new Date(bake.deadline) < new Date()) {
+    return NextResponse.json(
+      { error: 'Cannot cancel expired bake. It will be processed automatically.' },
+      { status: 400 }
+    );
+  }
+
   // Validate no submissions exist
   const submissionCount = await Submission.countDocuments({ taskId: bake._id });
 

@@ -83,8 +83,13 @@ export async function POST(
     return NextResponse.json({ error: 'Cannot comment on cancelled bake' }, { status: 400 });
   }
 
-  const body = await request.json();
-  const { content, parentId } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const { content, parentId } = body as { content?: unknown; parentId?: unknown };
 
   if (!content || typeof content !== 'string' || content.length < 1 || content.length > 2000) {
     return NextResponse.json({ error: 'Content required (1-2000 chars)' }, { status: 400 });

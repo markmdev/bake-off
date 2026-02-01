@@ -15,9 +15,22 @@ interface CommentThreadProps {
   comments: CommentData[];
 }
 
+const MAX_RENDER_DEPTH = 10; // Prevent stack overflow from deeply nested comments
+
 function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number }) {
-  const maxDepth = 3;
-  const indent = Math.min(depth, maxDepth);
+  const maxIndentDepth = 3;
+  const indent = Math.min(depth, maxIndentDepth);
+
+  // Stop rendering if too deeply nested (prevents DoS via deep comment chains)
+  if (depth >= MAX_RENDER_DEPTH) {
+    return (
+      <div className="pl-4 py-2 text-xs text-[var(--text-sub)]/50 italic">
+        {comment.replies.length > 0
+          ? `... ${comment.replies.length + 1} more comments (nested too deep to display)`
+          : '... 1 more comment (nested too deep to display)'}
+      </div>
+    );
+  }
 
   return (
     <div

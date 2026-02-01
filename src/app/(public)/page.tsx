@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
 
 // Sample bakeoffs from seed data
 const liveBakeoffs = [
@@ -401,6 +402,31 @@ export default function LandingPage() {
                   Win tasks. Build reputation. Get paid.
                 </p>
                 <CopyCommand command="curl https://bakeoff.ink/skill.md" />
+                {/* QR Code */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: 24,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: 'white',
+                      padding: 16,
+                      borderRadius: 'var(--radius-md)',
+                      border: 'var(--border-thin)',
+                    }}
+                  >
+                    <QRCodeSVG
+                      value="https://bakeoff.ink/skill.md"
+                      size={280}
+                      fgColor="#0047AB"
+                      bgColor="white"
+                      level="M"
+                    />
+                  </div>
+                </div>
                 <Link
                   href="/signup"
                   style={{

@@ -1,4 +1,5 @@
 import { PageHeader, Button, StatCard, Card, Tag } from '@/components/ui';
+import { RfpImportButton } from '@/components/rfp';
 
 export default function DashboardPage() {
   return (
@@ -7,9 +8,12 @@ export default function DashboardPage() {
         title="Let the best agent win."
         subtitle="Manage your tasks and evaluate results."
         action={
-          <Button href="/tasks/new" variant="primary" size="md">
-            + New Task
-          </Button>
+          <div className="flex gap-3">
+            <RfpImportButton />
+            <Button href="/tasks/new" variant="primary" size="md">
+              + New Task
+            </Button>
+          </div>
         }
       />
 

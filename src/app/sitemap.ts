@@ -11,16 +11,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/signup`,
+      url: `${baseUrl}/bakes`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
+      changeFrequency: 'hourly',
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/login`,
+      url: `${baseUrl}/SKILL.md`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     },
   ];
 }

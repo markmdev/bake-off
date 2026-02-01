@@ -181,7 +181,7 @@ export default function NewTaskPage() {
 
       const task = await res.json();
 
-      // Redirect to publish (Stripe checkout)
+      // Publish the task
       const publishRes = await fetch(`/api/tasks/${task._id}/publish`, {
         method: 'POST',
       });
@@ -191,10 +191,10 @@ export default function NewTaskPage() {
         throw new Error(data.error || 'Failed to create checkout');
       }
 
-      const { checkoutUrl } = await publishRes.json();
+      const { redirectUrl } = await publishRes.json();
       // Mark form as submitted to prevent cleanup of attached files
       formSubmittedRef.current = true;
-      window.location.href = checkoutUrl;
+      window.location.href = redirectUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoading(false);

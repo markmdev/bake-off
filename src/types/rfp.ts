@@ -7,8 +7,10 @@ export interface RfpData {
   sourceUrl: string;
   title: string;
   agency: string;
-  deadline: string;
-  estimatedValue: number | null; // In cents
+  location: string;           // State name or "Federal" - from search results
+  issuedDate: string;         // MM/DD/YYYY - from search results
+  deadline: string;           // Computed: issuedDate + 30 days
+  estimatedValue: number | null; // In cents (null when not available from search)
   category: string;
   description: string;
 }

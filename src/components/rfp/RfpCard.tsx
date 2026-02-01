@@ -49,7 +49,12 @@ export function RfpCard({ rfp, isSelected, onSelect, index }: RfpCardProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-[var(--text-main)] truncate">{rfp.title}</h3>
-          <p className="text-sm text-[var(--text-sub)] mt-1">{rfp.agency}</p>
+          <p className="text-sm text-[var(--text-sub)] mt-1">
+            {rfp.agency} • {rfp.location}
+          </p>
+          <p className="text-xs text-[var(--text-sub)] mt-0.5">
+            Issued: {rfp.issuedDate}
+          </p>
           <div className="flex items-center gap-3 mt-2 text-xs text-[var(--text-sub)]">
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--accent-orange)] text-white rounded-full font-medium">
               ${(bounty / 100).toLocaleString()} bounty

@@ -168,18 +168,8 @@ Generate 3-5 search queries to research this task:`;
 // RFP Scraping (for task discovery)
 // =============================================================================
 
-// Default RFP source
-const DEFAULT_RFP_SOURCE = 'https://findrfp.com';
-
-// ExtractedRfp type used internally by extractFromMarkdown
-interface ExtractedRfp {
-  title: string;
-  agency: string;
-  deadline?: string;
-  estimatedValue?: number;
-  category?: string;
-  description: string;
-}
+// FindRFP authentication cookie from environment
+const FINDRFP_AUTH_COOKIE = process.env.FINDRFP_AUTH_COOKIE || '';
 
 /**
  * Generate a unique ID for an RFP based on its source URL
@@ -189,160 +179,162 @@ function generateRfpId(url: string): string {
 }
 
 /**
- * Map RFP source to discover listing URLs
- * Applies limit after receiving links (Firecrawl map doesn't have limit param)
+ * Scrape FindRFP search results using authenticated cookie injection
  */
-export async function mapRfpSource(limit: number = 20): Promise<string[]> {
+export async function scrapeRfpSearchResults(
+  searchQuery: string = 'Market research',
+  limit: number = 20
+): Promise<RfpData[]> {
   const firecrawl = getFirecrawl();
+  const url = `https://www.findrfp.com/service/search.aspx?s=${encodeURIComponent(searchQuery)}&t=FE&is=0`;
 
-  const mapResult = await firecrawl.map(DEFAULT_RFP_SOURCE, {
-    search: 'rfp bid contract proposal request',
-  });
-
-  // mapResult.links is an array of SearchResultWeb objects with url property
-  const links = (mapResult.links || []).map(link => link.url);
-  return links.slice(0, limit);
-}
-
-/**
- * Scrape a single RFP page and extract structured data
- */
-export async function scrapeRfpPage(url: string): Promise<RfpData | null> {
-  const firecrawl = getFirecrawl();
+  console.log('[Firecrawl] Scraping FindRFP search:', url);
 
   try {
+    // Use firecrawl.scrape() with actions for cookie injection
     const result = await firecrawl.scrape(url, {
       formats: ['markdown'],
+      actions: [
+        {
+          type: 'executeJavascript',
+          // Escape cookie value to prevent JS injection
+          script: `document.cookie = ${JSON.stringify(FINDRFP_AUTH_COOKIE)};`,
+        },
+        { type: 'wait', milliseconds: 2000 },
+        { type: 'scrape' },
+      ],
     });
 
-    // Use the markdown content and try to parse it
     const markdown = result.markdown || '';
+    console.log('[Firecrawl] Got markdown, length:', markdown.length);
 
-    // Extract structured data from the markdown
-    // For now, we'll do basic extraction - in production, use LLM extraction
-    const extracted = extractFromMarkdown(markdown, url);
-
-    if (!extracted) return null;
-
-    return {
-      id: generateRfpId(url),
-      sourceUrl: url,
-      title: extracted.title,
-      agency: extracted.agency,
-      deadline: extracted.deadline || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      estimatedValue: extracted.estimatedValue ? Math.round(extracted.estimatedValue * 100) : null,
-      category: extracted.category || 'general',
-      description: extracted.description,
-    };
+    return parseSearchResults(markdown, limit);
   } catch (error) {
-    console.error(`Failed to scrape ${url}:`, error);
-    return null;
+    console.error('[Firecrawl] Search scrape failed:', error);
+    // Fall back to basic scrape without auth if actions not supported
+    try {
+      console.log('[Firecrawl] Retrying without actions...');
+      const result = await firecrawl.scrape(url, {
+        formats: ['markdown'],
+      });
+      return parseSearchResults(result.markdown || '', limit);
+    } catch (fallbackError) {
+      console.error('[Firecrawl] Fallback also failed:', fallbackError);
+      return [];
+    }
   }
 }
 
 /**
- * Basic extraction from markdown content
- * In production, this would use Firecrawl's LLM extraction or a separate LLM call
+ * Parse FindRFP search results markdown into structured RFP data
  */
-function extractFromMarkdown(markdown: string, url: string): ExtractedRfp | null {
-  if (!markdown || markdown.length < 100) return null;
+function parseSearchResults(markdown: string, limit: number): RfpData[] {
+  const results: RfpData[] = [];
 
-  // Extract title from first heading or first line
-  const titleMatch = markdown.match(/^#\s+(.+)$/m) || markdown.match(/^(.+)$/m);
-  const title = titleMatch?.[1]?.trim().slice(0, 200) || 'Untitled RFP';
+  // FindRFP search results are in a table format
+  // Each row has: ID | Title (with link) | Agency | Location | Issued
+  // Example: | 1 | [Market Research for...](https://...) | State/Local | Federal | 01/26/2026 |
 
-  // Look for agency/organization patterns
-  const agencyPatterns = [
-    /(?:agency|organization|company|client|issued by)[:\s]+([^\n]+)/i,
-    /(?:city of|state of|county of|department of)\s+([^\n,]+)/i,
-  ];
-  let agency = 'Unknown Agency';
-  for (const pattern of agencyPatterns) {
-    const match = markdown.match(pattern);
-    if (match) {
-      agency = match[1].trim().slice(0, 100);
-      break;
-    }
+  // Match table rows with links
+  const rowPattern = /\|\s*\d+\s*\|\s*\[([^\]]+)\]\(([^)]+)\)\s*\|\s*([^|]*)\|\s*([^|]*)\|\s*(\d{2}\/\d{2}\/\d{4})\s*\|/g;
+
+  let match;
+  while ((match = rowPattern.exec(markdown)) !== null && results.length < limit) {
+    const [, title, detailUrl, agency, location, issuedDate] = match;
+
+    // Clean up extracted values
+    const cleanTitle = title.trim();
+    const cleanAgency = agency.trim() || 'Unknown';
+    const cleanLocation = location.trim() || 'Unknown';
+    const cleanIssuedDate = issuedDate.trim();
+
+    // Calculate deadline as issuedDate + 30 days
+    const issuedParts = cleanIssuedDate.split('/');
+    const issuedDateObj = new Date(
+      parseInt(issuedParts[2]),
+      parseInt(issuedParts[0]) - 1,
+      parseInt(issuedParts[1])
+    );
+    const deadlineDate = new Date(issuedDateObj.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const deadline = deadlineDate.toISOString();
+
+    // Determine category from title keywords
+    const category = inferCategory(cleanTitle);
+
+    // Generate description with link to full details
+    const description = generateRfpDescription({
+      title: cleanTitle,
+      agency: cleanAgency,
+      location: cleanLocation,
+      issuedDate: cleanIssuedDate,
+      sourceUrl: detailUrl,
+    });
+
+    results.push({
+      id: generateRfpId(detailUrl),
+      sourceUrl: detailUrl,
+      title: cleanTitle,
+      agency: cleanAgency,
+      location: cleanLocation,
+      issuedDate: cleanIssuedDate,
+      deadline,
+      estimatedValue: null, // Not available from search results
+      category,
+      description,
+    });
   }
 
-  // Look for deadline patterns
-  const deadlinePatterns = [
-    /(?:deadline|due date|due by|submission date|closes?)[:\s]+([^\n]+)/i,
-    /(?:submit by|response due)[:\s]+([^\n]+)/i,
-  ];
-  let deadline: string | undefined;
-  for (const pattern of deadlinePatterns) {
-    const match = markdown.match(pattern);
-    if (match) {
-      // Try to parse the date
-      const dateStr = match[1].trim();
-      const parsed = new Date(dateStr);
-      if (!isNaN(parsed.getTime())) {
-        deadline = parsed.toISOString();
-      }
-      break;
-    }
-  }
+  console.log('[Firecrawl] Parsed', results.length, 'RFPs from search results');
+  return results;
+}
 
-  // Look for estimated value patterns
-  const valuePatterns = [
-    /(?:estimated value|contract value|budget|worth)[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
-    /\$\s*([\d,]+(?:\.\d{2})?)\s*(?:million|m\b)/i,
-    /\$\s*([\d,]+(?:\.\d{2})?)/i,
-  ];
-  let estimatedValue: number | undefined;
-  for (const pattern of valuePatterns) {
-    const match = markdown.match(pattern);
-    if (match) {
-      const numStr = match[1].replace(/,/g, '');
-      const num = parseFloat(numStr);
-      if (!isNaN(num)) {
-        // Check if it's in millions
-        if (match[0].toLowerCase().includes('million') || match[0].toLowerCase().includes(' m')) {
-          estimatedValue = num * 1000000;
-        } else {
-          estimatedValue = num;
-        }
-      }
-      break;
-    }
-  }
+/**
+ * Infer category from RFP title keywords
+ */
+function inferCategory(title: string): string {
+  const lowerTitle = title.toLowerCase();
 
-  // Determine category from content
   const categoryKeywords: Record<string, string[]> = {
     marketing: ['marketing', 'advertising', 'brand', 'promotion', 'campaign'],
     copywriting: ['copywriting', 'content', 'writing', 'editorial', 'copy'],
     design: ['design', 'ui', 'ux', 'graphic', 'visual', 'creative'],
-    research: ['research', 'study', 'analysis', 'survey', 'data'],
+    research: ['research', 'study', 'analysis', 'survey', 'data', 'market research'],
     translation: ['translation', 'localization', 'interpreter', 'language'],
-    engineering: ['software', 'development', 'engineering', 'technical', 'it'],
+    engineering: ['software', 'development', 'engineering', 'technical', 'it', 'technology'],
   };
 
-  let category = 'general';
-  const lowerMarkdown = markdown.toLowerCase();
   for (const [cat, keywords] of Object.entries(categoryKeywords)) {
-    if (keywords.some(kw => lowerMarkdown.includes(kw))) {
-      category = cat;
-      break;
+    if (keywords.some(kw => lowerTitle.includes(kw))) {
+      return cat;
     }
   }
 
-  // Use first ~500 chars of content as description
-  const description = markdown
-    .replace(/^#.*$/gm, '') // Remove headings
-    .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
-    .replace(/[*_`]/g, '') // Remove formatting
-    .trim()
-    .slice(0, 500);
+  return 'general';
+}
 
-  return {
-    title,
-    agency,
-    deadline,
-    estimatedValue,
-    category,
-    description: description || 'No description available.',
-  };
+/**
+ * Generate task description with link to FindRFP detail page
+ */
+function generateRfpDescription(rfp: {
+  title: string;
+  agency: string;
+  location: string;
+  issuedDate: string;
+  sourceUrl: string;
+}): string {
+  return `## RFP Opportunity
+
+**Title:** ${rfp.title}
+**Agency:** ${rfp.agency}
+**Location:** ${rfp.location}
+**Issued:** ${rfp.issuedDate}
+
+### Full RFP Details
+View the complete RFP document at:
+${rfp.sourceUrl}
+
+### Task
+Review this RFP and create a proposal response that addresses the requirements.`;
 }
 
 // Re-export calculateBounty from utils for server-side usage

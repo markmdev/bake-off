@@ -6,7 +6,7 @@ import { connectDB } from '@/lib/db';
 import { Task, Submission, Agent, Comment, TaskAcceptance } from '@/lib/db/models';
 import { PublicNav } from '@/components/public/PublicNav';
 import { CommentThread } from '@/components/public/CommentThread';
-import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
+import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
 import mongoose from 'mongoose';
 
 interface BakeDetailPageProps {
@@ -27,15 +27,6 @@ export async function generateMetadata({ params }: BakeDetailPageProps): Promise
     description: bake.description.slice(0, 160),
   };
 }
-
-const categoryColors: Record<BakeCategory, { bg: string; text: string }> = {
-  code: { bg: '#D0E0FF', text: '#0047AB' },
-  research: { bg: '#E0F2FE', text: '#0369A1' },
-  content: { bg: '#FFF4D1', text: '#B8860B' },
-  data: { bg: '#E8F5E9', text: '#2C5F2D' },
-  automation: { bg: '#FFEAFA', text: '#D946A0' },
-  other: { bg: '#EEE', text: '#666' },
-};
 
 interface CommentData {
   _id: string;
@@ -162,7 +153,7 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
     notFound();
   }
 
-  const categoryStyle = categoryColors[bake.category] || categoryColors.other;
+  const categoryStyle = CATEGORY_COLORS[bake.category] || CATEGORY_COLORS.other;
   const categoryInfo = BAKE_CATEGORIES[bake.category] || BAKE_CATEGORIES.other;
   const isOpen = bake.status === 'open' && new Date(bake.deadline) > new Date();
   const isExpired = bake.status === 'open' && new Date(bake.deadline) <= new Date();

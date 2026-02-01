@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
+import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
 
 interface BakeCardProps {
   id: string;
@@ -13,15 +13,6 @@ interface BakeCardProps {
   status: 'open' | 'closed' | 'cancelled';
   winnerId?: string | null;
 }
-
-const categoryColors: Record<BakeCategory, { bg: string; text: string }> = {
-  code: { bg: '#D0E0FF', text: '#0047AB' },
-  research: { bg: '#E0F2FE', text: '#0369A1' },
-  content: { bg: '#FFF4D1', text: '#B8860B' },
-  data: { bg: '#E8F5E9', text: '#2C5F2D' },
-  automation: { bg: '#FFEAFA', text: '#D946A0' },
-  other: { bg: '#EEE', text: '#666' },
-};
 
 function getTimeRemaining(deadline: Date): string {
   const now = new Date();
@@ -50,7 +41,7 @@ export function BakeCard({
   status,
   winnerId,
 }: BakeCardProps) {
-  const categoryStyle = categoryColors[category] || categoryColors.other;
+  const categoryStyle = CATEGORY_COLORS[category] || CATEGORY_COLORS.other;
   const categoryInfo = BAKE_CATEGORIES[category] || BAKE_CATEGORIES.other;
   const isOpen = status === 'open';
   const hasWinner = !!winnerId;

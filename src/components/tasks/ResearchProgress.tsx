@@ -85,18 +85,16 @@ export default function ResearchProgress({
   // Show error state if fetch failed
   if (error) {
     return (
-      <div className="bg-[var(--accent-pink-light)] border-2 border-[var(--accent-pink)] rounded-[var(--radius-md)] p-6 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0">
-            <span className="text-2xl">!</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-[var(--text-main)]">Unable to load research status</h3>
-            <p className="text-sm text-[var(--text-sub)]">
-              Failed to fetch research progress. Please refresh the page.
-            </p>
-          </div>
+      <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-[var(--text-main)]">Research</h2>
+          <span className="px-3 py-1 text-xs font-bold rounded-full border-2 border-[var(--accent-pink)] bg-[var(--accent-pink-light)] text-[var(--accent-pink)]">
+            Error
+          </span>
         </div>
+        <p className="text-sm text-[var(--text-sub)]">
+          Failed to fetch research progress. Please refresh the page.
+        </p>
       </div>
     );
   }
@@ -110,55 +108,92 @@ export default function ResearchProgress({
   // Completed state with insights
   if (status === 'completed' || status === 'partial') {
     return (
-      <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-6 mb-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-[var(--text-main)]">Research Findings</h2>
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <span className="text-2xl">{status === 'completed' ? '✓' : '⚠'}</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-[var(--text-main)]">
-                {status === 'completed' ? 'Research complete' : 'Research partially complete'}
-              </h3>
-              <p className="text-sm text-[var(--text-sub)] opacity-80">
-                {summary.documentsWithText} document{summary.documentsWithText !== 1 ? 's' : ''} parsed
-                {' • '}
-                {summary.totalResults} source{summary.totalResults !== 1 ? 's' : ''} found
-              </p>
-            </div>
-          </div>
-          {insights && insights.estimatedComplexity && (
-            <span className={`px-2 py-1 text-xs font-bold rounded-[var(--radius-sm)] border-2 border-[var(--text-sub)] ${complexityColors[insights.estimatedComplexity]}`}>
-              {insights.estimatedComplexity.charAt(0).toUpperCase() + insights.estimatedComplexity.slice(1)} complexity
+            {insights && insights.estimatedComplexity && (
+              <span className={`px-3 py-1 text-xs font-bold rounded-full border-2 border-[var(--text-sub)] ${complexityColors[insights.estimatedComplexity]}`}>
+                {insights.estimatedComplexity.charAt(0).toUpperCase() + insights.estimatedComplexity.slice(1)} complexity
+              </span>
+            )}
+            <span className={`px-3 py-1 text-xs font-bold rounded-full border-2 border-[var(--text-sub)] ${status === 'completed' ? 'bg-[var(--accent-green-light)] text-[var(--accent-green)]' : 'bg-[var(--accent-yellow-light)] text-[var(--accent-yellow)]'}`}>
+              {status === 'completed' ? 'Complete' : 'Partial'}
             </span>
+          </div>
+        </div>
+
+        {/* Summary stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b-2 border-dashed border-[rgba(26,43,60,0.1)]">
+          <div>
+            <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Documents</div>
+            <div className="text-lg font-bold text-[var(--text-main)]">{summary.documentsWithText}</div>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Sources Found</div>
+            <div className="text-lg font-bold text-[var(--text-main)]">{summary.totalResults}</div>
+          </div>
+          {insights && insights.keyDeliverables && (
+            <div>
+              <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Deliverables</div>
+              <div className="text-lg font-bold text-[var(--text-main)]">{insights.keyDeliverables.length}</div>
+            </div>
+          )}
+          {insights && insights.requirements && (
+            <div>
+              <div className="text-sm font-medium text-[var(--text-sub)] opacity-60 mb-1">Requirements</div>
+              <div className="text-lg font-bold text-[var(--text-main)]">{insights.requirements.length}</div>
+            </div>
           )}
         </div>
 
-        {/* AI Insights Summary */}
+        {/* AI Summary */}
         {insights && insights.summary && (
-          <div className="border-t-2 border-dashed border-[rgba(26,43,60,0.1)] pt-4">
-            <h4 className="text-sm font-bold text-[var(--text-sub)] mb-2">AI Analysis</h4>
-            <p className="text-sm text-[var(--text-main)] mb-3">{insights.summary}</p>
+          <div className="mb-6">
+            <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">Summary</h3>
+            <p className="text-sm text-[var(--text-main)] leading-relaxed">{insights.summary}</p>
+          </div>
+        )}
 
-            {!showFullInsights && (
+        {/* Expandable details */}
+        {insights && (
+          <>
+            {!showFullInsights ? (
               <button
                 onClick={() => setShowFullInsights(true)}
                 className="text-sm text-[var(--accent-orange)] hover:underline font-bold"
               >
-                Show full analysis →
+                View detailed analysis →
               </button>
-            )}
-
-            {showFullInsights && (
-              <div className="space-y-4 mt-4">
+            ) : (
+              <div className="space-y-6 pt-6 border-t-2 border-dashed border-[rgba(26,43,60,0.1)]">
                 {insights.requirements.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
                       Requirements
-                    </h5>
-                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
+                    </h3>
+                    <ul className="text-sm text-[var(--text-main)] space-y-1">
                       {insights.requirements.map((req, i) => (
-                        <li key={i}>{req}</li>
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-[var(--accent-orange)] mt-1">•</span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {insights.keyDeliverables.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
+                      Key Deliverables
+                    </h3>
+                    <ul className="text-sm text-[var(--text-main)] space-y-1">
+                      {insights.keyDeliverables.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-[var(--accent-green)] mt-1">•</span>
+                          <span>{item}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -166,14 +201,14 @@ export default function ResearchProgress({
 
                 {insights.technicalSkills.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
-                      Technical Skills Needed
-                    </h5>
-                    <div className="flex flex-wrap gap-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
+                      Technical Skills
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
                       {insights.technicalSkills.map((skill, i) => (
                         <span
                           key={i}
-                          className="px-2 py-0.5 bg-[var(--bg-cream)] text-[var(--text-main)] text-xs rounded-[var(--radius-sm)] border border-[var(--text-sub)] border-opacity-20"
+                          className="px-3 py-1 bg-[var(--bg-cream)] text-[var(--text-main)] text-xs font-medium rounded-full border border-[var(--text-sub)] border-opacity-20"
                         >
                           {skill}
                         </span>
@@ -182,36 +217,26 @@ export default function ResearchProgress({
                   </div>
                 )}
 
-                {insights.keyDeliverables.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
-                      Key Deliverables
-                    </h5>
-                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
-                      {insights.keyDeliverables.map((item, i) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {insights.suggestedApproach && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
                       Suggested Approach
-                    </h5>
-                    <p className="text-sm text-[var(--text-main)]">{insights.suggestedApproach}</p>
+                    </h3>
+                    <p className="text-sm text-[var(--text-main)] leading-relaxed">{insights.suggestedApproach}</p>
                   </div>
                 )}
 
                 {insights.potentialChallenges.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
                       Potential Challenges
-                    </h5>
-                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
+                    </h3>
+                    <ul className="text-sm text-[var(--text-main)] space-y-1">
                       {insights.potentialChallenges.map((challenge, i) => (
-                        <li key={i}>{challenge}</li>
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-[var(--accent-pink)] mt-1">•</span>
+                          <span>{challenge}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -219,12 +244,15 @@ export default function ResearchProgress({
 
                 {insights.successCriteria.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
                       Success Criteria
-                    </h5>
-                    <ul className="text-sm text-[var(--text-main)] list-disc list-inside space-y-1">
+                    </h3>
+                    <ul className="text-sm text-[var(--text-main)] space-y-1">
                       {insights.successCriteria.map((criterion, i) => (
-                        <li key={i}>{criterion}</li>
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-[var(--accent-purple)] mt-1">✓</span>
+                          <span>{criterion}</span>
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -232,22 +260,22 @@ export default function ResearchProgress({
 
                 {insights.relevantContext && (
                   <div>
-                    <h5 className="text-xs font-bold text-[var(--text-sub)] uppercase tracking-wide mb-1">
+                    <h3 className="text-sm font-bold text-[var(--text-sub)] mb-2 uppercase tracking-wide">
                       Relevant Context
-                    </h5>
-                    <p className="text-sm text-[var(--text-main)]">{insights.relevantContext}</p>
+                    </h3>
+                    <p className="text-sm text-[var(--text-main)] leading-relaxed">{insights.relevantContext}</p>
                   </div>
                 )}
 
                 <button
                   onClick={() => setShowFullInsights(false)}
-                  className="text-sm text-[var(--text-sub)] opacity-60 hover:opacity-100"
+                  className="text-sm text-[var(--text-sub)] opacity-60 hover:opacity-100 font-medium"
                 >
                   ← Hide details
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -256,18 +284,16 @@ export default function ResearchProgress({
   // Failed state
   if (status === 'failed') {
     return (
-      <div className="bg-[var(--accent-pink-light)] border-2 border-[var(--accent-pink)] rounded-[var(--radius-md)] p-6 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0">
-            <span className="text-2xl">✗</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-[var(--text-main)]">Research failed</h3>
-            <p className="text-sm text-[var(--text-sub)]">
-              {researchError || 'An error occurred while researching your task.'}
-            </p>
-          </div>
+      <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-[var(--text-main)]">Research</h2>
+          <span className="px-3 py-1 text-xs font-bold rounded-full border-2 border-[var(--accent-pink)] bg-[var(--accent-pink-light)] text-[var(--accent-pink)]">
+            Failed
+          </span>
         </div>
+        <p className="text-sm text-[var(--text-sub)]">
+          {researchError || 'An error occurred while researching your task.'}
+        </p>
       </div>
     );
   }
@@ -304,10 +330,13 @@ export default function ResearchProgress({
   }
 
   return (
-    <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-6 mb-6">
-      <h3 className="text-lg font-bold text-[var(--text-main)] mb-4">
-        Preparing your task...
-      </h3>
+    <div className="bg-[var(--surface-white)] shadow-soft rounded-[var(--radius-md)] p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-[var(--text-main)]">Research</h2>
+        <span className="px-3 py-1 text-xs font-bold rounded-full border-2 border-[var(--accent-purple)] bg-[var(--accent-purple-light)] text-[var(--accent-purple)] animate-pulse">
+          In Progress
+        </span>
+      </div>
 
       <div className="space-y-3 mb-6">
         {steps.map((step, idx) => {
@@ -331,7 +360,7 @@ export default function ResearchProgress({
                 {isComplete ? (
                   <span className="text-[var(--accent-green)] font-bold">✓</span>
                 ) : isActive ? (
-                  <span className="w-4 h-4 border-2 border-[var(--accent-purple)] border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-[var(--accent-orange)] border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <span className="w-3 h-3 rounded-full bg-[var(--text-sub)] opacity-30" />
                 )}
@@ -341,7 +370,7 @@ export default function ResearchProgress({
                   isActive
                     ? 'text-[var(--text-main)] font-bold'
                     : isComplete
-                      ? 'text-[var(--text-sub)] opacity-60'
+                      ? 'text-[var(--text-sub)]'
                       : 'text-[var(--text-sub)] opacity-40'
                 }`}
               >
@@ -360,7 +389,7 @@ export default function ResearchProgress({
         />
       </div>
       <p className="text-xs text-[var(--text-sub)] opacity-40 text-right mt-2">
-        Live • Updates every 2s
+        Updates every 2s
       </p>
     </div>
   );

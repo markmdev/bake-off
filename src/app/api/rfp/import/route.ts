@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { mapRfpSource, scrapeRfpPage } from '@/lib/firecrawl';
+import { scrapeRfpSearchResults } from '@/lib/firecrawl';
 import type { SSEEvent, RfpData } from '@/types/rfp';
 
 const AI_COMPATIBLE_CATEGORIES = [
@@ -41,11 +41,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Parse body
+  let searchQuery = 'Market research';
   let categories: string[] | undefined;
   let limit = 20;
 
   try {
     const body = await request.json();
+    searchQuery = body.searchQuery || 'Market research';
     categories = body.categories;
     limit = body.limit || 20;
   } catch {
@@ -66,65 +68,47 @@ export async function POST(request: NextRequest) {
       };
 
       try {
-        send({ type: 'status', message: 'Connecting to RFP source...', progress: 0 });
+        send({ type: 'status', message: 'Connecting to FindRFP...', progress: 0 });
 
-        // Map the source to discover URLs
-        let urls: string[];
+        // Scrape FindRFP search results with authenticated cookie
+        let allRfps: RfpData[];
         try {
-          urls = await mapRfpSource(limit);
+          send({ type: 'status', message: `Searching for "${searchQuery}"...`, progress: 20 });
+          allRfps = await scrapeRfpSearchResults(searchQuery, limit);
         } catch (error) {
-          console.error('Failed to map RFP source:', error);
-          send({ type: 'error', message: 'Could not reach RFP source. Try again later.' });
+          console.error('Failed to scrape RFP search:', error);
+          send({ type: 'error', message: 'Could not reach FindRFP. Try again later.' });
           controller.close();
           return;
         }
 
-        if (urls.length === 0) {
+        if (allRfps.length === 0) {
           send({ type: 'status', message: 'No RFP listings found', progress: 100 });
           send({ type: 'complete', totalFound: 0 });
           controller.close();
           return;
         }
 
-        send({ type: 'status', message: `Found ${urls.length} listings to scan`, progress: 10 });
+        send({ type: 'status', message: `Found ${allRfps.length} RFPs, filtering...`, progress: 60 });
 
-        // Scrape each URL and stream results
+        // Filter and stream results
         const rfps: RfpData[] = [];
-        for (let i = 0; i < urls.length; i++) {
-          const url = urls[i];
-          const progress = 10 + Math.floor((i / urls.length) * 85);
+        for (const rfpData of allRfps) {
+          // Filter by category if specified
+          const matchesCategory =
+            !categories ||
+            categories.length === 0 ||
+            categories.includes(rfpData.category);
 
-          send({
-            type: 'status',
-            message: `Scanning ${i + 1}/${urls.length}...`,
-            progress,
-          });
+          // Only include AI-compatible categories
+          const isAiCompatible = AI_COMPATIBLE_CATEGORIES.includes(rfpData.category);
 
-          try {
-            const rfpData = await scrapeRfpPage(url);
-
-            if (rfpData) {
-              // Filter by category if specified
-              const matchesCategory =
-                !categories ||
-                categories.length === 0 ||
-                categories.includes(rfpData.category);
-
-              // Only include AI-compatible categories
-              const isAiCompatible = AI_COMPATIBLE_CATEGORIES.includes(rfpData.category);
-
-              if (matchesCategory && isAiCompatible) {
-                rfps.push(rfpData);
-                send({ type: 'rfp', data: rfpData });
-              }
-            }
-          } catch (error) {
-            // Skip failed pages silently
-            console.error(`Failed to scrape ${url}:`, error);
+          if (matchesCategory && isAiCompatible) {
+            rfps.push(rfpData);
+            send({ type: 'rfp', data: rfpData });
+            // Small delay for visual streaming effect
+            await new Promise(resolve => setTimeout(resolve, 50));
           }
-
-          // Small delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         send({ type: 'status', message: 'Scan complete', progress: 100 });

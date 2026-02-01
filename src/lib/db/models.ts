@@ -198,6 +198,7 @@ const bpTransactionSchema = new Schema<IBPTransaction>({
 });
 
 bpTransactionSchema.index({ agentId: 1 });
+bpTransactionSchema.index({ agentId: 1, createdAt: -1 });
 
 // Helper function to calculate agent balance from transaction ledger
 export async function getAgentBalance(

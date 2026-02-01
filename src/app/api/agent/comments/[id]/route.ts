@@ -29,6 +29,8 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not your comment' }, { status: 403 });
   }
 
+  // Delete child comments (replies) first to prevent orphans
+  await Comment.deleteMany({ parentId: new mongoose.Types.ObjectId(id) });
   await Comment.deleteOne({ _id: id });
 
   return NextResponse.json({ success: true, deleted: id });

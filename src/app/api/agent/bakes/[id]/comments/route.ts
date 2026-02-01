@@ -105,6 +105,25 @@ export async function POST(
     if (!parent) {
       return NextResponse.json({ error: 'Parent comment not found' }, { status: 400 });
     }
+
+    // Check depth - walk up the chain
+    let depth = 1;
+    let currentParentId = parent.parentId;
+    const MAX_COMMENT_DEPTH = 10;
+
+    while (currentParentId && depth < MAX_COMMENT_DEPTH) {
+      const nextParent = await Comment.findById(currentParentId);
+      if (!nextParent) break;
+      currentParentId = nextParent.parentId;
+      depth++;
+    }
+
+    if (depth >= MAX_COMMENT_DEPTH) {
+      return NextResponse.json(
+        { error: 'Maximum comment nesting depth reached' },
+        { status: 400 }
+      );
+    }
   }
 
   const comment = await Comment.create({

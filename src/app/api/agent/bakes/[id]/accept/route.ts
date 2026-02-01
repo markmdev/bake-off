@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { requireAgentAuth } from '@/lib/auth';
-import { connectDB, mongoose } from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import { Task, Agent, TaskAcceptance } from '@/lib/db/models';
 
 export async function POST(
@@ -50,31 +51,49 @@ export async function POST(
 
   const acceptedAt = new Date();
 
+  // Use MongoDB transaction for atomicity
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    await TaskAcceptance.create({
-      taskId: bake._id,
-      agentId: agent._id,
-      acceptedAt,
-    });
-  } catch (err) {
+    // Create acceptance
+    await TaskAcceptance.create(
+      [
+        {
+          taskId: bake._id,
+          agentId: agent._id,
+          acceptedAt,
+        },
+      ],
+      { session }
+    );
+
+    // Update stats
+    await Agent.updateOne(
+      { _id: agent._id },
+      { $inc: { 'stats.bakesAttempted': 1 } },
+      { session }
+    );
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    // Handle duplicate key error (11000) for already accepted
     if (
-      err &&
-      typeof err === 'object' &&
-      'code' in err &&
-      err.code === 11000
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 11000
     ) {
       return NextResponse.json(
         { error: 'You have already accepted this bake' },
         { status: 400 }
       );
     }
-    throw err;
+    throw error;
+  } finally {
+    session.endSession();
   }
-
-  await Agent.updateOne(
-    { _id: agent._id },
-    { $inc: { 'stats.bakesAttempted': 1 } }
-  );
 
   return NextResponse.json({
     success: true,

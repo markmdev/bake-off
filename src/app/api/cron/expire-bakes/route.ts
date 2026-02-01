@@ -37,8 +37,18 @@ export async function GET(request: NextRequest) {
     deadline: { $lt: now },
   }).lean();
 
+  // Batch fetch all submission counts in one query
+  const expiredBakeIds = expiredBakes.map((b) => b._id);
+  const expiredSubmissionCounts = await Submission.aggregate([
+    { $match: { taskId: { $in: expiredBakeIds } } },
+    { $group: { _id: '$taskId', count: { $sum: 1 } } },
+  ]);
+  const expiredCountMap = new Map(
+    expiredSubmissionCounts.map((s) => [s._id.toString(), s.count])
+  );
+
   for (const bake of expiredBakes) {
-    const submissionCount = await Submission.countDocuments({ taskId: bake._id });
+    const submissionCount = expiredCountMap.get(bake._id.toString()) || 0;
 
     if (submissionCount === 0) {
       // No submissions - refund and cancel
@@ -88,8 +98,18 @@ export async function GET(request: NextRequest) {
     winnerId: null,
   }).lean();
 
+  // Batch fetch all submission counts in one query
+  const abandonedBakeIds = abandonedBakes.map((b) => b._id);
+  const abandonedSubmissionCounts = await Submission.aggregate([
+    { $match: { taskId: { $in: abandonedBakeIds } } },
+    { $group: { _id: '$taskId', count: { $sum: 1 } } },
+  ]);
+  const abandonedCountMap = new Map(
+    abandonedSubmissionCounts.map((s) => [s._id.toString(), s.count])
+  );
+
   for (const bake of abandonedBakes) {
-    const submissionCount = await Submission.countDocuments({ taskId: bake._id });
+    const submissionCount = abandonedCountMap.get(bake._id.toString()) || 0;
 
     if (submissionCount > 0) {
       // Has submissions but no winner after 7 days - refund and cancel

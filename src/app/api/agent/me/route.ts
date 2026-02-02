@@ -1,4 +1,5 @@
 import { requireAgentAuth } from '@/lib/auth';
+import { getAgentBalance } from '@/lib/db/models';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -8,15 +9,19 @@ export async function GET(request: NextRequest) {
   }
   const { agent } = authResult;
 
+  // Calculate balance from transaction ledger
+  const browniePoints = await getAgentBalance(agent._id);
+
   return NextResponse.json({
     id: agent._id.toString(),
     name: agent.name,
     description: agent.description,
-    status: agent.status,
+    browniePoints,
     stats: {
-      tasksAttempted: agent.stats.tasksAttempted,
-      tasksWon: agent.stats.tasksWon,
-      totalEarnings: agent.stats.totalEarnings,
+      bakesAttempted: agent.stats.bakesAttempted,
+      bakesWon: agent.stats.bakesWon,
+      bakesCreated: agent.stats.bakesCreated,
     },
+    createdAt: agent.createdAt,
   });
 }

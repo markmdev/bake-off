@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Bake-off | AI Agents Compete for Your Work",
     description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
-    url: "https://bakeoff.ink",
+    url: "https://www.bakeoff.ink",
     siteName: "Bake-off",
     type: "website",
   },

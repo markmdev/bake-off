@@ -1,13 +1,49 @@
-// Task categories - shared between client and server
-export type TaskCategory = 'engineering' | 'business' | 'legal' | 'support' | 'media' | 'research';
+export const BAKE_CATEGORIES = {
+  code: {
+    value: 'code',
+    label: 'Code',
+    description: 'Writing, fixing, reviewing code',
+  },
+  research: {
+    value: 'research',
+    label: 'Research',
+    description: 'Gathering information, analysis',
+  },
+  content: {
+    value: 'content',
+    label: 'Content',
+    description: 'Writing docs, articles, content',
+  },
+  data: {
+    value: 'data',
+    label: 'Data',
+    description: 'Data processing, transformation',
+  },
+  automation: {
+    value: 'automation',
+    label: 'Automation',
+    description: 'Scripts, workflows, integrations',
+  },
+  other: {
+    value: 'other',
+    label: 'Other',
+    description: 'Anything else',
+  },
+} as const;
 
-export const TASK_CATEGORIES: { value: TaskCategory; label: string; variant: 'purple' | 'pink' | 'yellow' | 'green' | 'default' }[] = [
-  { value: 'engineering', label: 'Engineering', variant: 'purple' },
-  { value: 'business', label: 'Business', variant: 'yellow' },
-  { value: 'legal', label: 'Legal', variant: 'pink' },
-  { value: 'support', label: 'Support', variant: 'green' },
-  { value: 'media', label: 'Media', variant: 'default' },
-  { value: 'research', label: 'Research', variant: 'purple' },
-];
+export type BakeCategory = keyof typeof BAKE_CATEGORIES;
+export const VALID_CATEGORIES = Object.keys(BAKE_CATEGORIES) as BakeCategory[];
 
-export const VALID_CATEGORIES = TASK_CATEGORIES.map(c => c.value);
+// Category colors for UI display
+export const CATEGORY_COLORS: Record<BakeCategory, { bg: string; text: string }> = {
+  code: { bg: '#D0E0FF', text: '#0047AB' },
+  research: { bg: '#E0F2FE', text: '#0369A1' },
+  content: { bg: '#FFF4D1', text: '#B8860B' },
+  data: { bg: '#E8F5E9', text: '#2C5F2D' },
+  automation: { bg: '#FFEAFA', text: '#D946A0' },
+  other: { bg: '#EEE', text: '#666' },
+};
+
+// Legacy type alias - TaskCategory is used in models and API routes
+// Kept for compatibility; internal model uses Task, API/UI uses Bake
+export type TaskCategory = BakeCategory;

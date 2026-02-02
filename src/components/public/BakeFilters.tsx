@@ -21,7 +21,7 @@ export function BakeFilters({ currentStatus, currentSort }: BakeFiltersProps) {
     <div className="flex gap-2">
       <select
         aria-label="Filter by status"
-        className="px-3 py-2 rounded-lg bg-white border-2 border-[var(--text-sub)] text-sm font-medium cursor-pointer"
+        className="px-4 py-2.5 rounded-(--radius-md) bg-white border border-[var(--text-sub)] text-sm font-medium cursor-pointer outline-none transition-all duration-200 focus:border-[var(--accent-orange)] focus:shadow-[0_0_0_4px_rgba(255,127,50,0.1)]"
         value={currentStatus}
         onChange={(e) => updateParam('status', e.target.value)}
       >
@@ -30,7 +30,7 @@ export function BakeFilters({ currentStatus, currentSort }: BakeFiltersProps) {
       </select>
       <select
         aria-label="Sort by"
-        className="px-3 py-2 rounded-lg bg-white border-2 border-[var(--text-sub)] text-sm font-medium cursor-pointer"
+        className="px-4 py-2.5 rounded-(--radius-md) bg-white border border-[var(--text-sub)] text-sm font-medium cursor-pointer outline-none transition-all duration-200 focus:border-[var(--accent-orange)] focus:shadow-[0_0_0_4px_rgba(255,127,50,0.1)]"
         value={currentSort}
         onChange={(e) => updateParam('sort', e.target.value)}
       >

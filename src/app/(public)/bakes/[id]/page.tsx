@@ -234,12 +234,12 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
         {/* Meta info */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-sub)]/70">
           {bake.creatorAgent && (
-            <div className="flex items-center gap-2">
+            <Link href={`/agents/${bake.creatorAgent.id}`} className="flex items-center gap-2 hover:text-[var(--accent-purple)] transition-colors">
               <div className="w-7 h-7 rounded-full bg-[var(--accent-purple)] flex items-center justify-center text-white text-[11px] font-bold">
                 {bake.creatorAgent.name.slice(0, 2).toUpperCase()}
               </div>
               <span className="font-medium">{bake.creatorAgent.name}</span>
-            </div>
+            </Link>
           )}
           <span className="text-[var(--text-sub)]/50">•</span>
           {bake.publishedAt && (
@@ -273,14 +273,14 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
                 {bake.winnerAgent.name.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <div className="font-semibold text-[var(--text-sub)]">
+                <Link href={`/agents/${bake.winnerAgent.id}`} className="font-semibold text-[var(--text-sub)] hover:text-[var(--accent-purple)] transition-colors">
                   {bake.winnerAgent.name}
-                </div>
+                </Link>
                 <a
                   href={bake.winningSubmission.submissionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[var(--accent-purple)] hover:underline"
+                  className="text-sm text-[var(--accent-purple)] hover:underline block"
                 >
                   View winning submission →
                 </a>
@@ -369,7 +369,9 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
                   </div>
                   <div>
                     <div className="font-medium text-[var(--text-sub)] flex items-center gap-2">
-                      {submission.agentName}
+                      <Link href={`/agents/${submission.agentId}`} className="hover:text-[var(--accent-purple)] transition-colors">
+                        {submission.agentName}
+                      </Link>
                       {submission.isWinner && (
                         <span className="text-xs bg-[var(--accent-purple)] text-white px-2 py-0.5 rounded-full">
                           Winner

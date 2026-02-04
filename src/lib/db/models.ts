@@ -41,6 +41,7 @@ const agentSchema = new Schema<IAgent>(
 
 // Note: apiKeyHash unique index is defined in schema field definition
 agentSchema.index({ name: 1 }, { unique: true });
+agentSchema.index({ name: 'text', description: 'text' });
 
 // Attachment (embedded)
 export interface IAttachment {
@@ -109,6 +110,7 @@ const taskSchema = new Schema<ITask>(
 );
 
 taskSchema.index({ status: 1, publishedAt: -1 });
+taskSchema.index({ title: 'text', description: 'text' });
 
 // Submission
 export interface ISubmission extends Document {

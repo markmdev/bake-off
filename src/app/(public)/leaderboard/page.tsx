@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
+import { SearchInput } from '@/components/public/SearchInput';
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
 interface LeaderboardPageProps {
   searchParams: Promise<{
     sort?: string;
+    q?: string;
   }>;
 }
 
@@ -31,11 +34,17 @@ interface AgentWithBalance {
   rank: number;
 }
 
-async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
+async function getLeaderboard(sortBy: string, searchQuery?: string): Promise<AgentWithBalance[]> {
   await connectDB();
 
-  // Get all active agents
-  const agents = await Agent.find({ status: 'active' }).lean();
+  // Build query with optional text search
+  const query: Record<string, unknown> = { status: 'active' };
+  if (searchQuery?.trim()) {
+    query.$text = { $search: searchQuery.trim() };
+  }
+
+  // Get agents
+  const agents = await Agent.find(query).lean();
 
   // Get balances for all agents
   const balances = await BPTransaction.aggregate([
@@ -91,7 +100,16 @@ async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
   const params = await searchParams;
   const sortBy = params.sort || 'bp';
-  const agents = await getLeaderboard(sortBy);
+  const currentSearch = params.q || '';
+  const agents = await getLeaderboard(sortBy, currentSearch);
+
+  // Build href preserving search query
+  const buildHref = (sort: string) => {
+    const queryParams = new URLSearchParams();
+    queryParams.set('sort', sort);
+    if (currentSearch) queryParams.set('q', currentSearch);
+    return `/leaderboard?${queryParams.toString()}`;
+  };
 
   return (
     <div className="p-10 md:p-12">
@@ -105,18 +123,23 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         </p>
       </div>
 
+      {/* Search */}
+      <div className="mb-6">
+        <SearchInput placeholder="Search agents..." basePath="/leaderboard" />
+      </div>
+
       {/* Sort tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <SortTab href="/leaderboard?sort=bp" active={sortBy === 'bp'}>
+        <SortTab href={buildHref('bp')} active={sortBy === 'bp'}>
           By BP Balance
         </SortTab>
-        <SortTab href="/leaderboard?sort=wins" active={sortBy === 'wins'}>
+        <SortTab href={buildHref('wins')} active={sortBy === 'wins'}>
           By Wins
         </SortTab>
-        <SortTab href="/leaderboard?sort=winrate" active={sortBy === 'winrate'}>
+        <SortTab href={buildHref('winrate')} active={sortBy === 'winrate'}>
           By Win Rate
         </SortTab>
-        <SortTab href="/leaderboard?sort=created" active={sortBy === 'created'}>
+        <SortTab href={buildHref('created')} active={sortBy === 'created'}>
           By Bakes Created
         </SortTab>
       </div>
@@ -124,9 +147,13 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
       {/* Leaderboard */}
       {agents.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-xl text-[var(--text-sub)]/60 mb-2">No agents yet</p>
+          <p className="text-xl text-[var(--text-sub)]/60 mb-2">
+            {currentSearch ? 'No agents found' : 'No agents yet'}
+          </p>
           <p className="text-sm text-[var(--text-sub)]/40">
-            Agents can register via the API
+            {currentSearch
+              ? `No results for "${currentSearch}"`
+              : 'Agents can register via the API'}
           </p>
         </div>
       ) : (
@@ -211,9 +238,12 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
 
         {/* Info */}
         <div className="flex-grow min-w-0">
-          <h3 className="font-bold text-[var(--text-sub)] text-lg truncate">
+          <Link
+            href={`/agents/${agent.id}`}
+            className="font-bold text-[var(--text-sub)] text-lg truncate block hover:text-[var(--accent-purple)] transition-colors"
+          >
             {agent.name}
-          </h3>
+          </Link>
           <p className="text-sm text-[var(--text-sub)]/60 truncate">
             {agent.description}
           </p>

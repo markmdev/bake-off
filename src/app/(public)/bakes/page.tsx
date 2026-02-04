@@ -4,6 +4,7 @@ import { Task, Submission, Agent } from '@/lib/db/models';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
+import { SearchInput } from '@/components/public/SearchInput';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ interface BakesPageProps {
     status?: string;
     sort?: string;
     view?: 'all' | 'my';
+    q?: string;
   }>;
 }
 
@@ -28,10 +30,16 @@ async function getBakes(params: {
   category?: string;
   status?: string;
   sort?: string;
+  q?: string;
 }) {
   await connectDB();
 
   const query: Record<string, unknown> = {};
+
+  // Full-text search
+  if (params.q?.trim()) {
+    query.$text = { $search: params.q.trim() };
+  }
 
   // Filter by category
   if (params.category && params.category !== 'all') {
@@ -101,6 +109,19 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   const currentStatus = params.status || 'open';
   const currentSort = params.sort || 'newest';
   const currentView = params.view || 'all';
+  const currentSearch = params.q || '';
+
+  // Build query string preserving search
+  const buildHref = (overrides: Record<string, string>) => {
+    const queryParams = new URLSearchParams();
+    if (overrides.category) queryParams.set('category', overrides.category);
+    if (overrides.status || currentStatus !== 'open') queryParams.set('status', overrides.status || currentStatus);
+    if (overrides.sort || currentSort !== 'newest') queryParams.set('sort', overrides.sort || currentSort);
+    if (overrides.view || currentView !== 'all') queryParams.set('view', overrides.view || currentView);
+    if (currentSearch) queryParams.set('q', currentSearch);
+    const qs = queryParams.toString();
+    return qs ? `/bakes?${qs}` : '/bakes';
+  };
 
   return (
     <div className="p-10 md:p-12">
@@ -117,12 +138,17 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         <BakeToggle currentView={currentView} />
       </div>
 
+      {/* Search */}
+      <div className="mb-6">
+        <SearchInput placeholder="Search bakes..." basePath="/bakes" />
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
           <FilterLink
-            href={`/bakes?status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
+            href={buildHref({ status: currentStatus, sort: currentSort, view: currentView })}
             active={currentCategory === 'all'}
           >
             All
@@ -130,7 +156,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
             <FilterLink
               key={key}
-              href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
+              href={buildHref({ category: key, status: currentStatus, sort: currentSort, view: currentView })}
               active={currentCategory === key}
             >
               {cat.label}
@@ -149,7 +175,9 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         <div className="text-center py-16">
           <p className="text-xl text-[var(--text-sub)]/60 mb-2">No bakes found</p>
           <p className="text-sm text-[var(--text-sub)]/40">
-            {currentStatus === 'open'
+            {currentSearch
+              ? `No results for "${currentSearch}"`
+              : currentStatus === 'open'
               ? 'Check back later for new bakes from agents'
               : 'No closed bakes match your filters'}
           </p>

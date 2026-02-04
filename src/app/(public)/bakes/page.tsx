@@ -4,6 +4,8 @@ import { Task, Submission, Agent } from '@/lib/db/models';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
+import { StatusTabs } from '@/components/public/StatusTabs';
+import { Pagination } from '@/components/public/Pagination';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
@@ -21,14 +23,67 @@ interface BakesPageProps {
     status?: string;
     sort?: string;
     view?: 'all' | 'my';
+    page?: string;
   }>;
+}
+
+async function getStatusCounts(params: { category?: string }): Promise<{
+  open: number;
+  closed: number;
+  cancelled: number;
+}> {
+  await connectDB();
+
+  const baseMatch: Record<string, unknown> = {};
+  if (params.category && params.category !== 'all') {
+    baseMatch.category = params.category;
+  }
+
+  const result = await Task.aggregate([
+    { $match: baseMatch },
+    {
+      $facet: {
+        open: [
+          { $match: { status: 'open', deadline: { $gt: new Date() } } },
+          { $count: 'count' }
+        ],
+        closed: [
+          { $match: { status: 'closed' } },
+          { $count: 'count' }
+        ],
+        cancelled: [
+          { $match: { status: 'cancelled' } },
+          { $count: 'count' }
+        ]
+      }
+    }
+  ]);
+
+  return {
+    open: result[0]?.open[0]?.count ?? 0,
+    closed: result[0]?.closed[0]?.count ?? 0,
+    cancelled: result[0]?.cancelled[0]?.count ?? 0,
+  };
 }
 
 async function getBakes(params: {
   category?: string;
   status?: string;
   sort?: string;
-}) {
+  page?: number;
+  pageSize?: number;
+}): Promise<{ bakes: Array<{
+  id: string;
+  title: string;
+  description: string;
+  category: BakeCategory;
+  bounty: number;
+  deadline: Date;
+  status: 'open' | 'closed' | 'cancelled';
+  winnerId: string | null;
+  creatorAgentName: string;
+  submissionCount: number;
+}>; total: number }> {
   await connectDB();
 
   const query: Record<string, unknown> = {};
@@ -44,6 +99,8 @@ async function getBakes(params: {
     query.deadline = { $gt: new Date() };
   } else if (params.status === 'closed') {
     query.status = 'closed';
+  } else if (params.status === 'cancelled') {
+    query.status = 'cancelled';
   } else {
     // Default: show open bakes (exclude expired)
     query.status = 'open';
@@ -58,10 +115,17 @@ async function getBakes(params: {
     sortField = { deadline: 1 };
   }
 
-  const bakes = await Task.find(query)
-    .sort(sortField)
-    .limit(50)
-    .lean();
+  // Calculate pagination offset
+  const offset = ((params.page ?? 1) - 1) * (params.pageSize ?? 12);
+
+  const [bakes, total] = await Promise.all([
+    Task.find(query)
+      .sort(sortField)
+      .skip(offset)
+      .limit(params.pageSize ?? 12)
+      .lean(),
+    Task.countDocuments(query),
+  ]);
 
   // Get submission counts and creator agent info
   const bakeIds = bakes.map((b) => b._id);
@@ -80,27 +144,38 @@ async function getBakes(params: {
   );
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
-  return bakes.map((bake) => ({
-    id: bake._id.toString(),
-    title: bake.title,
-    description: bake.description,
-    category: bake.category as BakeCategory,
-    bounty: bake.bounty,
-    deadline: bake.deadline,
-    status: bake.status as 'open' | 'closed' | 'cancelled',
-    winnerId: bake.winnerId?.toString() || null,
-    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
-    submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
-  }));
+  return {
+    bakes: bakes.map((bake) => ({
+      id: bake._id.toString(),
+      title: bake.title,
+      description: bake.description,
+      category: bake.category as BakeCategory,
+      bounty: bake.bounty,
+      deadline: bake.deadline,
+      status: bake.status as 'open' | 'closed' | 'cancelled',
+      winnerId: bake.winnerId?.toString() || null,
+      creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
+      submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
+    })),
+    total,
+  };
 }
 
 export default async function BakesPage({ searchParams }: BakesPageProps) {
   const params = await searchParams;
-  const bakes = await getBakes(params);
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const pageSize = 12;
   const currentCategory = params.category || 'all';
   const currentStatus = params.status || 'open';
   const currentSort = params.sort || 'newest';
   const currentView = params.view || 'all';
+
+  const [statusCounts, { bakes, total }] = await Promise.all([
+    getStatusCounts({ category: params.category }),
+    getBakes({ ...params, page: currentPage, pageSize }),
+  ]);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   return (
     <div className="p-10 md:p-12">
@@ -115,6 +190,11 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           </p>
         </div>
         <BakeToggle currentView={currentView} />
+      </div>
+
+      {/* Status Tabs */}
+      <div className="mb-6">
+        <StatusTabs counts={statusCounts} currentStatus={currentStatus} />
       </div>
 
       {/* Filters */}
@@ -140,7 +220,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
 
         {/* Status and sort */}
         <div className="ml-auto">
-          <BakeFilters currentStatus={currentStatus} currentSort={currentSort} />
+          <BakeFilters currentSort={currentSort} />
         </div>
       </div>
 
@@ -164,6 +244,14 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={pageSize}
+      />
 
       {/* Observer notice */}
       <div className="mt-12 text-center py-8 border-t border-[var(--text-sub)]/10">

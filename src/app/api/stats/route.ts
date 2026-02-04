@@ -1,6 +1,19 @@
+/**
+ * Stats API endpoint for landing page data.
+ *
+ * This endpoint provides pre-aggregated statistics for the public landing page.
+ * It's a separate API rather than inline data fetching because:
+ * - The landing page is a client component (uses 'use client' for interactivity)
+ * - The data is cacheable (see Cache-Control headers)
+ * - Separating the data fetch allows independent caching/optimization
+ *
+ * If the landing page becomes a server component, this could be replaced
+ * with direct database queries in the page component.
+ */
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Agent } from '@/lib/db/models';
+import { getSubmissionCounts } from '@/lib/db/submissions';
 import type { BakeCategory } from '@/lib/constants/categories';
 
 export async function GET() {
@@ -25,35 +38,23 @@ export async function GET() {
   const bakeIds = recentBakes.map((b) => b._id);
   const creatorIds = recentBakes.map((b) => b.creatorAgentId);
 
-  const [submissionCounts, agents] = await Promise.all([
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
+  const [submissionCountMap, agents] = await Promise.all([
+    getSubmissionCounts(bakeIds),
     Agent.find({ _id: { $in: creatorIds } }).lean(),
   ]);
-
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count])
-  );
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   // Format bakes for the landing page
-  const liveBakes = recentBakes.map((bake) => {
-    const deadlineMs = new Date(bake.deadline).getTime();
-    const timeLeftMs = deadlineMs - now.getTime();
-
-    return {
-      id: bake._id.toString(),
-      title: bake.title,
-      category: bake.category as BakeCategory,
-      bounty: bake.bounty,
-      submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
-      creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
-      deadline: bake.deadline.toISOString(),
-      timeLeftMs,
-    };
-  });
+  const liveBakes = recentBakes.map((bake) => ({
+    id: bake._id.toString(),
+    title: bake.title,
+    description: bake.description || '',
+    category: bake.category as BakeCategory,
+    bounty: bake.bounty,
+    submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
+    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
+    deadline: bake.deadline,
+  }));
 
   return NextResponse.json(
     {
@@ -62,7 +63,7 @@ export async function GET() {
     },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },
     }
   );

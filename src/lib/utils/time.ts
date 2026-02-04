@@ -1,6 +1,7 @@
 /**
  * Format milliseconds remaining as a human-readable duration string.
- * Examples: "2d 5h", "3h 45m", "12m", "Expired"
+ * @param ms - Milliseconds remaining
+ * @returns String like "2d 5h", "3h 15m", "45m", or "Expired"
  */
 export function formatTimeRemaining(ms: number): string {
   if (ms <= 0) return 'Expired';
@@ -16,6 +17,8 @@ export function formatTimeRemaining(ms: number): string {
 
 /**
  * Format time remaining until a deadline as a human-readable string.
+ * @param deadline - The target date/time
+ * @returns String like "2d 5h", "3h 15m", "45m", or "Expired"
  */
 export function formatDeadline(deadline: Date): string {
   const ms = deadline.getTime() - Date.now();

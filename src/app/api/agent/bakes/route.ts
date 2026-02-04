@@ -8,13 +8,13 @@ import {
   BPTransaction,
   Comment,
   TaskAcceptance,
-  Submission,
   getAgentBalance,
   VALID_CATEGORIES,
   TaskCategory,
 } from '@/lib/db/models';
+import { getSubmissionCounts } from '@/lib/db/submissions';
+import { isValidGitHubRepoUrl } from '@/lib/utils/github';
 
-const GITHUB_URL_PATTERN = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+$/;
 const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
 
 interface AttachmentInput {
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
   const bakeIds = bakes.map((b) => b._id);
   const creatorIds = [...new Set(bakes.map((b) => b.creatorAgentId.toString()))];
 
-  const [creators, commentCounts, acceptedCounts, submissionCounts] = await Promise.all([
+  const [creators, commentCounts, acceptedCounts, submissionCountMap] = await Promise.all([
     Agent.find({ _id: { $in: creatorIds } })
       .select('_id name description')
       .lean(),
@@ -132,10 +132,7 @@ export async function GET(request: NextRequest) {
       { $match: { taskId: { $in: bakeIds } } },
       { $group: { _id: '$taskId', count: { $sum: 1 } } },
     ]),
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
+    getSubmissionCounts(bakeIds),
   ]);
 
   const creatorMap = new Map(
@@ -146,9 +143,6 @@ export async function GET(request: NextRequest) {
   );
   const acceptedCountMap = new Map(
     acceptedCounts.map((a) => [a._id.toString(), a.count as number])
-  );
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count as number])
   );
 
   return NextResponse.json({
@@ -264,7 +258,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (targetRepo !== undefined && targetRepo !== null) {
-    if (typeof targetRepo !== 'string' || !GITHUB_URL_PATTERN.test(targetRepo)) {
+    if (typeof targetRepo !== 'string' || !isValidGitHubRepoUrl(targetRepo)) {
       errors.push('targetRepo: must be a valid GitHub repository URL (https://github.com/owner/repo)');
     }
   }
@@ -284,19 +278,26 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Rate limit check
-  if (agent.lastBakeCreatedAt) {
-    const timeSinceLastBake = Date.now() - new Date(agent.lastBakeCreatedAt).getTime();
-    if (timeSinceLastBake < RATE_LIMIT_MS) {
-      const retryAfter = Math.ceil((RATE_LIMIT_MS - timeSinceLastBake) / 1000);
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
-        {
-          status: 429,
-          headers: { 'Retry-After': retryAfter.toString() },
-        }
-      );
-    }
+  // Rate limit: 1 bake per 5 minutes
+  // Atomic check-and-update to prevent TOCTOU race condition
+  const fiveMinutesAgo = new Date(Date.now() - RATE_LIMIT_MS);
+  const rateLimitCheck = await Agent.findOneAndUpdate(
+    {
+      _id: agent._id,
+      $or: [
+        { lastBakeCreatedAt: null },
+        { lastBakeCreatedAt: { $lte: fiveMinutesAgo } },
+      ],
+    },
+    { $set: { lastBakeCreatedAt: new Date() } },
+    { new: true }
+  );
+
+  if (!rateLimitCheck) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
+      { status: 429, headers: { 'Retry-After': '300' } }
+    );
   }
 
   // Use MongoDB transaction for atomicity
@@ -343,13 +344,10 @@ export async function POST(request: NextRequest) {
       { session }
     );
 
-    // 4. Update agent stats and rate limit timestamp
+    // 4. Update agent stats (rate limit timestamp already set atomically above)
     await Agent.updateOne(
       { _id: agent._id },
-      {
-        $inc: { 'stats.bakesCreated': 1 },
-        $set: { lastBakeCreatedAt: new Date() },
-      },
+      { $inc: { 'stats.bakesCreated': 1 } },
       { session }
     );
 

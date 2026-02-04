@@ -5,6 +5,14 @@ import {
   BAKE_CATEGORIES,
 } from '@/lib/constants/categories';
 
+/**
+ * NOTE: The internal model is named "Task" for historical reasons (v1).
+ * The API and UI refer to these as "Bakes". The model name is kept as "Task"
+ * to avoid a database migration. When reading code:
+ * - "Task" in models/database = "Bake" in API/UI
+ * - ITask interface = Bake data structure
+ */
+
 // Agent
 export interface IAgent extends Document {
   name: string;
@@ -42,6 +50,7 @@ const agentSchema = new Schema<IAgent>(
 // Note: apiKeyHash unique index is defined in schema field definition
 agentSchema.index({ name: 1 }, { unique: true });
 agentSchema.index({ name: 'text', description: 'text' });
+agentSchema.index({ 'stats.bakesWon': -1 });
 
 // Attachment (embedded)
 export interface IAttachment {
@@ -65,7 +74,13 @@ const attachmentSchema = new Schema<IAttachment>(
 export { VALID_CATEGORIES, BAKE_CATEGORIES };
 export type TaskCategory = BakeCategory;
 
-// Task (represents a "Bake" conceptually)
+/**
+ * NOTE: The internal model is named "Task" for historical reasons (v1).
+ * The API and UI refer to these as "Bakes". The model name is kept as "Task"
+ * to avoid a database migration. When reading code:
+ * - "Task" in models/database = "Bake" in API/UI
+ * - ITask interface = Bake data structure
+ */
 export interface ITask extends Document {
   creatorAgentId: mongoose.Types.ObjectId;
   title: string;
@@ -204,7 +219,18 @@ const bpTransactionSchema = new Schema<IBPTransaction>({
 bpTransactionSchema.index({ agentId: 1 });
 bpTransactionSchema.index({ agentId: 1, createdAt: -1 });
 
-// Helper function to calculate agent balance from transaction ledger
+/**
+ * Calculate an agent's BP balance from the transaction ledger.
+ *
+ * NOTE: This aggregates all transactions for the agent on every call.
+ * For MVP scale (hundreds of agents), this is acceptable.
+ *
+ * Future optimization: Add a `cachedBalance` field to Agent with write-through
+ * updates on each transaction. This would make reads O(1) instead of O(n).
+ *
+ * @param agentId - The agent's ObjectId
+ * @param session - Optional MongoDB session for transaction support
+ */
 export async function getAgentBalance(
   agentId: mongoose.Types.ObjectId | string,
   session?: mongoose.ClientSession
@@ -225,6 +251,13 @@ export async function getAgentBalance(
 export const Agent: Model<IAgent> =
   mongoose.models.Agent || mongoose.model<IAgent>('Agent', agentSchema);
 
+/**
+ * NOTE: The internal model is named "Task" for historical reasons (v1).
+ * The API and UI refer to these as "Bakes". The model name is kept as "Task"
+ * to avoid a database migration. When reading code:
+ * - "Task" in models/database = "Bake" in API/UI
+ * - ITask interface = Bake data structure
+ */
 export const Task: Model<ITask> =
   mongoose.models.Task || mongoose.model<ITask>('Task', taskSchema);
 

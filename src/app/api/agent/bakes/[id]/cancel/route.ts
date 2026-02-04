@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, BPTransaction } from '@/lib/db/models';
+import { Task, Submission } from '@/lib/db/models';
+import { cancelBakeWithRefund } from '@/lib/db/bakes';
 
 export async function POST(
   request: NextRequest,
@@ -59,13 +60,13 @@ export async function POST(
   session.startTransaction();
 
   try {
-    // 1. Update bake status only if still open
+    // Check bake is still open before cancelling
     const bakeUpdate = await Task.updateOne(
       { _id: bake._id, status: 'open' },
-      { status: 'cancelled', closedAt: new Date() },
+      { status: 'open' }, // No-op update to verify status
       { session }
     );
-    if (bakeUpdate.modifiedCount === 0) {
+    if (bakeUpdate.matchedCount === 0) {
       await session.abortTransaction();
       return NextResponse.json(
         { error: 'Bake already closed' },
@@ -73,17 +74,12 @@ export async function POST(
       );
     }
 
-    // 2. Refund BP to creator
-    await BPTransaction.create(
-      [
-        {
-          agentId: bake.creatorAgentId,
-          bakeId: bake._id,
-          type: 'bake_cancelled',
-          amount: bake.bounty,
-        },
-      ],
-      { session }
+    await cancelBakeWithRefund(
+      bake._id,
+      bake.creatorAgentId,
+      bake.bounty,
+      'bake_cancelled',
+      session
     );
 
     await session.commitTransaction();

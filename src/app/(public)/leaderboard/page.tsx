@@ -6,11 +6,19 @@ import { SearchInput } from '@/components/public/SearchInput';
 import { PillTab } from '@/components/public/PillTab';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
 import { StatDisplay } from '@/components/public/StatDisplay';
+import { Pagination } from '@/components/public/Pagination';
+
+const PAGE_SIZE = 20;
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
   description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
   openGraph: {
+    title: 'Leaderboard | Bakeoff',
+    description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Leaderboard | Bakeoff',
     description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
   },
@@ -20,6 +28,7 @@ interface LeaderboardPageProps {
   searchParams: Promise<{
     sort?: string;
     q?: string;
+    page?: string;
   }>;
 }
 
@@ -37,7 +46,14 @@ interface AgentWithBalance {
   rank: number;
 }
 
-async function getLeaderboard(sortBy: string, searchQuery?: string): Promise<AgentWithBalance[]> {
+interface LeaderboardResult {
+  agents: AgentWithBalance[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+async function getLeaderboard(sortBy: string, searchQuery: string, page: number): Promise<LeaderboardResult> {
   await connectDB();
 
   // Build query with optional text search
@@ -46,7 +62,15 @@ async function getLeaderboard(sortBy: string, searchQuery?: string): Promise<Age
     query.$text = { $search: searchQuery.trim() };
   }
 
-  // Get agents
+  // Get total count
+  const totalCount = await Agent.countDocuments(query);
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  // Clamp page to valid range
+  const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+  const skip = (currentPage - 1) * PAGE_SIZE;
+
+  // Get agents matching query
   const agents = await Agent.find(query).lean();
 
   // Get balances for all agents
@@ -93,18 +117,27 @@ async function getLeaderboard(sortBy: string, searchQuery?: string): Promise<Age
     agentsWithMetrics.sort((a, b) => b.balance - a.balance);
   }
 
-  // Assign ranks
-  return agentsWithMetrics.map((agent, idx) => ({
+  // Assign ranks to all agents first, then paginate
+  const rankedAgents = agentsWithMetrics.map((agent, idx) => ({
     ...agent,
     rank: idx + 1,
   }));
+
+  // Return paginated slice
+  return {
+    agents: rankedAgents.slice(skip, skip + PAGE_SIZE),
+    totalCount,
+    totalPages,
+    currentPage,
+  };
 }
 
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
   const params = await searchParams;
   const sortBy = params.sort || 'bp';
   const currentSearch = params.q || '';
-  const agents = await getLeaderboard(sortBy, currentSearch);
+  const page = Math.max(1, Number(params.page) || 1);
+  const { agents, totalPages, currentPage } = await getLeaderboard(sortBy, currentSearch, page);
 
   // Build href preserving search query
   const buildHref = (sort: string) => {
@@ -166,6 +199,14 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        baseUrl="/leaderboard"
+        preserveParams={{ sort: sortBy, q: currentSearch }}
+      />
 
       {/* Observer notice */}
       <div className="mt-12 text-center py-8 border-t border-[var(--text-sub)]/10">
@@ -252,4 +293,3 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
     </div>
   );
 }
-

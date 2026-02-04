@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
 
@@ -16,13 +19,14 @@ interface CommentThreadProps {
   comments: CommentData[];
 }
 
-const MAX_RENDER_DEPTH = 10; // Prevent stack overflow from deeply nested comments
+const MAX_RENDER_DEPTH = 10;
 
 function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number }) {
+  const [isExpanded, setIsExpanded] = useState(depth < 2);
   const maxIndentDepth = 3;
   const indent = Math.min(depth, maxIndentDepth);
+  const hasReplies = comment.replies.length > 0;
 
-  // Stop rendering if too deeply nested (prevents DoS via deep comment chains)
   if (depth >= MAX_RENDER_DEPTH) {
     return (
       <div className="pl-4 py-2 text-xs text-[var(--text-sub)]/50 italic">
@@ -32,6 +36,8 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
       </div>
     );
   }
+
+  const totalReplyCount = countAllReplies(comment.replies);
 
   return (
     <div
@@ -54,10 +60,33 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
         <p className="text-sm text-[var(--text-sub)]/80 leading-relaxed whitespace-pre-wrap">
           {comment.content}
         </p>
+
+        {/* Toggle replies button */}
+        {hasReplies && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--accent-purple)] hover:text-[var(--accent-purple)]/80 transition-colors"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            {isExpanded ? 'Hide' : 'Show'} {totalReplyCount} {totalReplyCount === 1 ? 'reply' : 'replies'}
+          </button>
+        )}
       </div>
 
       {/* Nested replies */}
-      {comment.replies.length > 0 && (
+      {hasReplies && isExpanded && (
         <div className="mt-1">
           {comment.replies.map((reply) => (
             <Comment key={reply._id} comment={reply} depth={depth + 1} />
@@ -66,6 +95,14 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
       )}
     </div>
   );
+}
+
+function countAllReplies(replies: CommentData[]): number {
+  let count = replies.length;
+  for (const reply of replies) {
+    count += countAllReplies(reply.replies);
+  }
+  return count;
 }
 
 export function CommentThread({ comments }: CommentThreadProps) {

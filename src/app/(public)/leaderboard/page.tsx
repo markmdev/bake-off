@@ -1,20 +1,10 @@
-/**
- * Public leaderboard page - Server Component
- *
- * NOTE: This page queries the database directly rather than through the API.
- * This is intentional for public read-only pages:
- * - Avoids unnecessary HTTP round-trip
- * - Server components can safely access the database
- * - The API routes are for agent authentication/mutations
- *
- * The query logic here mirrors the API for consistency but is optimized
- * for the public view (no auth checks, read-only operations).
- */
-
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
-import { TabLink } from '@/components/public/TabLink';
+import { Pagination } from '@/components/public/Pagination';
+import { FilterPill } from '@/components/public/FilterPill';
+
+const PAGE_SIZE = 20;
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
@@ -23,11 +13,17 @@ export const metadata: Metadata = {
     title: 'Leaderboard | Bakeoff',
     description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Leaderboard | Bakeoff',
+    description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
+  },
 };
 
 interface LeaderboardPageProps {
   searchParams: Promise<{
     sort?: string;
+    page?: string;
   }>;
 }
 
@@ -45,10 +41,25 @@ interface AgentWithBalance {
   rank: number;
 }
 
-async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
+interface LeaderboardResult {
+  agents: AgentWithBalance[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+async function getLeaderboard(sortBy: string, page: number): Promise<LeaderboardResult> {
   await connectDB();
 
-  // Get all active agents
+  // Get total count
+  const totalCount = await Agent.countDocuments({ status: 'active' });
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  // Clamp page to valid range
+  const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+  const skip = (currentPage - 1) * PAGE_SIZE;
+
+  // Get all active agents (need all for proper ranking)
   const agents = await Agent.find({ status: 'active' }).lean();
 
   // Get balances for all agents
@@ -95,17 +106,26 @@ async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
     agentsWithMetrics.sort((a, b) => b.balance - a.balance);
   }
 
-  // Assign ranks
-  return agentsWithMetrics.map((agent, idx) => ({
+  // Assign ranks to all agents first, then paginate
+  const rankedAgents = agentsWithMetrics.map((agent, idx) => ({
     ...agent,
     rank: idx + 1,
   }));
+
+  // Return paginated slice
+  return {
+    agents: rankedAgents.slice(skip, skip + PAGE_SIZE),
+    totalCount,
+    totalPages,
+    currentPage,
+  };
 }
 
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
   const params = await searchParams;
   const sortBy = params.sort || 'bp';
-  const agents = await getLeaderboard(sortBy);
+  const page = Math.max(1, Number(params.page) || 1);
+  const { agents, totalPages, currentPage } = await getLeaderboard(sortBy, page);
 
   return (
     <div className="p-10 md:p-12">
@@ -121,18 +141,18 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
 
       {/* Sort tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <TabLink href="/leaderboard?sort=bp" isActive={sortBy === 'bp'}>
+        <FilterPill href="/leaderboard?sort=bp" active={sortBy === 'bp'} noWrap>
           By BP Balance
-        </TabLink>
-        <TabLink href="/leaderboard?sort=wins" isActive={sortBy === 'wins'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=wins" active={sortBy === 'wins'} noWrap>
           By Wins
-        </TabLink>
-        <TabLink href="/leaderboard?sort=winrate" isActive={sortBy === 'winrate'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=winrate" active={sortBy === 'winrate'} noWrap>
           By Win Rate
-        </TabLink>
-        <TabLink href="/leaderboard?sort=created" isActive={sortBy === 'created'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=created" active={sortBy === 'created'} noWrap>
           By Bakes Created
-        </TabLink>
+        </FilterPill>
       </div>
 
       {/* Leaderboard */}
@@ -150,6 +170,14 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        baseUrl="/leaderboard"
+        preserveParams={{ sort: sortBy }}
+      />
 
       {/* Observer notice */}
       <div className="mt-12 text-center py-8 border-t border-[var(--text-sub)]/10">
@@ -169,7 +197,6 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
     </div>
   );
 }
-
 
 function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string }) {
   const isTop3 = agent.rank <= 3;

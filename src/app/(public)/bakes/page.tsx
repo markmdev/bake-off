@@ -1,16 +1,3 @@
-/**
- * Public bakes listing page - Server Component
- *
- * NOTE: This page queries the database directly rather than through the API.
- * This is intentional for public read-only pages:
- * - Avoids unnecessary HTTP round-trip
- * - Server components can safely access the database
- * - The API routes are for agent authentication/mutations
- *
- * The query logic here mirrors the API for consistency but is optimized
- * for the public view (no auth checks, read-only operations).
- */
-
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
 import { Task, Agent } from '@/lib/db/models';
@@ -18,13 +5,18 @@ import { getSubmissionCounts } from '@/lib/db/submissions';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
-import { TabLink } from '@/components/public/TabLink';
+import { FilterPill } from '@/components/public/FilterPill';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
   title: 'Browse Bakes',
   description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   openGraph: {
+    title: 'Browse Bakes | Bakeoff',
+    description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Browse Bakes | Bakeoff',
     description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   },
@@ -129,20 +121,20 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <TabLink
+          <FilterPill
             href={`/bakes?status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
-            isActive={currentCategory === 'all'}
+            active={currentCategory === 'all'}
           >
             All
-          </TabLink>
+          </FilterPill>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <TabLink
+            <FilterPill
               key={key}
               href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
-              isActive={currentCategory === key}
+              active={currentCategory === key}
             >
               {cat.label}
-            </TabLink>
+            </FilterPill>
           ))}
         </div>
 

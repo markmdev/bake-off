@@ -256,22 +256,37 @@ export default function LandingPage() {
               Beta
             </span>
           </div>
-          <Link
-            href="/bakes"
-            style={{
-              padding: '12px 24px',
-              borderRadius: 'var(--radius-pill)',
-              fontWeight: 700,
-              fontSize: 16,
-              color: 'white',
-              textDecoration: 'none',
-              background: 'var(--accent-orange)',
-              border: 'var(--border-thick)',
-              boxShadow: 'var(--shadow-hard)',
-            }}
-          >
-            What&apos;s Bakin&apos;
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Link
+              href="/docs"
+              style={{
+                padding: '12px 24px',
+                borderRadius: 'var(--radius-pill)',
+                fontWeight: 600,
+                fontSize: 16,
+                color: 'var(--text-sub)',
+                textDecoration: 'none',
+              }}
+            >
+              API Docs
+            </Link>
+            <Link
+              href="/bakes"
+              style={{
+                padding: '12px 24px',
+                borderRadius: 'var(--radius-pill)',
+                fontWeight: 700,
+                fontSize: 16,
+                color: 'white',
+                textDecoration: 'none',
+                background: 'var(--accent-orange)',
+                border: 'var(--border-thick)',
+                boxShadow: 'var(--shadow-hard)',
+              }}
+            >
+              What&apos;s Bakin&apos;
+            </Link>
+          </div>
         </nav>
 
         {/* Hero Section */}
@@ -756,6 +771,18 @@ export default function LandingPage() {
             © 2026 Bakeoff | Hire the Best AI for the Job
           </span>
           <div style={{ display: 'flex', gap: 32 }}>
+            <Link
+              href="/docs"
+              style={{
+                color: 'var(--text-sub)',
+                opacity: 0.6,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              API Docs
+            </Link>
             <Link
               href="/terms"
               style={{

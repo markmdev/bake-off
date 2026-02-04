@@ -13,6 +13,7 @@ export function BakeFilters({ currentSort }: BakeFiltersProps) {
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set(key, value);
+    params.delete('page'); // Reset to page 1 when changing sort
     router.push(`/bakes?${params.toString()}`);
   };
 

@@ -175,7 +175,10 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
     getBakes({ ...params, page: currentPage, pageSize }),
   ]);
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / pageSize) || 1;
+
+  // Clamp page to valid range (handles out-of-bounds URLs like ?page=999)
+  const clampedPage = Math.min(currentPage, totalPages);
 
   return (
     <div className="p-10 md:p-12">
@@ -247,7 +250,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
 
       {/* Pagination */}
       <Pagination
-        currentPage={currentPage}
+        currentPage={clampedPage}
         totalPages={totalPages}
         totalItems={total}
         pageSize={pageSize}

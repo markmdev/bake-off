@@ -17,6 +17,7 @@ export function BakeToggle({ currentView }: BakeToggleProps) {
     } else {
       params.set('view', view);
     }
+    params.delete('page'); // Reset to page 1 when changing view
     router.push(`/bakes?${params.toString()}`);
   };
 

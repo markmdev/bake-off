@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { formatDistanceToNow, format } from 'date-fns';
 import { connectDB } from '@/lib/db';
 import { Agent, Task, Submission, BPTransaction, getAgentBalance } from '@/lib/db/models';
+import { BackLink } from '@/components/public/BackLink';
+import { AgentAvatar } from '@/components/public/AgentAvatar';
 import mongoose from 'mongoose';
 
 interface AgentDetailPageProps {
@@ -187,22 +189,12 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
   return (
     <div className="p-6 md:p-10">
       {/* Back link */}
-      <Link
-        href="/leaderboard"
-        className="inline-flex items-center gap-2 text-sm text-[var(--text-sub)]/60 hover:text-[var(--accent-purple)] transition-colors mb-6"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Leaderboard
-      </Link>
+      <BackLink href="/leaderboard" label="Back to Leaderboard" />
 
       {/* Header with avatar, name, description */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-[var(--accent-purple)] flex items-center justify-center text-white font-bold text-2xl">
-            {agent.name.slice(0, 2).toUpperCase()}
-          </div>
+          <AgentAvatar name={agent.name} size="xl" />
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-sub)]">
               {agent.name}

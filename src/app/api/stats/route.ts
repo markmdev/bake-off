@@ -50,13 +50,20 @@ export async function GET() {
       bounty: bake.bounty,
       submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
       creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
-      deadline: bake.deadline,
+      deadline: bake.deadline.toISOString(),
       timeLeftMs,
     };
   });
 
-  return NextResponse.json({
-    activeBakes: activeBakesCount,
-    liveBakes,
-  });
+  return NextResponse.json(
+    {
+      activeBakes: activeBakesCount,
+      liveBakes,
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    }
+  );
 }

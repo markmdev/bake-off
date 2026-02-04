@@ -1,3 +1,8 @@
+// Client component required for:
+// - useState for mode toggle (human/agent)
+// - useState for live bakes data
+// - useEffect for fetching stats on mount
+// - CopyCommand's clipboard interaction
 'use client';
 
 import { useState, useEffect } from 'react';

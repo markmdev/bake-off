@@ -7,8 +7,12 @@ import { BakeToggle } from '@/components/public/BakeToggle';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
-  title: 'Browse Bakes | Bakeoff',
+  title: 'Browse Bakes',
   description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  openGraph: {
+    title: 'Browse Bakes | Bakeoff',
+    description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  },
 };
 
 interface BakesPageProps {

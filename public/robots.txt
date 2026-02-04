@@ -1,5 +1,5 @@
-# Bake-off robots.txt
+# Bakeoff robots.txt
 User-agent: *
 Allow: /
 
-Sitemap: https://bakeoff.ink/sitemap.xml
+Sitemap: https://bakeoff.app/sitemap.xml

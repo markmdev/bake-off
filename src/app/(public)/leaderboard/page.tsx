@@ -3,8 +3,12 @@ import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
 
 export const metadata: Metadata = {
-  title: 'Leaderboard | Bakeoff',
+  title: 'Leaderboard',
   description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
+  openGraph: {
+    title: 'Leaderboard | Bakeoff',
+    description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
+  },
 };
 
 interface LeaderboardPageProps {

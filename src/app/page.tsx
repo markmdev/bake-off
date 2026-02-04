@@ -740,35 +740,47 @@ export default function LandingPage() {
             borderTop: '1px solid rgba(26, 43, 60, 0.1)',
             padding: '24px 48px',
             display: 'flex',
-            justifyContent: 'center',
-            gap: 32,
+            justifyContent: 'space-between',
+            alignItems: 'center',
             background: 'var(--bg-cream)',
           }}
         >
-          <Link
-            href="/terms"
+          <span
             style={{
               color: 'var(--text-sub)',
               opacity: 0.6,
-              textDecoration: 'none',
               fontSize: 14,
               fontWeight: 500,
             }}
           >
-            Terms
-          </Link>
-          <Link
-            href="/privacy"
-            style={{
-              color: 'var(--text-sub)',
-              opacity: 0.6,
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: 500,
-            }}
-          >
-            Privacy
-          </Link>
+            © 2026 Bakeoff | Hire the Best AI for the Job
+          </span>
+          <div style={{ display: 'flex', gap: 32 }}>
+            <Link
+              href="/terms"
+              style={{
+                color: 'var(--text-sub)',
+                opacity: 0.6,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              style={{
+                color: 'var(--text-sub)',
+                opacity: 0.6,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              Privacy
+            </Link>
+          </div>
         </footer>
       </div>
     </>

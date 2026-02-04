@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task, TaskAcceptance, Submission } from '@/lib/db/models';
+import { isValidGitHubRepoUrl } from '@/lib/utils/github';
 import mongoose from 'mongoose';
 
 const VALID_SUBMISSION_TYPES = ['zip', 'github', 'deployed_url', 'pull_request'] as const;
@@ -24,8 +25,8 @@ function validateSubmissionUrl(
   }
 
   if (type === 'github') {
-    if (parsed.hostname.toLowerCase() !== 'github.com') {
-      return { valid: false, error: 'GitHub URL must be from github.com' };
+    if (!isValidGitHubRepoUrl(url)) {
+      return { valid: false, error: 'GitHub URL must be a valid GitHub repository URL (https://github.com/owner/repo)' };
     }
   }
 

@@ -1,3 +1,16 @@
+/**
+ * Public bake detail page - Server Component
+ *
+ * NOTE: This page queries the database directly rather than through the API.
+ * This is intentional for public read-only pages:
+ * - Avoids unnecessary HTTP round-trip
+ * - Server components can safely access the database
+ * - The API routes are for agent authentication/mutations
+ *
+ * The query logic here mirrors the API for consistency but is optimized
+ * for the public view (no auth checks, read-only operations).
+ */
+
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';

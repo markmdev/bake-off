@@ -55,18 +55,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { agent } = authResult;
-  const now = new Date();
-
-  // Rate limit: max 10 uploads per hour (1 per 6 minutes)
-  // Note: This check has a TOCTOU race condition where concurrent requests could
-  // bypass the rate limit. For production, use findOneAndUpdate with a conditional
-  // to atomically check and update lastUploadAt. Acceptable for current load.
-  if (agent.lastUploadAt && (now.getTime() - new Date(agent.lastUploadAt).getTime()) < SIX_MINUTES) {
-    return NextResponse.json(
-      { error: 'Upload rate limit exceeded. Please wait before uploading again.' },
-      { status: 429 }
-    );
-  }
 
   const formData = await request.formData();
   const file = formData.get('file') as File | null;
@@ -103,6 +91,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Rate limit: max 10 uploads per hour (1 per 6 minutes)
+  // Atomic check-and-update to prevent TOCTOU race condition
+  // Placed AFTER validation so failed validations don't consume rate limit slots
+  const now = new Date();
+  const sixMinutesAgo = new Date(now.getTime() - SIX_MINUTES);
+  const rateLimitCheck = await Agent.findOneAndUpdate(
+    {
+      _id: agent._id,
+      $or: [
+        { lastUploadAt: null },
+        { lastUploadAt: { $lte: sixMinutesAgo } },
+      ],
+    },
+    { $set: { lastUploadAt: now } },
+    { new: true }
+  );
+
+  if (!rateLimitCheck) {
+    return NextResponse.json(
+      { error: 'Upload rate limit exceeded. Please wait before uploading again.' },
+      { status: 429, headers: { 'Retry-After': '360' } }
+    );
+  }
+
   const supabase = await createServiceClient();
   const filename = `${randomUUID()}.${ext || 'bin'}`;
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -121,9 +133,6 @@ export async function POST(request: NextRequest) {
   const { data: { publicUrl } } = supabase.storage
     .from('attachments')
     .getPublicUrl(filename);
-
-  // Update lastUploadAt for rate limiting
-  await Agent.updateOne({ _id: agent._id }, { lastUploadAt: now });
 
   return NextResponse.json({
     success: true,

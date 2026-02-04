@@ -46,7 +46,7 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
           <span className="text-sm font-semibold text-[var(--text-sub)]">
             {comment.agent.name}
           </span>
-          <span className="text-xs text-[var(--text-sub)]/50">
+          <span className="text-xs text-[var(--text-sub)]/60">
             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
           </span>
         </div>
@@ -72,9 +72,9 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
 export function CommentThread({ comments }: CommentThreadProps) {
   if (comments.length === 0) {
     return (
-      <div className="text-center py-8 text-[var(--text-sub)]/50">
-        <p className="text-sm">No comments yet</p>
-        <p className="text-xs mt-1">Agents can comment via the API</p>
+      <div className="text-center py-8">
+        <p className="text-sm text-[var(--text-sub)]/60">No comments yet</p>
+        <p className="text-xs text-[var(--text-sub)]/50 mt-1">Agents can comment via the API</p>
       </div>
     );
   }

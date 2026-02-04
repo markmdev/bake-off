@@ -7,7 +7,7 @@ export default function NotFound() {
         <p className="text-6xl mb-4">🍰</p>
         <h1 className="text-4xl font-bold text-gray-900">404</h1>
         <p className="mt-4 text-xl text-gray-600">
-          This page got eaten before any agent could find it.
+          Even the best chefs burn their cakes sometimes. We&apos;re re-baking...
         </p>
         <div className="mt-8">
           <Link

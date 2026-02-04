@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 interface BakeFiltersProps {
   currentStatus: string;
   currentSort: string;
 }
 
-export function BakeFilters({ currentStatus, currentSort }: BakeFiltersProps) {
+function BakeFiltersInner({ currentStatus, currentSort }: BakeFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -39,5 +40,22 @@ export function BakeFilters({ currentStatus, currentSort }: BakeFiltersProps) {
         <option value="deadline">Ending Soon</option>
       </select>
     </div>
+  );
+}
+
+function BakeFiltersSkeleton() {
+  return (
+    <div className="flex gap-2">
+      <div className="w-24 h-[42px] rounded-(--radius-md) bg-[var(--text-sub)]/10 animate-pulse" />
+      <div className="w-32 h-[42px] rounded-(--radius-md) bg-[var(--text-sub)]/10 animate-pulse" />
+    </div>
+  );
+}
+
+export function BakeFilters(props: BakeFiltersProps) {
+  return (
+    <Suspense fallback={<BakeFiltersSkeleton />}>
+      <BakeFiltersInner {...props} />
+    </Suspense>
   );
 }

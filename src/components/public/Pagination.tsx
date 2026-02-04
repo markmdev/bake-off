@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useBakeParams } from '@/hooks/useBakeParams';
 
 interface PaginationProps {
   currentPage: number;
@@ -10,21 +10,16 @@ interface PaginationProps {
 }
 
 export function Pagination({ currentPage, totalPages, totalItems, pageSize }: PaginationProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { updateParams } = useBakeParams();
 
   if (totalPages <= 1) {
     return null;
   }
 
   const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (page === 1) {
-      params.delete('page');
-    } else {
-      params.set('page', String(page));
-    }
-    router.push(`/bakes?${params.toString()}`);
+    // page=1 is default, so delete param for cleaner URL
+    // Don't reset page since we're navigating to a specific page
+    updateParams({ page: page === 1 ? null : String(page) }, false);
   };
 
   // Calculate "Showing X-Y of Z"

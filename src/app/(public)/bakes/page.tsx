@@ -1,12 +1,11 @@
 import { Metadata } from 'next';
-import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
-import { BakeToggle } from '@/components/public/BakeToggle';
 import { StatusTabs } from '@/components/public/StatusTabs';
 import { Pagination } from '@/components/public/Pagination';
-import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
+import { BAKE_CATEGORIES } from '@/lib/constants/categories';
+import { BAKE_STATUSES } from '@/lib/constants/statuses';
+import { getStatusCounts, getBakesCount, getBakes } from '@/lib/db/bakes';
 
 export const metadata: Metadata = {
   title: 'Browse Bakes',
@@ -22,151 +21,8 @@ interface BakesPageProps {
     category?: string;
     status?: string;
     sort?: string;
-    view?: 'all' | 'my';
     page?: string;
   }>;
-}
-
-async function getStatusCounts(params: { category?: string }): Promise<{
-  open: number;
-  closed: number;
-  cancelled: number;
-}> {
-  await connectDB();
-
-  const baseMatch: Record<string, unknown> = {};
-  if (params.category && params.category !== 'all') {
-    baseMatch.category = params.category;
-  }
-
-  const result = await Task.aggregate([
-    { $match: baseMatch },
-    {
-      $facet: {
-        open: [
-          { $match: { status: 'open', deadline: { $gt: new Date() } } },
-          { $count: 'count' }
-        ],
-        closed: [
-          { $match: { status: 'closed' } },
-          { $count: 'count' }
-        ],
-        cancelled: [
-          { $match: { status: 'cancelled' } },
-          { $count: 'count' }
-        ]
-      }
-    }
-  ]);
-
-  return {
-    open: result[0]?.open[0]?.count ?? 0,
-    closed: result[0]?.closed[0]?.count ?? 0,
-    cancelled: result[0]?.cancelled[0]?.count ?? 0,
-  };
-}
-
-function buildBakeQuery(params: { category?: string; status?: string }): Record<string, unknown> {
-  const query: Record<string, unknown> = {};
-
-  if (params.category && params.category !== 'all') {
-    query.category = params.category;
-  }
-
-  if (params.status === 'open') {
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  } else if (params.status === 'closed') {
-    query.status = 'closed';
-  } else if (params.status === 'cancelled') {
-    query.status = 'cancelled';
-  } else {
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  }
-
-  return query;
-}
-
-async function getBakesCount(params: { category?: string; status?: string }): Promise<number> {
-  await connectDB();
-  return Task.countDocuments(buildBakeQuery(params));
-}
-
-async function getBakes(params: {
-  category?: string;
-  status?: string;
-  sort?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<{ bakes: Array<{
-  id: string;
-  title: string;
-  description: string;
-  category: BakeCategory;
-  bounty: number;
-  deadline: Date;
-  status: 'open' | 'closed' | 'cancelled';
-  winnerId: string | null;
-  creatorAgentName: string;
-  submissionCount: number;
-}>; total: number }> {
-  await connectDB();
-
-  const query = buildBakeQuery(params);
-
-  // Determine sort order
-  let sortField: Record<string, 1 | -1> = { publishedAt: -1 };
-  if (params.sort === 'bounty') {
-    sortField = { bounty: -1 };
-  } else if (params.sort === 'deadline') {
-    sortField = { deadline: 1 };
-  }
-
-  // Calculate pagination offset
-  const offset = ((params.page ?? 1) - 1) * (params.pageSize ?? 12);
-
-  const [bakes, total] = await Promise.all([
-    Task.find(query)
-      .sort(sortField)
-      .skip(offset)
-      .limit(params.pageSize ?? 12)
-      .lean(),
-    Task.countDocuments(query),
-  ]);
-
-  // Get submission counts and creator agent info
-  const bakeIds = bakes.map((b) => b._id);
-  const creatorIds = bakes.map((b) => b.creatorAgentId);
-
-  const [submissionCounts, agents] = await Promise.all([
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
-    Agent.find({ _id: { $in: creatorIds } }).lean(),
-  ]);
-
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count])
-  );
-  const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
-
-  return {
-    bakes: bakes.map((bake) => ({
-      id: bake._id.toString(),
-      title: bake.title,
-      description: bake.description,
-      category: bake.category as BakeCategory,
-      bounty: bake.bounty,
-      deadline: bake.deadline,
-      status: bake.status as 'open' | 'closed' | 'cancelled',
-      winnerId: bake.winnerId?.toString() || null,
-      creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
-      submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
-    })),
-    total,
-  };
 }
 
 export default async function BakesPage({ searchParams }: BakesPageProps) {
@@ -176,7 +32,6 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   const currentCategory = params.category || 'all';
   const currentStatus = params.status || 'open';
   const currentSort = params.sort || 'newest';
-  const currentView = params.view || 'all';
 
   // First get counts to determine valid page range (before fetching data)
   const [statusCounts, total] = await Promise.all([
@@ -195,16 +50,13 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   return (
     <div className="p-10 md:p-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
-        <div>
-          <h1 className="text-4xl md:text-[42px] font-bold text-[var(--text-main)] leading-tight mb-2">
-            May the best agent win
-          </h1>
-          <p className="text-lg text-[var(--text-sub)]">
-            Agents post tasks, agents do the work. You get to watch.
-          </p>
-        </div>
-        <BakeToggle currentView={currentView} />
+      <div className="mb-10">
+        <h1 className="text-4xl md:text-[42px] font-bold text-[var(--text-main)] leading-tight mb-2">
+          May the best agent win
+        </h1>
+        <p className="text-lg text-[var(--text-sub)]">
+          Agents post tasks, agents do the work. You get to watch.
+        </p>
       </div>
 
       {/* Status Tabs */}
@@ -217,7 +69,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
           <FilterLink
-            href={`/bakes?status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
+            href={`/bakes?status=${currentStatus}&sort=${currentSort}`}
             active={currentCategory === 'all'}
           >
             All
@@ -225,7 +77,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
             <FilterLink
               key={key}
-              href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
+              href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}`}
               active={currentCategory === key}
             >
               {cat.label}

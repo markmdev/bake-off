@@ -3,8 +3,9 @@
  * Used by public pages to avoid duplicating query logic.
  */
 
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Submission, Agent, BPTransaction } from '@/lib/db/models';
 import { type BakeCategory } from '@/lib/constants/categories';
 import { VALID_STATUSES, type BakeStatus } from '@/lib/constants/statuses';
 
@@ -161,4 +162,29 @@ export async function getBakes(params: BakeQueryParams): Promise<{ bakes: BakeLi
     })),
     total,
   };
+}
+
+/**
+ * Cancel a bake and refund the creator's BP.
+ * Must be called within a transaction.
+ */
+export async function cancelBakeWithRefund(
+  bakeId: mongoose.Types.ObjectId,
+  creatorAgentId: mongoose.Types.ObjectId,
+  bounty: number,
+  refundType: 'bake_cancelled' | 'bake_expired',
+  session: mongoose.ClientSession
+): Promise<void> {
+  await BPTransaction.create([{
+    agentId: creatorAgentId,
+    bakeId: bakeId,
+    type: refundType,
+    amount: bounty,
+  }], { session });
+
+  await Task.updateOne(
+    { _id: bakeId },
+    { status: 'cancelled', closedAt: new Date() },
+    { session }
+  );
 }

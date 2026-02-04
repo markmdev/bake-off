@@ -1,30 +1,56 @@
 'use client';
 
+import Link from 'next/link';
 import { useBakeParams } from '@/hooks/useBakeParams';
 
-interface PaginationProps {
+interface BasePaginationProps {
   currentPage: number;
   totalPages: number;
-  totalItems: number;
-  pageSize: number;
 }
 
-export function Pagination({ currentPage, totalPages, totalItems, pageSize }: PaginationProps) {
+interface BakesPaginationProps extends BasePaginationProps {
+  totalItems: number;
+  pageSize: number;
+  baseUrl?: never;
+  preserveParams?: never;
+}
+
+interface GenericPaginationProps extends BasePaginationProps {
+  baseUrl: string;
+  preserveParams?: Record<string, string>;
+  totalItems?: never;
+  pageSize?: never;
+}
+
+type PaginationProps = BakesPaginationProps | GenericPaginationProps;
+
+export function Pagination(props: PaginationProps) {
+  const { currentPage, totalPages } = props;
   const { updateParams } = useBakeParams();
 
   if (totalPages <= 1) {
     return null;
   }
 
-  const goToPage = (page: number) => {
-    // page=1 is default, so delete param for cleaner URL
-    // Don't reset page since we're navigating to a specific page
-    updateParams({ page: page === 1 ? null : String(page) }, false);
+  const isGenericMode = 'baseUrl' in props && props.baseUrl !== undefined;
+
+  const buildUrl = (page: number) => {
+    if (!isGenericMode) return '';
+    const params = new URLSearchParams();
+    const preserveParams = props.preserveParams || {};
+    Object.entries(preserveParams).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    if (page > 1) params.set('page', String(page));
+    const queryString = params.toString();
+    return queryString ? `${props.baseUrl}?${queryString}` : props.baseUrl;
   };
 
-  // Calculate "Showing X-Y of Z"
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalItems);
+  const goToPage = (page: number) => {
+    if (isGenericMode) return; // Links handle navigation
+    // page=1 is default, so delete param for cleaner URL
+    updateParams({ page: page === 1 ? null : String(page) }, false);
+  };
 
   // Generate page numbers with ellipsis
   const getPageNumbers = (): (number | 'ellipsis')[] => {
@@ -76,23 +102,53 @@ export function Pagination({ currentPage, totalPages, totalItems, pageSize }: Pa
   const disabledClass = 'opacity-40 cursor-not-allowed bg-gray-100';
   const defaultClass = 'bg-white text-[var(--text-sub)] hover:bg-[var(--bg-cream)]';
 
+  // Render a page button - either as Link (generic mode) or button (bakes mode)
+  const renderPageButton = (page: number, children: React.ReactNode, disabled?: boolean, isActive?: boolean) => {
+    const className = `${buttonBaseClass} ${
+      disabled ? disabledClass : isActive ? activeClass : defaultClass
+    }`;
+
+    if (isGenericMode) {
+      if (disabled) {
+        return <span className={className}>{children}</span>;
+      }
+      return (
+        <Link href={buildUrl(page)} className={className}>
+          {children}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => goToPage(page)}
+        disabled={disabled}
+        className={className}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  // Calculate "Showing X-Y of Z" for bakes mode
+  const showingText = !isGenericMode && props.totalItems !== undefined && props.pageSize !== undefined
+    ? (() => {
+        const startItem = (currentPage - 1) * props.pageSize + 1;
+        const endItem = Math.min(currentPage * props.pageSize, props.totalItems);
+        return `Showing ${startItem}-${endItem} of ${props.totalItems} bakes`;
+      })()
+    : `Page ${currentPage} of ${totalPages}`;
+
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-[var(--text-sub)]/10">
-      {/* Left: "Showing X-Y of Z bakes" */}
+      {/* Left: status text */}
       <p className="text-sm text-[var(--text-sub)]">
-        Showing {startItem}-{endItem} of {totalItems} bakes
+        {showingText}
       </p>
 
       {/* Right: Prev + page numbers + Next */}
       <div className="flex items-center gap-2">
-        {/* Prev button */}
-        <button
-          onClick={() => goToPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          className={`${buttonBaseClass} ${currentPage === 1 ? disabledClass : defaultClass}`}
-        >
-          Prev
-        </button>
+        {renderPageButton(currentPage - 1, 'Prev', currentPage === 1)}
 
         {/* Page numbers */}
         {pageNumbers.map((page, index) => {
@@ -107,26 +163,14 @@ export function Pagination({ currentPage, totalPages, totalItems, pageSize }: Pa
             );
           }
 
-          const isActive = page === currentPage;
           return (
-            <button
-              key={page}
-              onClick={() => goToPage(page)}
-              className={`${buttonBaseClass} ${isActive ? activeClass : defaultClass}`}
-            >
-              {page}
-            </button>
+            <span key={page}>
+              {renderPageButton(page, page, false, page === currentPage)}
+            </span>
           );
         })}
 
-        {/* Next button */}
-        <button
-          onClick={() => goToPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className={`${buttonBaseClass} ${currentPage === totalPages ? disabledClass : defaultClass}`}
-        >
-          Next
-        </button>
+        {renderPageButton(currentPage + 1, 'Next', currentPage === totalPages)}
       </div>
     </div>
   );

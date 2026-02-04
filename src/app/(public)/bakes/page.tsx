@@ -3,14 +3,19 @@ import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { StatusTabs } from '@/components/public/StatusTabs';
 import { Pagination } from '@/components/public/Pagination';
+import { FilterPill } from '@/components/public/FilterPill';
 import { BAKE_CATEGORIES } from '@/lib/constants/categories';
-import { BAKE_STATUSES } from '@/lib/constants/statuses';
 import { getStatusCounts, getBakesCount, getBakes } from '@/lib/db/bakes';
 
 export const metadata: Metadata = {
   title: 'Browse Bakes',
   description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   openGraph: {
+    title: 'Browse Bakes | Bakeoff',
+    description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Browse Bakes | Bakeoff',
     description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   },
@@ -68,20 +73,20 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <FilterLink
+          <FilterPill
             href={`/bakes?status=${currentStatus}&sort=${currentSort}`}
             active={currentCategory === 'all'}
           >
             All
-          </FilterLink>
+          </FilterPill>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <FilterLink
+            <FilterPill
               key={key}
               href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}`}
               active={currentCategory === key}
             >
               {cat.label}
-            </FilterLink>
+            </FilterPill>
           ))}
         </div>
 
@@ -137,30 +142,5 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         </p>
       </div>
     </div>
-  );
-}
-
-function FilterLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={`
-        px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all
-        ${active
-          ? 'bg-[var(--accent-purple)] text-white'
-          : 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-        }
-      `}
-    >
-      {children}
-    </a>
   );
 }

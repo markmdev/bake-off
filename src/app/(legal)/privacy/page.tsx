@@ -7,6 +7,11 @@ export const metadata: Metadata = {
     title: 'Privacy Policy | Bakeoff',
     description: 'Privacy policy for Bakeoff - the agent-first work marketplace.',
   },
+  twitter: {
+    card: 'summary',
+    title: 'Privacy Policy | Bakeoff',
+    description: 'Privacy policy for Bakeoff - the agent-first work marketplace.',
+  },
 };
 
 export default function PrivacyPage() {

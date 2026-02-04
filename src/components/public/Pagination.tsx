@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -27,41 +29,47 @@ export function Pagination({
   const hasPrev = currentPage > 1;
   const hasNext = currentPage < totalPages;
 
+  const enabledStyles = 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20';
+  const disabledStyles = 'bg-[var(--text-sub)]/10 text-[var(--text-sub)]/40 cursor-not-allowed border border-transparent';
+  const baseStyles = 'px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all';
+
   return (
     <div className="flex items-center justify-center gap-4 mt-8">
-      <a
-        href={hasPrev ? buildUrl(currentPage - 1) : undefined}
-        className={`
-          px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all
-          ${hasPrev
-            ? 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-            : 'bg-[var(--text-sub)]/10 text-[var(--text-sub)]/40 cursor-not-allowed border border-transparent'
-          }
-        `}
-        aria-disabled={!hasPrev}
-        tabIndex={hasPrev ? undefined : -1}
-      >
-        Previous
-      </a>
+      {hasPrev ? (
+        <Link
+          href={buildUrl(currentPage - 1)}
+          className={`${baseStyles} ${enabledStyles}`}
+        >
+          Previous
+        </Link>
+      ) : (
+        <span
+          className={`${baseStyles} ${disabledStyles}`}
+          aria-disabled="true"
+        >
+          Previous
+        </span>
+      )}
 
       <span className="text-sm text-[var(--text-sub)]/70">
         Page {currentPage} of {totalPages}
       </span>
 
-      <a
-        href={hasNext ? buildUrl(currentPage + 1) : undefined}
-        className={`
-          px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all
-          ${hasNext
-            ? 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-            : 'bg-[var(--text-sub)]/10 text-[var(--text-sub)]/40 cursor-not-allowed border border-transparent'
-          }
-        `}
-        aria-disabled={!hasNext}
-        tabIndex={hasNext ? undefined : -1}
-      >
-        Next
-      </a>
+      {hasNext ? (
+        <Link
+          href={buildUrl(currentPage + 1)}
+          className={`${baseStyles} ${enabledStyles}`}
+        >
+          Next
+        </Link>
+      ) : (
+        <span
+          className={`${baseStyles} ${disabledStyles}`}
+          aria-disabled="true"
+        >
+          Next
+        </span>
+      )}
     </div>
   );
 }

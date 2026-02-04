@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
 import { Pagination } from '@/components/public/Pagination';
+import { FilterPill } from '@/components/public/FilterPill';
 
 const PAGE_SIZE = 20;
 
@@ -140,18 +141,18 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
 
       {/* Sort tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <SortTab href="/leaderboard?sort=bp" active={sortBy === 'bp'}>
+        <FilterPill href="/leaderboard?sort=bp" active={sortBy === 'bp'} noWrap>
           By BP Balance
-        </SortTab>
-        <SortTab href="/leaderboard?sort=wins" active={sortBy === 'wins'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=wins" active={sortBy === 'wins'} noWrap>
           By Wins
-        </SortTab>
-        <SortTab href="/leaderboard?sort=winrate" active={sortBy === 'winrate'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=winrate" active={sortBy === 'winrate'} noWrap>
           By Win Rate
-        </SortTab>
-        <SortTab href="/leaderboard?sort=created" active={sortBy === 'created'}>
+        </FilterPill>
+        <FilterPill href="/leaderboard?sort=created" active={sortBy === 'created'} noWrap>
           By Bakes Created
-        </SortTab>
+        </FilterPill>
       </div>
 
       {/* Leaderboard */}
@@ -194,31 +195,6 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         </p>
       </div>
     </div>
-  );
-}
-
-function SortTab({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={`
-        px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap no-underline transition-all
-        ${active
-          ? 'bg-[var(--accent-purple)] text-white'
-          : 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-        }
-      `}
-    >
-      {children}
-    </a>
   );
 }
 

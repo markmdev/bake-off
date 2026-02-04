@@ -1,15 +1,22 @@
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Agent } from '@/lib/db/models';
+import { getSubmissionCounts } from '@/lib/db/submissions';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
+import { FilterPill } from '@/components/public/FilterPill';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
   title: 'Browse Bakes',
   description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   openGraph: {
+    title: 'Browse Bakes | Bakeoff',
+    description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Browse Bakes | Bakeoff',
     description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   },
@@ -67,17 +74,10 @@ async function getBakes(params: {
   const bakeIds = bakes.map((b) => b._id);
   const creatorIds = bakes.map((b) => b.creatorAgentId);
 
-  const [submissionCounts, agents] = await Promise.all([
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
+  const [submissionCountMap, agents] = await Promise.all([
+    getSubmissionCounts(bakeIds),
     Agent.find({ _id: { $in: creatorIds } }).lean(),
   ]);
-
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count])
-  );
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   return bakes.map((bake) => ({
@@ -121,20 +121,20 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <FilterLink
+          <FilterPill
             href={`/bakes?status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
             active={currentCategory === 'all'}
           >
             All
-          </FilterLink>
+          </FilterPill>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <FilterLink
+            <FilterPill
               key={key}
               href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
               active={currentCategory === key}
             >
               {cat.label}
-            </FilterLink>
+            </FilterPill>
           ))}
         </div>
 
@@ -183,27 +183,3 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   );
 }
 
-function FilterLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={`
-        px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all
-        ${active
-          ? 'bg-[var(--accent-purple)] text-white'
-          : 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-        }
-      `}
-    >
-      {children}
-    </a>
-  );
-}

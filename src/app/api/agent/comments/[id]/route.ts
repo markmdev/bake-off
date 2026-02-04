@@ -29,21 +29,36 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not your comment' }, { status: 403 });
   }
 
-  // Delete all descendant comments recursively to prevent orphans
-  // Loop until no more children remain (handles unlimited nesting depth)
-  const commentOid = new mongoose.Types.ObjectId(id);
-  let parentIds = [commentOid];
-  while (parentIds.length > 0) {
-    const children = await Comment.find(
-      { parentId: { $in: parentIds } },
-      { _id: 1 }
-    ).lean();
-    if (children.length === 0) break;
-    const childIds = children.map((c) => c._id);
-    await Comment.deleteMany({ _id: { $in: childIds } });
-    parentIds = childIds;
+  // Use MongoDB transaction for atomicity
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Delete all descendant comments recursively to prevent orphans
+    // Loop until no more children remain (handles unlimited nesting depth)
+    const commentOid = new mongoose.Types.ObjectId(id);
+    let parentIds = [commentOid];
+    while (parentIds.length > 0) {
+      const children = await Comment.find(
+        { parentId: { $in: parentIds } },
+        { _id: 1 }
+      )
+        .session(session)
+        .lean();
+      if (children.length === 0) break;
+      const childIds = children.map((c) => c._id);
+      await Comment.deleteMany({ _id: { $in: childIds } }, { session });
+      parentIds = childIds;
+    }
+    await Comment.deleteOne({ _id: commentOid }, { session });
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-  await Comment.deleteOne({ _id: commentOid });
 
   return NextResponse.json({ success: true, deleted: id });
 }

@@ -1,3 +1,16 @@
+/**
+ * Public bake detail page - Server Component
+ *
+ * NOTE: This page queries the database directly rather than through the API.
+ * This is intentional for public read-only pages:
+ * - Avoids unnecessary HTTP round-trip
+ * - Server components can safely access the database
+ * - The API routes are for agent authentication/mutations
+ *
+ * The query logic here mirrors the API for consistency but is optimized
+ * for the public view (no auth checks, read-only operations).
+ */
+
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -19,12 +32,27 @@ export async function generateMetadata({ params }: BakeDetailPageProps): Promise
 
   const bake = await Task.findById(id).lean();
   if (!bake) {
-    return { title: 'Bake Not Found | Bakeoff' };
+    return { title: 'Bake Not Found' };
   }
 
+  const title = bake.title;
+  const description = bake.description.slice(0, 160);
+  const url = `https://bakeoff.app/bakes/${id}`;
+
   return {
-    title: `${bake.title} | Bakeoff`,
-    description: bake.description.slice(0, 160),
+    title,
+    description,
+    openGraph: {
+      title: `${title} | Bakeoff`,
+      description,
+      url,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Bakeoff`,
+      description,
+    },
   };
 }
 
@@ -176,7 +204,7 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
         {/* Top row: Category, Status, Bounty */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <span
-            className="px-3 py-1.5 rounded-full text-xs font-bold border"
+            className="px-4 py-2 rounded-full text-sm font-bold border"
             style={{
               background: categoryStyle.bg,
               color: categoryStyle.text,
@@ -185,9 +213,9 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
           >
             {categoryInfo.label}
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 isOpen
                   ? 'bg-[var(--accent-green)] animate-pulse'
                   : bake.winnerAgent
@@ -198,7 +226,7 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
               }`}
             />
             <span
-              className={`text-xs font-semibold ${
+              className={`text-sm font-semibold ${
                 isOpen
                   ? 'text-[var(--accent-green)]'
                   : bake.winnerAgent
@@ -292,7 +320,7 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
       {/* Description */}
       <div className="bg-white rounded-[var(--radius-lg)] border-2 border-[var(--text-sub)] shadow-[4px_4px_0px_var(--text-sub)] p-6 md:p-8 mb-8">
         <h2 className="text-lg font-bold text-[var(--text-sub)] mb-4">Description</h2>
-        <div className="prose prose-lg max-w-none text-[var(--text-sub)] prose-headings:text-[var(--text-sub)] prose-p:text-[var(--text-sub)]/80 prose-li:text-[var(--text-sub)]/80 prose-strong:text-[var(--text-sub)] prose-a:text-[var(--accent-purple)] prose-ul:my-4 prose-ol:my-4 prose-li:my-1">
+        <div className="prose prose-sm max-w-none text-[var(--text-sub)] prose-headings:text-[var(--text-sub)] prose-headings:text-base prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2 prose-p:text-[var(--text-sub)]/80 prose-p:my-2 prose-li:text-[var(--text-sub)]/80 prose-strong:text-[var(--text-sub)] prose-a:text-[var(--accent-purple)] prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
           <ReactMarkdown>{bake.description}</ReactMarkdown>
         </div>
 

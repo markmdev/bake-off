@@ -52,43 +52,83 @@ export function Sidebar() {
   };
 
   return (
-    <nav className="w-[260px] min-h-screen p-8 flex flex-col border-r-2 border-[var(--text-sub)] bg-[var(--bg-cream)]">
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 no-underline mb-12">
-        <div className="relative w-6 h-6">
-          <div className="w-6 h-6 bg-[var(--accent-orange)] rounded-full border-2 border-[var(--text-sub)]" />
-          <div className="absolute w-4 h-4 bg-[var(--accent-yellow)] rounded-full -top-1 -right-2 border-2 border-[var(--text-sub)]" />
-        </div>
-        <span className="text-[28px] font-bold tracking-tight text-[var(--text-sub)]">
-          Bakeoff
-        </span>
-        <span className="text-[11px] font-bold text-[var(--accent-purple)] bg-[#E8F0FF] px-2 py-0.5 rounded-full uppercase tracking-wide">
-          Beta
-        </span>
-      </Link>
+    <>
+      {/* Mobile: Horizontal top nav */}
+      <nav className="md:hidden w-full p-4 flex items-center justify-between border-b-2 border-[var(--text-sub)] bg-[var(--bg-cream)] sticky top-0 z-50">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 no-underline">
+          <div className="relative w-5 h-5">
+            <div className="w-5 h-5 bg-[var(--accent-orange)] rounded-full border-2 border-[var(--text-sub)]" />
+            <div className="absolute w-3 h-3 bg-[var(--accent-yellow)] rounded-full -top-0.5 -right-1.5 border-2 border-[var(--text-sub)]" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-[var(--text-sub)]">
+            Bakeoff
+          </span>
+        </Link>
 
-      {/* Nav Items */}
-      <ul className="list-none flex flex-col gap-3">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          const linkClass = `
-            flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] font-semibold no-underline transition-all
-            ${active
-              ? 'bg-[var(--accent-orange)] text-white border-2 border-[var(--text-sub)] shadow-[2px_2px_0px_var(--text-sub)]'
-              : 'text-[var(--text-sub)] hover:bg-[rgba(193,154,107,0.3)]'
-            }
-          `;
+        {/* Nav Items - horizontal */}
+        <ul className="list-none flex items-center gap-2">
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            const linkClass = `
+              flex items-center gap-1.5 px-3 py-2 rounded-full font-semibold text-sm no-underline transition-all
+              ${active
+                ? 'bg-[var(--accent-orange)] text-white border-2 border-[var(--text-sub)] shadow-[2px_2px_0px_var(--text-sub)]'
+                : 'text-[var(--text-sub)] hover:bg-[rgba(193,154,107,0.3)]'
+              }
+            `;
 
-          return (
-            <li key={item.href}>
-              <Link href={item.href} className={linkClass}>
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+            return (
+              <li key={item.href}>
+                <Link href={item.href} className={linkClass} title={item.label}>
+                  {item.icon}
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Desktop: Vertical sidebar */}
+      <nav className="hidden md:flex w-[260px] min-h-screen p-8 flex-col border-r-2 border-[var(--text-sub)] bg-[var(--bg-cream)]">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 no-underline mb-12">
+          <div className="relative w-6 h-6">
+            <div className="w-6 h-6 bg-[var(--accent-orange)] rounded-full border-2 border-[var(--text-sub)]" />
+            <div className="absolute w-4 h-4 bg-[var(--accent-yellow)] rounded-full -top-1 -right-2 border-2 border-[var(--text-sub)]" />
+          </div>
+          <span className="text-[28px] font-bold tracking-tight text-[var(--text-sub)]">
+            Bakeoff
+          </span>
+          <span className="text-[11px] font-bold text-[var(--accent-purple)] bg-[#E8F0FF] px-2 py-0.5 rounded-full uppercase tracking-wide">
+            Beta
+          </span>
+        </Link>
+
+        {/* Nav Items */}
+        <ul className="list-none flex flex-col gap-3">
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            const linkClass = `
+              flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)] font-semibold no-underline transition-all
+              ${active
+                ? 'bg-[var(--accent-orange)] text-white border-2 border-[var(--text-sub)] shadow-[2px_2px_0px_var(--text-sub)]'
+                : 'text-[var(--text-sub)] hover:bg-[rgba(193,154,107,0.3)]'
+              }
+            `;
+
+            return (
+              <li key={item.href}>
+                <Link href={item.href} className={linkClass}>
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </>
   );
 }

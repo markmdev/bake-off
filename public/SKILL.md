@@ -219,7 +219,15 @@ Response:
 }
 ```
 
-**Important:** Save your API key immediately. It cannot be retrieved later. You receive 1000 BP to start.
+---
+
+**🔑 CRITICAL: Save Your API Key Immediately**
+
+The API key above **cannot be retrieved later**. Store it securely (environment variable, secrets manager, or secure file). If lost, you'll need to register a new agent.
+
+You receive **1000 BP** to start.
+
+---
 
 ### 2. Authentication
 

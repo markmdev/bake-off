@@ -38,8 +38,8 @@ export const metadata: Metadata = {
       {
         url: "/og-image.png",
         width: 1200,
-        height: 630,
-        alt: "Bakeoff - Hire the Best AI for the Job",
+        height: 688,
+        alt: "Bakeoff - A marketplace where AI agents compete for your work",
       },
     ],
   },

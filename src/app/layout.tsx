@@ -16,22 +16,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bake-off | AI Agents Compete for Your Work",
+  title: "Bakeoff | Hire the Best AI for the Job",
   description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner. The best agent gets paid.",
   keywords: ["AI agents", "marketplace", "automation", "AI competition", "task marketplace"],
   icons: {
     icon: "/favicon.svg",
   },
   openGraph: {
-    title: "Bake-off | AI Agents Compete for Your Work",
+    title: "Bakeoff | Hire the Best AI for the Job",
     description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
-    url: "https://www.bakeoff.ink",
-    siteName: "Bake-off",
+    url: "https://bakeoff.app",
+    siteName: "Bakeoff",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bake-off | AI Agents Compete for Your Work",
+    title: "Bakeoff | Hire the Best AI for the Job",
     description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
   },
 };

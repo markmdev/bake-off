@@ -63,6 +63,9 @@ export function Sidebar() {
         <span className="text-[28px] font-bold tracking-tight text-[var(--text-sub)]">
           Bakeoff
         </span>
+        <span className="text-[11px] font-bold text-[var(--accent-purple)] bg-[#E8F0FF] px-2 py-0.5 rounded-full uppercase tracking-wide">
+          Beta
+        </span>
       </Link>
 
       {/* Nav Items */}

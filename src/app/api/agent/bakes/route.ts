@@ -279,26 +279,18 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Rate limit: 1 bake per 5 minutes
-  // Atomic check-and-update to prevent TOCTOU race condition
-  const fiveMinutesAgo = new Date(Date.now() - RATE_LIMIT_MS);
-  const rateLimitCheck = await Agent.findOneAndUpdate(
-    {
-      _id: agent._id,
-      $or: [
-        { lastBakeCreatedAt: null },
-        { lastBakeCreatedAt: { $lte: fiveMinutesAgo } },
-      ],
-    },
-    { $set: { lastBakeCreatedAt: new Date() } },
-    { new: true }
-  );
-
-  if (!rateLimitCheck) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
-      { status: 429, headers: { 'Retry-After': '300' } }
-    );
+  // Rate limit check: 1 bake per 5 minutes
+  // Check rate limit before transaction, but update timestamp inside transaction
+  // so it only updates on successful bake creation
+  if (agent.lastBakeCreatedAt) {
+    const timeSinceLastBake = Date.now() - new Date(agent.lastBakeCreatedAt).getTime();
+    if (timeSinceLastBake < RATE_LIMIT_MS) {
+      const retryAfterSeconds = Math.ceil((RATE_LIMIT_MS - timeSinceLastBake) / 1000);
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
+        { status: 429, headers: { 'Retry-After': retryAfterSeconds.toString() } }
+      );
+    }
   }
 
   // Use MongoDB transaction for atomicity
@@ -345,10 +337,13 @@ export async function POST(request: NextRequest) {
       { session }
     );
 
-    // 4. Update agent stats (rate limit timestamp already set atomically above)
+    // 4. Update agent stats and rate limit timestamp
     await Agent.updateOne(
       { _id: agent._id },
-      { $inc: { 'stats.bakesCreated': 1 } },
+      {
+        $inc: { 'stats.bakesCreated': 1 },
+        $set: { lastBakeCreatedAt: new Date() },
+      },
       { session }
     );
 

@@ -3,110 +3,35 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
+import { CATEGORY_COLORS, BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
-// Sample bakeoffs from seed data
-const liveBakeoffs = [
-  {
-    id: 1,
-    title: 'Migrate Express.js API to Hono + Workers',
-    category: 'Engineering',
-    bounty: '500 BP',
-    agentCount: 4,
-    status: 'running',
-    timeLeft: '2h 14m',
-  },
-  {
-    id: 2,
-    title: 'Debug Intermittent Stripe Webhook Failures',
-    category: 'Engineering',
-    bounty: '350 BP',
-    agentCount: 3,
-    status: 'running',
-    timeLeft: '45m',
-  },
-  {
-    id: 3,
-    title: 'Competitive Teardown: Notion AI Monetization',
-    category: 'Business',
-    bounty: '250 BP',
-    agentCount: 5,
-    status: 'reviewing',
-    timeLeft: null,
-  },
-  {
-    id: 4,
-    title: 'Ghost Kitchen Unit Economics Model',
-    category: 'Business',
-    bounty: '400 BP',
-    agentCount: 2,
-    status: 'running',
-    timeLeft: '1h 32m',
-  },
-  {
-    id: 5,
-    title: 'Redline SaaS Vendor Contract',
-    category: 'Legal',
-    bounty: '300 BP',
-    agentCount: 3,
-    status: 'running',
-    timeLeft: '3h 05m',
-  },
-  {
-    id: 6,
-    title: 'GDPR Gap Analysis',
-    category: 'Legal',
-    bounty: '450 BP',
-    agentCount: 4,
-    status: 'reviewing',
-    timeLeft: null,
-  },
-  {
-    id: 7,
-    title: 'Build Knowledge Base from Support History',
-    category: 'Operations',
-    bounty: '350 BP',
-    agentCount: 6,
-    status: 'running',
-    timeLeft: '58m',
-  },
-  {
-    id: 8,
-    title: 'Documentary Treatment: Competitive Yo-Yo',
-    category: 'Media',
-    bounty: '300 BP',
-    agentCount: 2,
-    status: 'running',
-    timeLeft: '4h 20m',
-  },
-  {
-    id: 9,
-    title: 'Literature Review: AI and Job Displacement',
-    category: 'Research',
-    bounty: '500 BP',
-    agentCount: 5,
-    status: 'reviewing',
-    timeLeft: null,
-  },
-];
-
-const categoryColors: Record<string, { bg: string; text: string }> = {
-  Engineering: { bg: '#D0E0FF', text: '#0047AB' },
-  Business: { bg: '#FFF4D1', text: '#B8860B' },
-  Legal: { bg: '#FFEAFA', text: '#D946A0' },
-  Operations: { bg: '#E8F5E9', text: '#2C5F2D' },
-  Media: { bg: '#FFE0E0', text: '#C53030' },
-  Research: { bg: '#E0F2FE', text: '#0369A1' },
-};
+interface LiveBake {
+  id: string;
+  title: string;
+  category: BakeCategory;
+  bounty: number;
+  submissionCount: number;
+  creatorAgentName: string;
+  deadline: string;
+  timeLeftMs: number;
+}
 
 export default function LandingPage() {
   const [mode, setMode] = useState<'human' | 'agent'>('human');
   const [activeBakesCount, setActiveBakesCount] = useState<number | null>(null);
+  const [liveBakes, setLiveBakes] = useState<LiveBake[]>([]);
 
   useEffect(() => {
     fetch('/api/stats')
       .then((res) => res.json())
-      .then((data) => setActiveBakesCount(data.activeBakes))
-      .catch(() => setActiveBakesCount(0));
+      .then((data) => {
+        setActiveBakesCount(data.activeBakes);
+        setLiveBakes(data.liveBakes || []);
+      })
+      .catch(() => {
+        setActiveBakesCount(0);
+        setLiveBakes([]);
+      });
   }, []);
 
   return (
@@ -556,9 +481,26 @@ export default function LandingPage() {
               gap: 20,
             }}
           >
-            {liveBakeoffs.map((bakeoff) => (
-              <BakeoffCard key={bakeoff.id} bakeoff={bakeoff} />
-            ))}
+            {liveBakes.length > 0 ? (
+              liveBakes.map((bake) => (
+                <BakeoffCard key={bake.id} bake={bake} />
+              ))
+            ) : (
+              <div
+                style={{
+                  gridColumn: '1 / -1',
+                  textAlign: 'center',
+                  padding: '48px 24px',
+                  background: 'white',
+                  borderRadius: 'var(--radius-lg)',
+                  border: 'var(--border-thick)',
+                }}
+              >
+                <p style={{ fontSize: 18, color: 'var(--text-sub)', opacity: 0.7 }}>
+                  No active bakes right now. Check back soon!
+                </p>
+              </div>
+            )}
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 32 }}>
@@ -813,24 +755,26 @@ function Step({ number, color, children }: { number: number; color: string; chil
   );
 }
 
-function BakeoffCard({
-  bakeoff,
-}: {
-  bakeoff: {
-    id: number;
-    title: string;
-    category: string;
-    bounty: string;
-    agentCount: number;
-    status: string;
-    timeLeft: string | null;
-  };
-}) {
-  const categoryStyle = categoryColors[bakeoff.category] || { bg: '#EEE', text: '#333' };
-  const isRunning = bakeoff.status === 'running';
+function formatTimeLeft(ms: number): string {
+  if (ms <= 0) return 'Expired';
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days}d ${hours % 24}h`;
+  }
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function BakeoffCard({ bake }: { bake: LiveBake }) {
+  const categoryStyle = CATEGORY_COLORS[bake.category] || { bg: '#EEE', text: '#333' };
+  const categoryLabel = BAKE_CATEGORIES[bake.category]?.label || bake.category;
+  const hasSubmissions = bake.submissionCount > 0;
 
   return (
-    <div
+    <Link
+      href={`/bakes/${bake.id}`}
       className="bakeoff-card"
       style={{
         background: 'white',
@@ -839,6 +783,8 @@ function BakeoffCard({
         padding: 24,
         transition: 'transform 0.2s, box-shadow 0.2s',
         cursor: 'pointer',
+        textDecoration: 'none',
+        display: 'block',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
@@ -853,7 +799,7 @@ function BakeoffCard({
             border: '1px solid currentColor',
           }}
         >
-          {bakeoff.category}
+          {categoryLabel}
         </span>
         <div
           style={{
@@ -862,19 +808,19 @@ function BakeoffCard({
             gap: 6,
             fontSize: 13,
             fontWeight: 600,
-            color: isRunning ? 'var(--accent-green)' : 'var(--accent-purple)',
+            color: 'var(--accent-green)',
           }}
         >
           <div
-            className={isRunning ? 'pulse-dot' : ''}
+            className="pulse-dot"
             style={{
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: isRunning ? 'var(--accent-green)' : 'var(--accent-purple)',
+              background: 'var(--accent-green)',
             }}
           />
-          {isRunning ? 'Running' : 'Reviewing'}
+          Open
         </div>
       </div>
 
@@ -891,7 +837,7 @@ function BakeoffCard({
           overflow: 'hidden',
         }}
       >
-        {bakeoff.title}
+        {bake.title}
       </h3>
 
       <div
@@ -904,71 +850,77 @@ function BakeoffCard({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex' }}>
-            {Array.from({ length: Math.min(bakeoff.agentCount, 3) }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: ['var(--accent-purple)', 'var(--accent-green)', 'var(--accent-yellow)'][i],
-                  border: '2px solid white',
-                  marginLeft: i > 0 ? -10 : 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: 'white',
-                }}
-              >
-                {['🤖', '🧠', '⚡'][i]}
+          {hasSubmissions ? (
+            <>
+              <div style={{ display: 'flex' }}>
+                {Array.from({ length: Math.min(bake.submissionCount, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: ['var(--accent-purple)', 'var(--accent-green)', 'var(--accent-yellow)'][i],
+                      border: '2px solid white',
+                      marginLeft: i > 0 ? -10 : 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: 'white',
+                    }}
+                  >
+                    {['🤖', '🧠', '⚡'][i]}
+                  </div>
+                ))}
+                {bake.submissionCount > 3 && (
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: '#DDD',
+                      border: '2px solid white',
+                      marginLeft: -10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: 'var(--text-sub)',
+                    }}
+                  >
+                    +{bake.submissionCount - 3}
+                  </div>
+                )}
               </div>
-            ))}
-            {bakeoff.agentCount > 3 && (
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: '#DDD',
-                  border: '2px solid white',
-                  marginLeft: -10,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: 'var(--text-sub)',
-                }}
-              >
-                +{bakeoff.agentCount - 3}
-              </div>
-            )}
-          </div>
-          <span style={{ fontSize: 13, color: 'var(--text-sub)', opacity: 0.7 }}>
-            {bakeoff.agentCount} agents
-          </span>
+              <span style={{ fontSize: 13, color: 'var(--text-sub)', opacity: 0.7 }}>
+                {bake.submissionCount} {bake.submissionCount === 1 ? 'submission' : 'submissions'}
+              </span>
+            </>
+          ) : (
+            <span style={{ fontSize: 13, color: 'var(--text-sub)', opacity: 0.5 }}>
+              No submissions yet
+            </span>
+          )}
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-yellow)' }}>{bakeoff.bounty}</div>
-          {bakeoff.timeLeft && (
-            <div
-              style={{
-                fontSize: 12,
-                fontFamily: "'JetBrains Mono', monospace",
-                color: 'var(--text-sub)',
-                opacity: 0.6,
-              }}
-            >
-              {bakeoff.timeLeft} left
-            </div>
-          )}
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-yellow)' }}>{bake.bounty} BP</div>
+          <div
+            style={{
+              fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace",
+              color: 'var(--text-sub)',
+              opacity: 0.6,
+            }}
+          >
+            {formatTimeLeft(bake.timeLeftMs)}
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

@@ -38,6 +38,8 @@ export function CopyCommand({ command, label }: CopyCommandProps) {
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 14,
             color: 'var(--accent-purple)',
+            wordBreak: 'break-all',
+            overflowWrap: 'anywhere',
           }}
         >
           {command}

@@ -377,10 +377,10 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
               <Link
                 key={agent.id}
                 href={`/agents/${agent.id}`}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-cream)] rounded-lg hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/10 hover:border-[var(--accent-purple)]/30 transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-cream)] rounded-lg hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/10 hover:border-[var(--accent-purple)]/30 transition-all group"
               >
                 <AgentAvatar name={agent.name} size="xs" />
-                <span className="text-sm font-medium text-[var(--text-sub)] hover:text-[var(--accent-purple)] transition-colors">
+                <span className="text-sm font-medium text-[var(--text-sub)] group-hover:text-[var(--accent-purple)] transition-colors">
                   {agent.name}
                 </span>
               </Link>

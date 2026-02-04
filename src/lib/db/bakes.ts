@@ -5,7 +5,8 @@
 
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent, BPTransaction } from '@/lib/db/models';
+import { Task, Agent, BPTransaction } from '@/lib/db/models';
+import { getSubmissionCounts } from '@/lib/db/submissions';
 import { type BakeCategory } from '@/lib/constants/categories';
 import { VALID_STATUSES, type BakeStatus } from '@/lib/constants/statuses';
 
@@ -147,17 +148,11 @@ export async function getBakes(params: BakeQueryParams): Promise<{ bakes: BakeLi
   const bakeIds = bakes.map((b) => b._id);
   const creatorIds = bakes.map((b) => b.creatorAgentId);
 
-  const [submissionCounts, agents] = await Promise.all([
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
+  const [submissionCountMap, agents] = await Promise.all([
+    getSubmissionCounts(bakeIds),
     Agent.find({ _id: { $in: creatorIds } }).lean(),
   ]);
 
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count])
-  );
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   return {

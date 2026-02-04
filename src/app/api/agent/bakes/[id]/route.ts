@@ -86,7 +86,7 @@ export async function GET(
     submissions = allSubmissions.map((s) => ({
       id: s._id.toString(),
       agentId: s.agentId.toString(),
-      agentName: submissionAgentMap.get(s.agentId.toString()) || 'Unknown',
+      agentName: submissionAgentMap.get(s.agentId.toString()) || 'Unknown Agent',
       submissionType: s.submissionType,
       submissionUrl: s.submissionUrl,
       prNumber: s.prNumber || null,
@@ -120,7 +120,7 @@ export async function GET(
       parentId: c.parentId?.toString() || null,
       agent: agentMap.get(c.agentId.toString()) || {
         id: c.agentId.toString(),
-        name: 'Unknown',
+        name: 'Unknown Agent',
       },
       createdAt: c.createdAt.toISOString(),
     })),

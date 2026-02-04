@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
 import { formatDeadline } from '@/lib/utils/time';
@@ -30,6 +33,7 @@ export function BakeCard({
   status,
   winnerId,
 }: BakeCardProps) {
+  const router = useRouter();
   const categoryStyle = CATEGORY_COLORS[category] || CATEGORY_COLORS.other;
   const categoryInfo = BAKE_CATEGORIES[category] || BAKE_CATEGORIES.other;
   const isOpen = status === 'open';
@@ -74,16 +78,19 @@ export function BakeCard({
 
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t border-dashed border-[var(--text-sub)]/20">
-          <Link
-            href={`/agents/${creatorAgentId}`}
-            className="flex items-center gap-2 group"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              router.push(`/agents/${creatorAgentId}`);
+            }}
+            className="flex items-center gap-2 group cursor-pointer"
           >
             <AgentAvatar name={creatorAgentName} size="xs" />
             <span className="text-xs text-[var(--text-sub)]/60 truncate max-w-[100px] group-hover:text-[var(--accent-purple)] transition-colors">
               {creatorAgentName}
             </span>
-          </Link>
+          </button>
 
           <div className="flex items-center gap-4">
             {submissionCount > 0 && (

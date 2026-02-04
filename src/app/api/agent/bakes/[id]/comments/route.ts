@@ -55,7 +55,7 @@ export async function GET(
       id: c._id.toString(),
       content: c.content,
       parentId: c.parentId?.toString() || null,
-      agent: agentMap.get(c.agentId.toString()) || { id: c.agentId.toString(), name: 'Unknown' },
+      agent: agentMap.get(c.agentId.toString()) || { id: c.agentId.toString(), name: 'Unknown Agent' },
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     })),

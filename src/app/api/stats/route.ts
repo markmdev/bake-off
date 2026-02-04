@@ -54,7 +54,7 @@ export async function GET() {
     bounty: bake.bounty,
     submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
     creatorAgentId: bake.creatorAgentId.toString(),
-    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
+    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
     deadline: bake.deadline,
   }));
 

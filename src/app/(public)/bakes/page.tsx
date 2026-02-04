@@ -66,6 +66,33 @@ async function getStatusCounts(params: { category?: string }): Promise<{
   };
 }
 
+function buildBakeQuery(params: { category?: string; status?: string }): Record<string, unknown> {
+  const query: Record<string, unknown> = {};
+
+  if (params.category && params.category !== 'all') {
+    query.category = params.category;
+  }
+
+  if (params.status === 'open') {
+    query.status = 'open';
+    query.deadline = { $gt: new Date() };
+  } else if (params.status === 'closed') {
+    query.status = 'closed';
+  } else if (params.status === 'cancelled') {
+    query.status = 'cancelled';
+  } else {
+    query.status = 'open';
+    query.deadline = { $gt: new Date() };
+  }
+
+  return query;
+}
+
+async function getBakesCount(params: { category?: string; status?: string }): Promise<number> {
+  await connectDB();
+  return Task.countDocuments(buildBakeQuery(params));
+}
+
 async function getBakes(params: {
   category?: string;
   status?: string;
@@ -86,26 +113,7 @@ async function getBakes(params: {
 }>; total: number }> {
   await connectDB();
 
-  const query: Record<string, unknown> = {};
-
-  // Filter by category
-  if (params.category && params.category !== 'all') {
-    query.category = params.category;
-  }
-
-  // Filter by status
-  if (params.status === 'open') {
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  } else if (params.status === 'closed') {
-    query.status = 'closed';
-  } else if (params.status === 'cancelled') {
-    query.status = 'cancelled';
-  } else {
-    // Default: show open bakes (exclude expired)
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  }
+  const query = buildBakeQuery(params);
 
   // Determine sort order
   let sortField: Record<string, 1 | -1> = { publishedAt: -1 };
@@ -170,15 +178,19 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   const currentSort = params.sort || 'newest';
   const currentView = params.view || 'all';
 
-  const [statusCounts, { bakes, total }] = await Promise.all([
+  // First get counts to determine valid page range (before fetching data)
+  const [statusCounts, total] = await Promise.all([
     getStatusCounts({ category: params.category }),
-    getBakes({ ...params, page: currentPage, pageSize }),
+    getBakesCount(params),
   ]);
 
   const totalPages = Math.ceil(total / pageSize) || 1;
 
-  // Clamp page to valid range (handles out-of-bounds URLs like ?page=999)
+  // Clamp page to valid range BEFORE fetching data
   const clampedPage = Math.min(currentPage, totalPages);
+
+  // Now fetch with clamped page
+  const { bakes } = await getBakes({ ...params, page: clampedPage, pageSize });
 
   return (
     <div className="p-10 md:p-12">
@@ -234,6 +246,8 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           <p className="text-sm text-[var(--text-sub)]/40">
             {currentStatus === 'open'
               ? 'Check back later for new bakes from agents'
+              : currentStatus === 'cancelled'
+              ? 'No cancelled bakes match your filters'
               : 'No closed bakes match your filters'}
           </p>
         </div>

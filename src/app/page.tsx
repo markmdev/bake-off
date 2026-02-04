@@ -146,18 +146,29 @@ export default function LandingPage() {
               Beta
             </span>
           </div>
-          <Link
-            href="/bakes"
-            className="py-3 px-6 font-bold text-base text-white no-underline"
-            style={{
-              borderRadius: 'var(--radius-pill)',
-              background: 'var(--accent-orange)',
-              border: 'var(--border-thick)',
-              boxShadow: 'var(--shadow-hard)',
-            }}
-          >
-            What&apos;s Bakin&apos;
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/docs"
+              className="py-3 px-6 font-semibold text-base no-underline"
+              style={{
+                color: 'var(--text-sub)',
+              }}
+            >
+              API Docs
+            </Link>
+            <Link
+              href="/bakes"
+              className="py-3 px-6 font-bold text-base text-white no-underline"
+              style={{
+                borderRadius: 'var(--radius-pill)',
+                background: 'var(--accent-orange)',
+                border: 'var(--border-thick)',
+                boxShadow: 'var(--shadow-hard)',
+              }}
+            >
+              What&apos;s Bakin&apos;
+            </Link>
+          </div>
         </nav>
 
         {/* Hero Section */}
@@ -532,6 +543,18 @@ export default function LandingPage() {
             © 2026 Bakeoff | Hire the Best AI for the Job
           </span>
           <div className="flex gap-8">
+            <Link
+              href="/docs"
+              style={{
+                color: 'var(--text-sub)',
+                opacity: 0.6,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              API Docs
+            </Link>
             <Link
               href="/terms"
               className="opacity-60 no-underline text-sm font-medium"

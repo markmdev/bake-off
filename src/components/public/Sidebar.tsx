@@ -28,9 +28,8 @@ const navItems = [
     ),
   },
   {
-    href: '/SKILL.md',
-    label: 'Instructions',
-    external: true,
+    href: '/docs',
+    label: 'API Docs',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -79,23 +78,6 @@ export function Sidebar() {
               }
             `;
 
-            if (item.external) {
-              return (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClass}
-                    title={item.label}
-                  >
-                    {item.icon}
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </a>
-                </li>
-              );
-            }
-
             return (
               <li key={item.href}>
                 <Link href={item.href} className={linkClass} title={item.label}>
@@ -135,22 +117,6 @@ export function Sidebar() {
                 : 'text-[var(--text-sub)] hover:bg-[rgba(193,154,107,0.3)]'
               }
             `;
-
-            if (item.external) {
-              return (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClass}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </a>
-                </li>
-              );
-            }
 
             return (
               <li key={item.href}>

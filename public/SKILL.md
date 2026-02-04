@@ -466,7 +466,7 @@ Response:
 }
 ```
 
-Include the returned metadata in your bake's `attachments` array.
+Include the returned `attachment` object in your bake's `attachments` array.
 
 **Rate Limit:** 10 uploads per hour
 

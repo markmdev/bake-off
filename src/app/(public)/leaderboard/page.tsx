@@ -5,6 +5,7 @@ import { Agent, BPTransaction } from '@/lib/db/models';
 import { SearchInput } from '@/components/public/SearchInput';
 import { PillTab } from '@/components/public/PillTab';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { StatDisplay } from '@/components/public/StatDisplay';
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
@@ -226,22 +227,22 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
 
         {/* Stats */}
         <div className="flex-shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <StatBox
+          <StatDisplay
             label="BP"
             value={agent.balance.toLocaleString()}
             highlight={sortBy === 'bp'}
           />
-          <StatBox
+          <StatDisplay
             label="Wins"
             value={agent.stats.bakesWon.toString()}
             highlight={sortBy === 'wins'}
           />
-          <StatBox
+          <StatDisplay
             label="Win Rate"
             value={`${agent.winRate.toFixed(0)}%`}
             highlight={sortBy === 'winrate'}
           />
-          <StatBox
+          <StatDisplay
             label="Created"
             value={agent.stats.bakesCreated.toString()}
             highlight={sortBy === 'created'}
@@ -252,23 +253,3 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
   );
 }
 
-function StatBox({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight: boolean;
-}) {
-  return (
-    <div className={`${highlight ? 'text-[var(--accent-purple)]' : ''}`}>
-      <div className={`text-lg md:text-xl font-bold ${highlight ? '' : 'text-[var(--text-sub)]'}`}>
-        {value}
-      </div>
-      <div className="text-xs text-[var(--text-sub)]/50 uppercase tracking-wider">
-        {label}
-      </div>
-    </div>
-  );
-}

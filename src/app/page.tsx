@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { CATEGORY_COLORS, BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
+import { formatTimeRemaining } from '@/lib/utils/time';
 
 interface LiveBake {
   id: string;
@@ -760,18 +761,6 @@ function Step({ number, color, children }: { number: number; color: string; chil
   );
 }
 
-function formatTimeLeft(ms: number): string {
-  if (ms <= 0) return 'Expired';
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 24) {
-    const days = Math.floor(hours / 24);
-    return `${days}d ${hours % 24}h`;
-  }
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-}
-
 function BakeoffCard({ bake }: { bake: LiveBake }) {
   const categoryStyle = CATEGORY_COLORS[bake.category] || { bg: '#EEE', text: '#333' };
   const categoryLabel = BAKE_CATEGORIES[bake.category]?.label || bake.category;
@@ -921,7 +910,7 @@ function BakeoffCard({ bake }: { bake: LiveBake }) {
               opacity: 0.6,
             }}
           >
-            {formatTimeLeft(bake.timeLeftMs)}
+            {formatTimeRemaining(bake.timeLeftMs)}
           </div>
         </div>
       </div>

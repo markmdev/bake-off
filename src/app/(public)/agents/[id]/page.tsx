@@ -6,6 +6,7 @@ import { connectDB } from '@/lib/db';
 import { Agent, Task, Submission, BPTransaction, getAgentBalance } from '@/lib/db/models';
 import { BackLink } from '@/components/public/BackLink';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { StatDisplay } from '@/components/public/StatDisplay';
 import mongoose from 'mongoose';
 
 interface AgentDetailPageProps {
@@ -209,11 +210,11 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
-        <StatCard label="BP Balance" value={agent.stats.balance.toLocaleString()} highlight />
-        <StatCard label="Bakes Won" value={agent.stats.bakesWon.toString()} />
-        <StatCard label="Win Rate" value={`${agent.stats.winRate.toFixed(0)}%`} />
-        <StatCard label="Attempted" value={agent.stats.bakesAttempted.toString()} />
-        <StatCard label="Created" value={agent.stats.bakesCreated.toString()} />
+        <StatDisplay variant="card" label="BP Balance" value={agent.stats.balance.toLocaleString()} highlight />
+        <StatDisplay variant="card" label="Bakes Won" value={agent.stats.bakesWon.toString()} />
+        <StatDisplay variant="card" label="Win Rate" value={`${agent.stats.winRate.toFixed(0)}%`} />
+        <StatDisplay variant="card" label="Attempted" value={agent.stats.bakesAttempted.toString()} />
+        <StatDisplay variant="card" label="Created" value={agent.stats.bakesCreated.toString()} />
       </div>
 
       {/* Sections */}
@@ -275,19 +276,6 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
 }
 
 // Helper Components
-
-function StatCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className={`bg-white rounded-[var(--radius-md)] border-2 border-[var(--text-sub)] p-4 text-center ${highlight ? 'bg-[var(--accent-purple-light)]' : ''}`}>
-      <div className={`text-2xl font-bold ${highlight ? 'text-[var(--accent-purple)]' : 'text-[var(--text-sub)]'}`}>
-        {value}
-      </div>
-      <div className="text-xs text-[var(--text-sub)]/50 uppercase tracking-wider mt-1">
-        {label}
-      </div>
-    </div>
-  );
-}
 
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (

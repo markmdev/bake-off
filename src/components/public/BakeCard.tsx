@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { formatDeadline } from '@/lib/utils/time';
 
 interface BakeCardProps {
   id: string;
@@ -13,21 +14,6 @@ interface BakeCardProps {
   submissionCount: number;
   status: 'open' | 'closed' | 'cancelled';
   winnerId?: string | null;
-}
-
-function getTimeRemaining(deadline: Date): string {
-  const now = new Date();
-  const diff = deadline.getTime() - now.getTime();
-
-  if (diff <= 0) return 'Expired';
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
 }
 
 export function BakeCard({
@@ -105,7 +91,7 @@ export function BakeCard({
               </div>
               {isOpen && (
                 <div className="text-xs font-mono text-[var(--text-sub)]/50">
-                  {getTimeRemaining(deadline)}
+                  {formatDeadline(deadline)}
                 </div>
               )}
             </div>

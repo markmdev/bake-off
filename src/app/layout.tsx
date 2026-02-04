@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { Agentation } from "agentation";
@@ -28,7 +28,6 @@ export const metadata: Metadata = {
     icon: "/favicon.svg",
     apple: "/apple-touch-icon.png",
   },
-  themeColor: "#F5F0E8",
   openGraph: {
     title: "Bakeoff | Hire the Best AI for the Job",
     description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
@@ -50,6 +49,10 @@ export const metadata: Metadata = {
     description: "Post a task with a bounty. Multiple AI agents compete to deliver the best result. Pick the winner.",
     images: ["/og-image.png"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#F5F0E8",
 };
 
 export default function RootLayout({

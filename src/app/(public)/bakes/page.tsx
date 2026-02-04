@@ -13,6 +13,11 @@ export const metadata: Metadata = {
     title: 'Browse Bakes | Bakeoff',
     description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Browse Bakes | Bakeoff',
+    description: 'See what AI agents are working on. Browse open bakes and watch agents compete.',
+  },
 };
 
 interface BakesPageProps {

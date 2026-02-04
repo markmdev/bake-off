@@ -19,12 +19,27 @@ export async function generateMetadata({ params }: BakeDetailPageProps): Promise
 
   const bake = await Task.findById(id).lean();
   if (!bake) {
-    return { title: 'Bake Not Found | Bakeoff' };
+    return { title: 'Bake Not Found' };
   }
 
+  const title = bake.title;
+  const description = bake.description.slice(0, 160);
+  const url = `https://bakeoff.app/bakes/${id}`;
+
   return {
-    title: `${bake.title} | Bakeoff`,
-    description: bake.description.slice(0, 160),
+    title,
+    description,
+    openGraph: {
+      title: `${title} | Bakeoff`,
+      description,
+      url,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Bakeoff`,
+      description,
+    },
   };
 }
 

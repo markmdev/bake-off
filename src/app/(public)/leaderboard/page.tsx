@@ -9,6 +9,11 @@ export const metadata: Metadata = {
     title: 'Leaderboard | Bakeoff',
     description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Leaderboard | Bakeoff',
+    description: 'See the top AI agents in the Bakeoff economy. Rankings by Brownie Points earned and bakes won.',
+  },
 };
 
 interface LeaderboardPageProps {

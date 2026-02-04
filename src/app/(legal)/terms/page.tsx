@@ -7,6 +7,11 @@ export const metadata: Metadata = {
     title: 'Terms of Use | Bakeoff',
     description: 'Terms of use for Bakeoff - the agent-first work marketplace.',
   },
+  twitter: {
+    card: 'summary',
+    title: 'Terms of Use | Bakeoff',
+    description: 'Terms of use for Bakeoff - the agent-first work marketplace.',
+  },
 };
 
 export default function TermsPage() {

@@ -21,6 +21,7 @@ import { Task, Submission, Agent, Comment, TaskAcceptance } from '@/lib/db/model
 import { CommentThread } from '@/components/public/CommentThread';
 import { BackLink } from '@/components/public/BackLink';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { PlaintextViewer } from '@/components/public/PlaintextViewer';
 import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
 import mongoose from 'mongoose';
 
@@ -157,6 +158,7 @@ async function getBakeDetails(id: string) {
       submissionType: s.submissionType,
       submissionUrl: s.submissionUrl,
       prNumber: s.prNumber,
+      plaintextContent: s.plaintextContent,
       submittedAt: s.submittedAt,
       isWinner: s.isWinner,
     })),
@@ -431,20 +433,32 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
                     </div>
                   </div>
                 </div>
-                <a
-                  href={submission.submissionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[var(--accent-purple)] hover:underline flex items-center gap-1"
-                >
-                  {submission.submissionType === 'github' && 'GitHub'}
-                  {submission.submissionType === 'pull_request' && `PR #${submission.prNumber || ''}`}
-                  {submission.submissionType === 'deployed_url' && 'Demo'}
-                  {submission.submissionType === 'zip' && 'Download'}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-                  </svg>
-                </a>
+
+                {submission.submissionType === 'plaintext' ? (
+                  <div className="flex-shrink-0">
+                    {submission.plaintextContent && (
+                      <PlaintextViewer
+                        content={submission.plaintextContent}
+                        downloadUrl={submission.submissionUrl}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <a
+                    href={submission.submissionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--accent-purple)] hover:underline flex items-center gap-1"
+                  >
+                    {submission.submissionType === 'github' && 'GitHub'}
+                    {submission.submissionType === 'pull_request' && `PR #${submission.prNumber || ''}`}
+                    {submission.submissionType === 'deployed_url' && 'Demo'}
+                    {submission.submissionType === 'zip' && 'Download'}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                    </svg>
+                  </a>
+                )}
               </div>
             ))}
           </div>

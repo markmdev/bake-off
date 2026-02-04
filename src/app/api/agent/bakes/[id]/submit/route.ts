@@ -3,9 +3,10 @@ import { requireAgentAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { Task, TaskAcceptance, Submission } from '@/lib/db/models';
 import { isValidGitHubRepoUrl } from '@/lib/utils/github';
+import { createClient } from '@supabase/supabase-js';
 import mongoose from 'mongoose';
 
-const VALID_SUBMISSION_TYPES = ['zip', 'github', 'deployed_url', 'pull_request'] as const;
+const VALID_SUBMISSION_TYPES = ['zip', 'github', 'deployed_url', 'pull_request', 'plaintext'] as const;
 type SubmissionType = typeof VALID_SUBMISSION_TYPES[number];
 
 function isValidSubmissionType(type: unknown): type is SubmissionType {
@@ -88,20 +89,36 @@ export async function POST(
     return NextResponse.json({ error: 'Request body must be an object' }, { status: 400 });
   }
 
-  const { submissionType, submissionUrl, prNumber } = body as Record<string, unknown>;
+  const { submissionType, submissionUrl, prNumber, content } = body as Record<string, unknown>;
 
   if (!isValidSubmissionType(submissionType)) {
     return NextResponse.json(
-      { error: 'submissionType must be zip, github, deployed_url, or pull_request' },
+      { error: 'submissionType must be zip, github, deployed_url, pull_request, or plaintext' },
       { status: 400 }
     );
   }
 
-  if (!submissionUrl || typeof submissionUrl !== 'string') {
-    return NextResponse.json(
-      { error: 'submissionUrl is required' },
-      { status: 400 }
-    );
+  // For plaintext, content is required; for others, URL is required
+  if (submissionType === 'plaintext') {
+    if (!content || typeof content !== 'string') {
+      return NextResponse.json(
+        { error: 'content is required for plaintext submissions' },
+        { status: 400 }
+      );
+    }
+    if (content.length > 100000) {
+      return NextResponse.json(
+        { error: 'content must be less than 100KB' },
+        { status: 400 }
+      );
+    }
+  } else {
+    if (!submissionUrl || typeof submissionUrl !== 'string') {
+      return NextResponse.json(
+        { error: 'submissionUrl is required' },
+        { status: 400 }
+      );
+    }
   }
 
   if (submissionType === 'pull_request') {
@@ -157,13 +174,16 @@ export async function POST(
     }
   }
 
-  const urlValidation = validateSubmissionUrl(
-    submissionType,
-    submissionUrl,
-    bake.targetRepo
-  );
-  if (!urlValidation.valid) {
-    return NextResponse.json({ error: urlValidation.error }, { status: 400 });
+  // Validate URL for non-plaintext submissions
+  if (submissionType !== 'plaintext') {
+    const urlValidation = validateSubmissionUrl(
+      submissionType,
+      submissionUrl as string,
+      bake.targetRepo
+    );
+    if (!urlValidation.valid) {
+      return NextResponse.json({ error: urlValidation.error }, { status: 400 });
+    }
   }
 
   const acceptance = await TaskAcceptance.findOne({
@@ -192,14 +212,47 @@ export async function POST(
 
   const submittedAt = new Date();
 
+  // For plaintext submissions, save content to Supabase Storage
+  let fileUrl = submissionUrl as string;
+  if (submissionType === 'plaintext') {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const filename = `${bake._id.toString()}-${agent._id.toString()}-${Date.now()}.md`;
+    const filePath = `submissions/${filename}`;
+
+    const { data, error: uploadError } = await supabase.storage
+      .from('bakeoff-public')
+      .upload(filePath, content as string, {
+        contentType: 'text/markdown',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      return NextResponse.json(
+        { error: `Failed to save submission: ${uploadError.message}` },
+        { status: 500 }
+      );
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('bakeoff-public')
+      .getPublicUrl(filePath);
+
+    fileUrl = publicUrl;
+  }
+
   let submission;
   try {
     submission = await Submission.create({
       taskId: bake._id,
       agentId: agent._id,
       submissionType,
-      submissionUrl,
+      submissionUrl: fileUrl,
       prNumber: submissionType === 'pull_request' ? (prNumber as number) : undefined,
+      plaintextContent: submissionType === 'plaintext' ? (content as string) : undefined,
       submittedAt,
       isWinner: false,
     });

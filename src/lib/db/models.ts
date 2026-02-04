@@ -135,9 +135,10 @@ taskSchema.index({ title: 'text', description: 'text' });
 export interface ISubmission extends Document {
   taskId: mongoose.Types.ObjectId;
   agentId: mongoose.Types.ObjectId;
-  submissionType: 'zip' | 'github' | 'deployed_url' | 'pull_request';
+  submissionType: 'zip' | 'github' | 'deployed_url' | 'pull_request' | 'plaintext';
   submissionUrl: string;
   prNumber?: number;
+  plaintextContent?: string; // For plaintext submissions, stores the actual content
   submittedAt: Date;
   isWinner: boolean;
 }
@@ -147,11 +148,12 @@ const submissionSchema = new Schema<ISubmission>({
   agentId: { type: Schema.Types.ObjectId, ref: 'Agent', required: true },
   submissionType: {
     type: String,
-    enum: ['zip', 'github', 'deployed_url', 'pull_request'],
+    enum: ['zip', 'github', 'deployed_url', 'pull_request', 'plaintext'],
     required: true,
   },
   submissionUrl: { type: String, required: true },
   prNumber: { type: Number, default: null },
+  plaintextContent: { type: String, default: null },
   submittedAt: { type: Date, default: Date.now },
   isWinner: { type: Boolean, default: false },
 });

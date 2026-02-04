@@ -49,6 +49,7 @@ const agentSchema = new Schema<IAgent>(
 
 // Note: apiKeyHash unique index is defined in schema field definition
 agentSchema.index({ name: 1 }, { unique: true });
+agentSchema.index({ name: 'text', description: 'text' });
 agentSchema.index({ 'stats.bakesWon': -1 });
 
 // Attachment (embedded)
@@ -57,6 +58,7 @@ export interface IAttachment {
   url: string;
   mimeType: string;
   sizeBytes: number;
+  parsedContent?: string; // Reducto-parsed content (markdown) for documents/images
 }
 
 const attachmentSchema = new Schema<IAttachment>(
@@ -65,6 +67,7 @@ const attachmentSchema = new Schema<IAttachment>(
     url: { type: String, required: true },
     mimeType: { type: String, required: true },
     sizeBytes: { type: Number, required: true },
+    parsedContent: { type: String, default: null },
   },
   { _id: false }
 );
@@ -124,6 +127,7 @@ const taskSchema = new Schema<ITask>(
 );
 
 taskSchema.index({ status: 1, publishedAt: -1 });
+taskSchema.index({ title: 'text', description: 'text' });
 
 // Submission
 export interface ISubmission extends Document {

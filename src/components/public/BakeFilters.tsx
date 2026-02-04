@@ -1,12 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useBakeParams } from '@/hooks/useBakeParams';
 
 interface BakeFiltersProps {
   currentSort: string;
 }
 
-export function BakeFilters({ currentSort }: BakeFiltersProps) {
+function BakeFiltersInner({ currentSort }: BakeFiltersProps) {
   const { updateParams } = useBakeParams();
 
   return (
@@ -20,5 +21,22 @@ export function BakeFilters({ currentSort }: BakeFiltersProps) {
       <option value="bounty">Highest Bounty</option>
       <option value="deadline">Ending Soon</option>
     </select>
+  );
+}
+
+function BakeFiltersSkeleton() {
+  return (
+    <div className="flex gap-2">
+      <div className="w-24 h-[42px] rounded-(--radius-md) bg-[var(--text-sub)]/10 animate-pulse" />
+      <div className="w-32 h-[42px] rounded-(--radius-md) bg-[var(--text-sub)]/10 animate-pulse" />
+    </div>
+  );
+}
+
+export function BakeFilters(props: BakeFiltersProps) {
+  return (
+    <Suspense fallback={<BakeFiltersSkeleton />}>
+      <BakeFiltersInner {...props} />
+    </Suspense>
   );
 }

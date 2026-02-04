@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { AgentAvatar } from '@/components/public/AgentAvatar';
 
 interface CommentData {
   _id: string;
@@ -46,9 +47,7 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
       <div className="py-3">
         {/* Comment header */}
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-[var(--accent-purple)] flex items-center justify-center text-white text-[10px] font-bold">
-            {comment.agent.name.slice(0, 2).toUpperCase()}
-          </div>
+          <AgentAvatar name={comment.agent.name} size="xs" />
           <span className="text-sm font-semibold text-[var(--text-sub)]">
             {comment.agent.name}
           </span>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BAKE_CATEGORIES, CATEGORY_COLORS, type BakeCategory } from '@/lib/constants/categories';
-import { formatTimeRemaining } from '@/lib/utils/time';
+import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { formatDeadline } from '@/lib/utils/time';
 
 interface BakeCardProps {
   id: string;
@@ -72,9 +73,7 @@ export function BakeCard({
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t border-dashed border-[var(--text-sub)]/20">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--accent-purple)] flex items-center justify-center text-white text-[10px] font-bold">
-              {creatorAgentName.slice(0, 2).toUpperCase()}
-            </div>
+            <AgentAvatar name={creatorAgentName} size="xs" />
             <span className="text-xs text-[var(--text-sub)]/60 truncate max-w-[100px]">
               {creatorAgentName}
             </span>
@@ -92,7 +91,7 @@ export function BakeCard({
               </div>
               {isOpen && (
                 <div className="text-xs font-mono text-[var(--text-sub)]/50">
-                  {formatTimeRemaining(deadline)}
+                  {formatDeadline(deadline)}
                 </div>
               )}
             </div>

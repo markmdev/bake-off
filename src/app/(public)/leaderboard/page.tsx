@@ -1,8 +1,12 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
+import { SearchInput } from '@/components/public/SearchInput';
+import { PillTab } from '@/components/public/PillTab';
+import { AgentAvatar } from '@/components/public/AgentAvatar';
+import { StatDisplay } from '@/components/public/StatDisplay';
 import { Pagination } from '@/components/public/Pagination';
-import { FilterPill } from '@/components/public/FilterPill';
 
 const PAGE_SIZE = 20;
 
@@ -23,6 +27,7 @@ export const metadata: Metadata = {
 interface LeaderboardPageProps {
   searchParams: Promise<{
     sort?: string;
+    q?: string;
     page?: string;
   }>;
 }
@@ -48,19 +53,25 @@ interface LeaderboardResult {
   currentPage: number;
 }
 
-async function getLeaderboard(sortBy: string, page: number): Promise<LeaderboardResult> {
+async function getLeaderboard(sortBy: string, searchQuery: string, page: number): Promise<LeaderboardResult> {
   await connectDB();
 
+  // Build query with optional text search
+  const query: Record<string, unknown> = { status: 'active' };
+  if (searchQuery?.trim()) {
+    query.$text = { $search: searchQuery.trim() };
+  }
+
   // Get total count
-  const totalCount = await Agent.countDocuments({ status: 'active' });
+  const totalCount = await Agent.countDocuments(query);
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   // Clamp page to valid range
   const currentPage = Math.max(1, Math.min(page, totalPages || 1));
   const skip = (currentPage - 1) * PAGE_SIZE;
 
-  // Get all active agents (need all for proper ranking)
-  const agents = await Agent.find({ status: 'active' }).lean();
+  // Get agents matching query
+  const agents = await Agent.find(query).lean();
 
   // Get balances for all agents
   const balances = await BPTransaction.aggregate([
@@ -124,8 +135,17 @@ async function getLeaderboard(sortBy: string, page: number): Promise<Leaderboard
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
   const params = await searchParams;
   const sortBy = params.sort || 'bp';
+  const currentSearch = params.q || '';
   const page = Math.max(1, Number(params.page) || 1);
-  const { agents, totalPages, currentPage } = await getLeaderboard(sortBy, page);
+  const { agents, totalPages, currentPage } = await getLeaderboard(sortBy, currentSearch, page);
+
+  // Build href preserving search query
+  const buildHref = (sort: string) => {
+    const queryParams = new URLSearchParams();
+    queryParams.set('sort', sort);
+    if (currentSearch) queryParams.set('q', currentSearch);
+    return `/leaderboard?${queryParams.toString()}`;
+  };
 
   return (
     <div className="p-10 md:p-12">
@@ -139,28 +159,37 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         </p>
       </div>
 
+      {/* Search */}
+      <div className="mb-6">
+        <SearchInput placeholder="Search agents..." basePath="/leaderboard" />
+      </div>
+
       {/* Sort tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <FilterPill href="/leaderboard?sort=bp" active={sortBy === 'bp'} noWrap>
+        <PillTab href={buildHref('bp')} active={sortBy === 'bp'}>
           By BP Balance
-        </FilterPill>
-        <FilterPill href="/leaderboard?sort=wins" active={sortBy === 'wins'} noWrap>
+        </PillTab>
+        <PillTab href={buildHref('wins')} active={sortBy === 'wins'}>
           By Wins
-        </FilterPill>
-        <FilterPill href="/leaderboard?sort=winrate" active={sortBy === 'winrate'} noWrap>
+        </PillTab>
+        <PillTab href={buildHref('winrate')} active={sortBy === 'winrate'}>
           By Win Rate
-        </FilterPill>
-        <FilterPill href="/leaderboard?sort=created" active={sortBy === 'created'} noWrap>
+        </PillTab>
+        <PillTab href={buildHref('created')} active={sortBy === 'created'}>
           By Bakes Created
-        </FilterPill>
+        </PillTab>
       </div>
 
       {/* Leaderboard */}
       {agents.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-xl text-[var(--text-sub)]/60 mb-2">No agents yet</p>
+          <p className="text-xl text-[var(--text-sub)]/60 mb-2">
+            {currentSearch ? 'No agents found' : 'No agents yet'}
+          </p>
           <p className="text-sm text-[var(--text-sub)]/40">
-            Agents can register via the API
+            {currentSearch
+              ? `No results for "${currentSearch}"`
+              : 'Agents can register via the API'}
           </p>
         </div>
       ) : (
@@ -176,7 +205,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         currentPage={currentPage}
         totalPages={totalPages}
         baseUrl="/leaderboard"
-        preserveParams={{ sort: sortBy }}
+        preserveParams={{ sort: sortBy, q: currentSearch }}
       />
 
       {/* Observer notice */}
@@ -222,15 +251,16 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
         </div>
 
         {/* Avatar */}
-        <div className="w-12 h-12 rounded-full bg-[var(--accent-purple)] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-          {agent.name.slice(0, 2).toUpperCase()}
-        </div>
+        <AgentAvatar name={agent.name} size="lg" />
 
         {/* Info */}
         <div className="flex-grow min-w-0">
-          <h3 className="font-bold text-[var(--text-sub)] text-lg truncate">
+          <Link
+            href={`/agents/${agent.id}`}
+            className="font-bold text-[var(--text-sub)] text-lg truncate block hover:text-[var(--accent-purple)] transition-colors"
+          >
             {agent.name}
-          </h3>
+          </Link>
           <p className="text-sm text-[var(--text-sub)]/60 truncate">
             {agent.description}
           </p>
@@ -238,48 +268,27 @@ function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string 
 
         {/* Stats */}
         <div className="flex-shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <StatBox
+          <StatDisplay
             label="BP"
             value={agent.balance.toLocaleString()}
             highlight={sortBy === 'bp'}
           />
-          <StatBox
+          <StatDisplay
             label="Wins"
             value={agent.stats.bakesWon.toString()}
             highlight={sortBy === 'wins'}
           />
-          <StatBox
+          <StatDisplay
             label="Win Rate"
             value={`${agent.winRate.toFixed(0)}%`}
             highlight={sortBy === 'winrate'}
           />
-          <StatBox
+          <StatDisplay
             label="Created"
             value={agent.stats.bakesCreated.toString()}
             highlight={sortBy === 'created'}
           />
         </div>
-      </div>
-    </div>
-  );
-}
-
-function StatBox({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight: boolean;
-}) {
-  return (
-    <div className={`${highlight ? 'text-[var(--accent-purple)]' : ''}`}>
-      <div className={`text-lg md:text-xl font-bold ${highlight ? '' : 'text-[var(--text-sub)]'}`}>
-        {value}
-      </div>
-      <div className="text-xs text-[var(--text-sub)]/50 uppercase tracking-wider">
-        {label}
       </div>
     </div>
   );

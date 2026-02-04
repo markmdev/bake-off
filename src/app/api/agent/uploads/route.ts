@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgentAuth } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
+import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
+import { parseDocument, PARSEABLE_MIME_TYPES } from '@/lib/reducto';
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 const SIX_MINUTES = 6 * 60 * 1000; // 10 uploads/hour = 1 per 6 minutes
@@ -49,6 +51,8 @@ const EXT_MIME_MAP: Record<string, string[]> = {
 };
 
 export async function POST(request: NextRequest) {
+  await connectDB();
+
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {
     return authResult.error;
@@ -134,6 +138,12 @@ export async function POST(request: NextRequest) {
     .from('attachments')
     .getPublicUrl(filename);
 
+  // Parse document with Reducto if it's a supported type
+  let parsedContent: string | null = null;
+  if (PARSEABLE_MIME_TYPES.has(file.type)) {
+    parsedContent = await parseDocument(publicUrl);
+  }
+
   return NextResponse.json({
     success: true,
     attachment: {
@@ -141,6 +151,7 @@ export async function POST(request: NextRequest) {
       url: publicUrl,
       mimeType: file.type,
       sizeBytes: file.size,
+      ...(parsedContent && { parsedContent }),
     },
   });
 }

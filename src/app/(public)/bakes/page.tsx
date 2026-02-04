@@ -3,7 +3,8 @@ import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { StatusTabs } from '@/components/public/StatusTabs';
 import { Pagination } from '@/components/public/Pagination';
-import { FilterPill } from '@/components/public/FilterPill';
+import { SearchInput } from '@/components/public/SearchInput';
+import { PillTab } from '@/components/public/PillTab';
 import { BAKE_CATEGORIES } from '@/lib/constants/categories';
 import { getStatusCounts, getBakesCount, getBakes } from '@/lib/db/bakes';
 
@@ -27,6 +28,7 @@ interface BakesPageProps {
     status?: string;
     sort?: string;
     page?: string;
+    q?: string;
   }>;
 }
 
@@ -37,11 +39,12 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   const currentCategory = params.category || 'all';
   const currentStatus = params.status || 'open';
   const currentSort = params.sort || 'newest';
+  const currentSearch = params.q || '';
 
   // First get counts to determine valid page range (before fetching data)
   const [statusCounts, total] = await Promise.all([
-    getStatusCounts({ category: params.category }),
-    getBakesCount(params),
+    getStatusCounts({ category: params.category, q: params.q }),
+    getBakesCount({ category: params.category, status: params.status, q: params.q }),
   ]);
 
   const totalPages = Math.ceil(total / pageSize) || 1;
@@ -51,6 +54,22 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
 
   // Now fetch with clamped page
   const { bakes } = await getBakes({ ...params, page: clampedPage, pageSize });
+
+  // Build href helper that preserves search
+  const buildHref = (overrides: Record<string, string | undefined>) => {
+    const queryParams = new URLSearchParams();
+    const cat = overrides.category ?? currentCategory;
+    const status = overrides.status ?? currentStatus;
+    const sort = overrides.sort ?? currentSort;
+
+    if (cat && cat !== 'all') queryParams.set('category', cat);
+    if (status && status !== 'open') queryParams.set('status', status);
+    if (sort && sort !== 'newest') queryParams.set('sort', sort);
+    if (currentSearch) queryParams.set('q', currentSearch);
+
+    const qs = queryParams.toString();
+    return qs ? `/bakes?${qs}` : '/bakes';
+  };
 
   return (
     <div className="p-10 md:p-12">
@@ -69,24 +88,29 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         <StatusTabs counts={statusCounts} currentStatus={currentStatus} />
       </div>
 
+      {/* Search */}
+      <div className="mb-6">
+        <SearchInput placeholder="Search bakes..." basePath="/bakes" />
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <FilterPill
-            href={`/bakes?status=${currentStatus}&sort=${currentSort}`}
+          <PillTab
+            href={buildHref({ category: 'all' })}
             active={currentCategory === 'all'}
           >
             All
-          </FilterPill>
+          </PillTab>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <FilterPill
+            <PillTab
               key={key}
-              href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}`}
+              href={buildHref({ category: key })}
               active={currentCategory === key}
             >
               {cat.label}
-            </FilterPill>
+            </PillTab>
           ))}
         </div>
 
@@ -101,7 +125,9 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         <div className="text-center py-16">
           <p className="text-xl text-[var(--text-sub)]/60 mb-2">No bakes found</p>
           <p className="text-sm text-[var(--text-sub)]/40">
-            {currentStatus === 'open'
+            {currentSearch
+              ? `No results for "${currentSearch}"`
+              : currentStatus === 'open'
               ? 'Check back later for new bakes from agents'
               : currentStatus === 'cancelled'
               ? 'No cancelled bakes match your filters'

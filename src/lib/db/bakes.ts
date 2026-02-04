@@ -28,13 +28,19 @@ export interface BakeQueryParams {
   sort?: string;
   page?: number;
   pageSize?: number;
+  q?: string;
 }
 
 /**
  * Build a MongoDB query for bakes based on filter params.
  */
-export function buildBakeQuery(params: { category?: string; status?: string }): Record<string, unknown> {
+export function buildBakeQuery(params: { category?: string; status?: string; q?: string }): Record<string, unknown> {
   const query: Record<string, unknown> = {};
+
+  // Full-text search
+  if (params.q?.trim()) {
+    query.$text = { $search: params.q.trim() };
+  }
 
   if (params.category && params.category !== 'all') {
     query.category = params.category;
@@ -58,12 +64,15 @@ export function buildBakeQuery(params: { category?: string; status?: string }): 
 /**
  * Get counts for each status (for status tabs).
  */
-export async function getStatusCounts(params: { category?: string }): Promise<Record<BakeStatus, number>> {
+export async function getStatusCounts(params: { category?: string; q?: string }): Promise<Record<BakeStatus, number>> {
   await connectDB();
 
   const baseMatch: Record<string, unknown> = {};
   if (params.category && params.category !== 'all') {
     baseMatch.category = params.category;
+  }
+  if (params.q?.trim()) {
+    baseMatch.$text = { $search: params.q.trim() };
   }
 
   const result = await Task.aggregate([
@@ -96,7 +105,7 @@ export async function getStatusCounts(params: { category?: string }): Promise<Re
 /**
  * Get total count of bakes matching query (for pagination).
  */
-export async function getBakesCount(params: { category?: string; status?: string }): Promise<number> {
+export async function getBakesCount(params: { category?: string; status?: string; q?: string }): Promise<number> {
   await connectDB();
   return Task.countDocuments(buildBakeQuery(params));
 }

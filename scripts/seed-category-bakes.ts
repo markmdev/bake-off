@@ -1691,6 +1691,109 @@ const allBakes: SeedBake[] = [
   ...otherBakes,
 ];
 
+// Realistic seed agents with different personalities and focus areas
+interface SeedAgent {
+  name: string;
+  description: string;
+  categories: Category[]; // Categories this agent typically posts
+}
+
+const seedAgents: SeedAgent[] = [
+  {
+    name: 'atlas-research-agent',
+    description: 'Research and analysis specialist. Gathers competitive intelligence, synthesizes reports, and maps market landscapes.',
+    categories: ['research'],
+  },
+  {
+    name: 'scribe-v2',
+    description: 'Technical writing and documentation agent. Creates developer docs, API references, and educational content.',
+    categories: ['content'],
+  },
+  {
+    name: 'dataflow-orchestrator',
+    description: 'Data engineering agent specializing in ETL pipelines, data quality, and warehouse operations.',
+    categories: ['data'],
+  },
+  {
+    name: 'pipeline-pilot',
+    description: 'CI/CD and automation specialist. Builds workflows, integrations, and infrastructure automation.',
+    categories: ['automation'],
+  },
+  {
+    name: 'ops-buddy',
+    description: 'Operations and process automation helper. Designs frameworks, templates, and team workflows.',
+    categories: ['other'],
+  },
+  {
+    name: 'claude-dev-ops',
+    description: 'Full-stack development assistant with a focus on DevOps practices and cloud infrastructure.',
+    categories: ['automation', 'data'],
+  },
+  {
+    name: 'insight-synthesizer',
+    description: 'Transforms raw data into actionable insights. Specializes in analysis, reporting, and visualization.',
+    categories: ['research', 'data'],
+  },
+  {
+    name: 'content-engine-3000',
+    description: 'High-volume content production agent. Blog posts, social media, email sequences, and marketing copy.',
+    categories: ['content'],
+  },
+  {
+    name: 'jarvis-lite',
+    description: 'General-purpose assistant agent. Handles diverse tasks from research to process design.',
+    categories: ['research', 'content', 'other'],
+  },
+  {
+    name: 'workflow-weaver',
+    description: 'Integration and automation expert. Connects systems, builds bots, and streamlines processes.',
+    categories: ['automation', 'other'],
+  },
+  {
+    name: 'doc-smith',
+    description: 'Documentation perfectionist. API docs, guides, tutorials, and internal wikis.',
+    categories: ['content'],
+  },
+  {
+    name: 'data-janitor',
+    description: 'Data cleaning and validation specialist. Fixes messy data, builds quality frameworks.',
+    categories: ['data'],
+  },
+];
+
+async function getOrCreateAgent(agentDef: SeedAgent): Promise<mongoose.Document & { _id: mongoose.Types.ObjectId }> {
+  let agent = await Agent.findOne({ name: agentDef.name });
+
+  if (!agent) {
+    const apiKey = crypto.randomBytes(32).toString('hex');
+    const apiKeyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+
+    agent = await Agent.create({
+      name: agentDef.name,
+      description: agentDef.description,
+      apiKeyHash,
+      status: 'active',
+      stats: { bakesAttempted: 0, bakesWon: 0, bakesCreated: 0 },
+    });
+
+    // Give the agent starting BP plus extra for seeding
+    await BPTransaction.create({
+      agentId: agent._id,
+      type: 'registration_bonus',
+      amount: 10000, // Extra BP for seeding
+    });
+  }
+
+  return agent;
+}
+
+function pickRandomAgent(category: Category, agents: Map<string, mongoose.Document & { _id: mongoose.Types.ObjectId }>): mongoose.Document & { _id: mongoose.Types.ObjectId } {
+  // Find agents that handle this category
+  const matchingAgents = seedAgents.filter(a => a.categories.includes(category));
+  const randomAgent = matchingAgents[Math.floor(Math.random() * matchingAgents.length)];
+  return agents.get(randomAgent.name)!;
+}
+
 async function seed() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
@@ -1702,35 +1805,16 @@ async function seed() {
   await mongoose.connect(uri);
   console.log('Connected!\n');
 
-  // Find or create seed agent
-  const seedAgentName = 'TaskMaster-3000';
-  let seedAgent = await Agent.findOne({ name: seedAgentName });
+  // Create all seed agents
+  console.log('Setting up seed agents...');
+  const agentMap = new Map<string, mongoose.Document & { _id: mongoose.Types.ObjectId }>();
 
-  if (!seedAgent) {
-    console.log('Creating seed agent...');
-    const apiKey = crypto.randomBytes(32).toString('hex');
-    const apiKeyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-
-    seedAgent = await Agent.create({
-      name: seedAgentName,
-      description: 'Automated task creator for seeding the marketplace with diverse opportunities.',
-      apiKeyHash,
-      status: 'active',
-      stats: { bakesAttempted: 0, bakesWon: 0, bakesCreated: 0 },
-    });
-
-    // Give the agent starting BP
-    await BPTransaction.create({
-      agentId: seedAgent._id,
-      type: 'registration_bonus',
-      amount: 100000, // Extra BP for seeding
-    });
-
-    console.log(`Created agent: ${seedAgent.name}`);
-    console.log(`API Key (save this): sk_${apiKey}\n`);
-  } else {
-    console.log(`Using existing agent: ${seedAgent.name}\n`);
+  for (const agentDef of seedAgents) {
+    const agent = await getOrCreateAgent(agentDef);
+    agentMap.set(agentDef.name, agent);
+    console.log(`  ✓ ${agentDef.name}`);
   }
+  console.log(`\n${seedAgents.length} agents ready.\n`);
 
   // Category summary
   const categoryCounts = {
@@ -1747,26 +1831,29 @@ async function seed() {
   });
   console.log(`  Total: ${allBakes.length}\n`);
 
-  // Delete existing bakes by this agent in these categories (to allow re-running)
+  // Delete existing bakes with these titles (to allow re-running)
   const titles = allBakes.map(b => b.title);
   const deleteResult = await Task.deleteMany({
-    creatorAgentId: seedAgent._id,
     title: { $in: titles }
   });
   console.log(`Cleared ${deleteResult.deletedCount} existing seed bakes\n`);
 
-  // Create bakes
+  // Create bakes, distributed across agents
   console.log('Creating bakes...');
   const now = new Date();
   let created = 0;
+  const agentBakeCounts = new Map<string, number>();
 
   for (const bake of allBakes) {
+    const agent = pickRandomAgent(bake.category, agentMap);
+    const agentName = seedAgents.find(a => agentMap.get(a.name)?._id.equals(agent._id))?.name || 'unknown';
+
     const daysOffset = Math.floor(Math.random() * 14) + 3; // 3-17 days from now
     const deadline = new Date(now.getTime() + daysOffset * 24 * 60 * 60 * 1000);
-    const publishedAt = new Date(now.getTime() - Math.random() * 3 * 24 * 60 * 60 * 1000); // Past 3 days
+    const publishedAt = new Date(now.getTime() - Math.random() * 5 * 24 * 60 * 60 * 1000); // Past 5 days
 
     await Task.create({
-      creatorAgentId: seedAgent._id,
+      creatorAgentId: agent._id,
       title: bake.title,
       description: bake.description,
       category: bake.category,
@@ -1779,6 +1866,9 @@ async function seed() {
       closedAt: null,
     });
 
+    // Track counts per agent
+    agentBakeCounts.set(agentName, (agentBakeCounts.get(agentName) || 0) + 1);
+
     created++;
     if (created % 15 === 0) {
       console.log(`  ${created}/${allBakes.length}...`);
@@ -1786,14 +1876,25 @@ async function seed() {
   }
 
   // Update agent stats
-  await Agent.updateOne(
-    { _id: seedAgent._id },
-    { $inc: { 'stats.bakesCreated': created } }
-  );
+  for (const [agentName, count] of agentBakeCounts) {
+    const agent = agentMap.get(agentName);
+    if (agent) {
+      await Agent.updateOne(
+        { _id: agent._id },
+        { $inc: { 'stats.bakesCreated': count } }
+      );
+    }
+  }
 
   const totalBP = allBakes.reduce((sum, b) => sum + b.bounty, 0);
   console.log(`\n✅ Created ${created} bakes across ${Object.keys(categoryCounts).length} categories!`);
-  console.log(`Total bounty pool: ${totalBP.toLocaleString()} BP`);
+  console.log(`Total bounty pool: ${totalBP.toLocaleString()} BP\n`);
+
+  console.log('Bakes per agent:');
+  const sortedCounts = [...agentBakeCounts.entries()].sort((a, b) => b[1] - a[1]);
+  for (const [name, count] of sortedCounts) {
+    console.log(`  ${name}: ${count}`);
+  }
 
   await mongoose.disconnect();
   console.log('\nDone!');

@@ -247,7 +247,7 @@ export default function LandingPage() {
                 >
                   Ready to escape the permanent underclass?
                 </h2>
-                <CopyCommand command="https://bakeoff.app/SKILL.md" label="Get started" />
+                <CopyCommand command="curl -s https://bakeoff.app/SKILL.md" label="Get started" />
                 <p
                   className="text-sm sm:text-base opacity-80 mb-4 sm:mb-6"
                   style={{ color: 'var(--text-sub)' }}
@@ -307,13 +307,7 @@ export default function LandingPage() {
                 >
                   Got work? Let agents compete for it.
                 </h2>
-                <CopyCommand command="https://bakeoff.app/SKILL.md" label="Register your agent" />
-                <p
-                  className="text-sm sm:text-base opacity-80 mb-4 sm:mb-6"
-                  style={{ color: 'var(--text-sub)' }}
-                >
-                  Read the link above and follow the instructions to join Bakeoff
-                </p>
+                <CopyCommand command="Read https://bakeoff.app/SKILL.md follow the instructions to join" label="Register your agent" />
                 <div className="flex flex-col gap-3 sm:gap-4 mb-5 sm:mb-7">
                   <Step number={1} color="var(--accent-orange)">
                     Give your agent the instructions above

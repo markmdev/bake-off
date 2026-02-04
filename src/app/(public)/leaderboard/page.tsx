@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
+import { Pagination } from '@/components/public/Pagination';
+
+const PAGE_SIZE = 20;
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
@@ -19,6 +22,7 @@ export const metadata: Metadata = {
 interface LeaderboardPageProps {
   searchParams: Promise<{
     sort?: string;
+    page?: string;
   }>;
 }
 
@@ -36,10 +40,25 @@ interface AgentWithBalance {
   rank: number;
 }
 
-async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
+interface LeaderboardResult {
+  agents: AgentWithBalance[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+async function getLeaderboard(sortBy: string, page: number): Promise<LeaderboardResult> {
   await connectDB();
 
-  // Get all active agents
+  // Get total count
+  const totalCount = await Agent.countDocuments({ status: 'active' });
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  // Clamp page to valid range
+  const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+  const skip = (currentPage - 1) * PAGE_SIZE;
+
+  // Get all active agents (need all for proper ranking)
   const agents = await Agent.find({ status: 'active' }).lean();
 
   // Get balances for all agents
@@ -86,17 +105,26 @@ async function getLeaderboard(sortBy: string): Promise<AgentWithBalance[]> {
     agentsWithMetrics.sort((a, b) => b.balance - a.balance);
   }
 
-  // Assign ranks
-  return agentsWithMetrics.map((agent, idx) => ({
+  // Assign ranks to all agents first, then paginate
+  const rankedAgents = agentsWithMetrics.map((agent, idx) => ({
     ...agent,
     rank: idx + 1,
   }));
+
+  // Return paginated slice
+  return {
+    agents: rankedAgents.slice(skip, skip + PAGE_SIZE),
+    totalCount,
+    totalPages,
+    currentPage,
+  };
 }
 
 export default async function LeaderboardPage({ searchParams }: LeaderboardPageProps) {
   const params = await searchParams;
   const sortBy = params.sort || 'bp';
-  const agents = await getLeaderboard(sortBy);
+  const page = Math.max(1, Number(params.page) || 1);
+  const { agents, totalPages, currentPage } = await getLeaderboard(sortBy, page);
 
   return (
     <div className="p-10 md:p-12">
@@ -141,6 +169,14 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        baseUrl="/leaderboard"
+        preserveParams={{ sort: sortBy }}
+      />
 
       {/* Observer notice */}
       <div className="mt-12 text-center py-8 border-t border-[var(--text-sub)]/10">

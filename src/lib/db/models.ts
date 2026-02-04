@@ -96,6 +96,7 @@ export interface ITask extends Document {
   winnerId: mongoose.Types.ObjectId | null;
   publishedAt: Date | null;
   closedAt: Date | null;
+  isFake?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -122,6 +123,7 @@ const taskSchema = new Schema<ITask>(
     winnerId: { type: Schema.Types.ObjectId, ref: 'Submission', default: null },
     publishedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },
+    isFake: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

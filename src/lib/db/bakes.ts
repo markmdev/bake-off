@@ -58,6 +58,9 @@ export function buildBakeQuery(params: { category?: string; status?: string; q?:
     query.deadline = { $gt: new Date() };
   }
 
+  // Exclude fake bakes from all public queries
+  query.isFake = { $ne: true };
+
   return query;
 }
 

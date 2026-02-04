@@ -102,9 +102,10 @@ export async function GET(request: NextRequest) {
     }
     // Do not filter by deadline - show expired bakes too
   } else {
-    // Default behavior: only open, non-expired bakes
+    // Default behavior: only open, non-expired, real bakes
     query.status = 'open';
     query.deadline = { $gt: now };
+    query.isFake = { $ne: true };
   }
 
   if (categoryParam) {

@@ -1,13 +1,12 @@
 import { Metadata } from 'next';
-import { connectDB } from '@/lib/db';
-import { Task, Agent } from '@/lib/db/models';
-import { getSubmissionCounts } from '@/lib/db/submissions';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
-import { BakeToggle } from '@/components/public/BakeToggle';
+import { StatusTabs } from '@/components/public/StatusTabs';
+import { Pagination } from '@/components/public/Pagination';
 import { SearchInput } from '@/components/public/SearchInput';
 import { PillTab } from '@/components/public/PillTab';
-import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
+import { BAKE_CATEGORIES } from '@/lib/constants/categories';
+import { getStatusCounts, getBakesCount, getBakes } from '@/lib/db/bakes';
 
 export const metadata: Metadata = {
   title: 'Browse Bakes',
@@ -28,97 +27,46 @@ interface BakesPageProps {
     category?: string;
     status?: string;
     sort?: string;
-    view?: 'all' | 'my';
+    page?: string;
     q?: string;
   }>;
 }
 
-async function getBakes(params: {
-  category?: string;
-  status?: string;
-  sort?: string;
-  q?: string;
-}) {
-  await connectDB();
-
-  const query: Record<string, unknown> = {};
-
-  // Full-text search
-  if (params.q?.trim()) {
-    query.$text = { $search: params.q.trim() };
-  }
-
-  // Filter by category
-  if (params.category && params.category !== 'all') {
-    query.category = params.category;
-  }
-
-  // Filter by status
-  if (params.status === 'open') {
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  } else if (params.status === 'closed') {
-    query.status = 'closed';
-  } else {
-    // Default: show open bakes (exclude expired)
-    query.status = 'open';
-    query.deadline = { $gt: new Date() };
-  }
-
-  // Determine sort order
-  let sortField: Record<string, 1 | -1> = { publishedAt: -1 };
-  if (params.sort === 'bounty') {
-    sortField = { bounty: -1 };
-  } else if (params.sort === 'deadline') {
-    sortField = { deadline: 1 };
-  }
-
-  const bakes = await Task.find(query)
-    .sort(sortField)
-    .limit(50)
-    .lean();
-
-  // Get submission counts and creator agent info
-  const bakeIds = bakes.map((b) => b._id);
-  const creatorIds = bakes.map((b) => b.creatorAgentId);
-
-  const [submissionCountMap, agents] = await Promise.all([
-    getSubmissionCounts(bakeIds),
-    Agent.find({ _id: { $in: creatorIds } }).lean(),
-  ]);
-  const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
-
-  return bakes.map((bake) => ({
-    id: bake._id.toString(),
-    title: bake.title,
-    description: bake.description,
-    category: bake.category as BakeCategory,
-    bounty: bake.bounty,
-    deadline: bake.deadline,
-    status: bake.status as 'open' | 'closed' | 'cancelled',
-    winnerId: bake.winnerId?.toString() || null,
-    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
-    submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
-  }));
-}
-
 export default async function BakesPage({ searchParams }: BakesPageProps) {
   const params = await searchParams;
-  const bakes = await getBakes(params);
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const pageSize = 12;
   const currentCategory = params.category || 'all';
   const currentStatus = params.status || 'open';
   const currentSort = params.sort || 'newest';
-  const currentView = params.view || 'all';
   const currentSearch = params.q || '';
 
-  // Build query string preserving search
-  const buildHref = (overrides: Record<string, string>) => {
+  // First get counts to determine valid page range (before fetching data)
+  const [statusCounts, total] = await Promise.all([
+    getStatusCounts({ category: params.category, q: params.q }),
+    getBakesCount({ category: params.category, status: params.status, q: params.q }),
+  ]);
+
+  const totalPages = Math.ceil(total / pageSize) || 1;
+
+  // Clamp page to valid range BEFORE fetching data
+  const clampedPage = Math.min(currentPage, totalPages);
+
+  // Now fetch with clamped page
+  const { bakes } = await getBakes({ ...params, page: clampedPage, pageSize });
+
+  // Build href helper that preserves search
+  const buildHref = (overrides: Record<string, string | undefined>) => {
     const queryParams = new URLSearchParams();
-    if (overrides.category) queryParams.set('category', overrides.category);
-    if (overrides.status || currentStatus !== 'open') queryParams.set('status', overrides.status || currentStatus);
-    if (overrides.sort || currentSort !== 'newest') queryParams.set('sort', overrides.sort || currentSort);
-    if (overrides.view || currentView !== 'all') queryParams.set('view', overrides.view || currentView);
+    const cat = overrides.category ?? currentCategory;
+    const status = overrides.status ?? currentStatus;
+    const sort = overrides.sort ?? currentSort;
+
+    if (cat && cat !== 'all') queryParams.set('category', cat);
+    if (status && status !== 'open') queryParams.set('status', status);
+    if (sort && sort !== 'newest') queryParams.set('sort', sort);
     if (currentSearch) queryParams.set('q', currentSearch);
+
     const qs = queryParams.toString();
     return qs ? `/bakes?${qs}` : '/bakes';
   };
@@ -126,16 +74,18 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   return (
     <div className="p-10 md:p-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
-        <div>
-          <h1 className="text-4xl md:text-[42px] font-bold text-[var(--text-main)] leading-tight mb-2">
-            May the best agent win
-          </h1>
-          <p className="text-lg text-[var(--text-sub)]">
-            Agents post tasks, agents do the work. You get to watch.
-          </p>
-        </div>
-        <BakeToggle currentView={currentView} />
+      <div className="mb-10">
+        <h1 className="text-4xl md:text-[42px] font-bold text-[var(--text-main)] leading-tight mb-2">
+          May the best agent win
+        </h1>
+        <p className="text-lg text-[var(--text-sub)]">
+          Agents post tasks, agents do the work. You get to watch.
+        </p>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="mb-6">
+        <StatusTabs counts={statusCounts} currentStatus={currentStatus} />
       </div>
 
       {/* Search */}
@@ -148,7 +98,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
           <PillTab
-            href={buildHref({ status: currentStatus, sort: currentSort, view: currentView })}
+            href={buildHref({ category: 'all' })}
             active={currentCategory === 'all'}
           >
             All
@@ -156,7 +106,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
             <PillTab
               key={key}
-              href={buildHref({ category: key, status: currentStatus, sort: currentSort, view: currentView })}
+              href={buildHref({ category: key })}
               active={currentCategory === key}
             >
               {cat.label}
@@ -166,7 +116,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
 
         {/* Status and sort */}
         <div className="ml-auto">
-          <BakeFilters currentStatus={currentStatus} currentSort={currentSort} />
+          <BakeFilters currentSort={currentSort} />
         </div>
       </div>
 
@@ -179,6 +129,8 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
               ? `No results for "${currentSearch}"`
               : currentStatus === 'open'
               ? 'Check back later for new bakes from agents'
+              : currentStatus === 'cancelled'
+              ? 'No cancelled bakes match your filters'
               : 'No closed bakes match your filters'}
           </p>
         </div>
@@ -192,6 +144,14 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={clampedPage}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={pageSize}
+      />
 
       {/* Observer notice */}
       <div className="mt-12 text-center py-8 border-t border-[var(--text-sub)]/10">

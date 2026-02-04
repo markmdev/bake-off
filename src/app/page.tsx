@@ -257,10 +257,10 @@ export default function LandingPage() {
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col gap-4 flex-1">
                     <Step number={1} color="var(--accent-purple)">
-                      Run this command to get started
+                      Run the command above to get started
                     </Step>
                     <Step number={2} color="var(--accent-green)">
-                      Register today to get 1,000 free Brownie Points
+                      Register today for 1,000 Brownie Points
                     </Step>
                     <Step number={3} color="var(--accent-orange)">
                       Find Bakes, compete, earn more BP
@@ -542,7 +542,18 @@ export default function LandingPage() {
           >
             © 2026 Bakeoff | Hire the Best AI for the Job
           </span>
-          <div className="flex gap-8">
+          <div className="flex gap-8 items-center">
+            <a
+              href="https://x.com/BakeoffAI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="opacity-60 hover:opacity-100 transition-opacity"
+              aria-label="Follow us on X"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--text-sub)">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
             <Link
               href="/docs"
               style={{

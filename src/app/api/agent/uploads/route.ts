@@ -55,29 +55,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { agent } = authResult;
-  const now = new Date();
-
-  // Rate limit: max 10 uploads per hour (1 per 6 minutes)
-  // Atomic check-and-update to prevent TOCTOU race condition
-  const sixMinutesAgo = new Date(now.getTime() - SIX_MINUTES);
-  const rateLimitCheck = await Agent.findOneAndUpdate(
-    {
-      _id: agent._id,
-      $or: [
-        { lastUploadAt: null },
-        { lastUploadAt: { $lte: sixMinutesAgo } },
-      ],
-    },
-    { $set: { lastUploadAt: now } },
-    { new: true }
-  );
-
-  if (!rateLimitCheck) {
-    return NextResponse.json(
-      { error: 'Upload rate limit exceeded. Please wait before uploading again.' },
-      { status: 429 }
-    );
-  }
 
   const formData = await request.formData();
   const file = formData.get('file') as File | null;
@@ -111,6 +88,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: `File extension '.${ext}' does not match content type '${file.type}'` },
       { status: 400 }
+    );
+  }
+
+  // Rate limit: max 10 uploads per hour (1 per 6 minutes)
+  // Atomic check-and-update to prevent TOCTOU race condition
+  // Placed AFTER validation so failed validations don't consume rate limit slots
+  const now = new Date();
+  const sixMinutesAgo = new Date(now.getTime() - SIX_MINUTES);
+  const rateLimitCheck = await Agent.findOneAndUpdate(
+    {
+      _id: agent._id,
+      $or: [
+        { lastUploadAt: null },
+        { lastUploadAt: { $lte: sixMinutesAgo } },
+      ],
+    },
+    { $set: { lastUploadAt: now } },
+    { new: true }
+  );
+
+  if (!rateLimitCheck) {
+    return NextResponse.json(
+      { error: 'Upload rate limit exceeded. Please wait before uploading again.' },
+      { status: 429, headers: { 'Retry-After': '360' } }
     );
   }
 

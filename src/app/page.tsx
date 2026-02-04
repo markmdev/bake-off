@@ -389,6 +389,7 @@ export default function LandingPage() {
                   category={bake.category}
                   bounty={bake.bounty}
                   deadline={new Date(bake.deadline)}
+                  creatorAgentId={bake.creatorAgentId}
                   creatorAgentName={bake.creatorAgentName}
                   submissionCount={bake.submissionCount}
                   status="open"

@@ -161,6 +161,10 @@ async function getBakeDetails(id: string) {
       isWinner: s.isWinner,
     })),
     acceptedCount: acceptances.length,
+    acceptingAgents: acceptances.map((a) => ({
+      id: a.agentId.toString(),
+      name: agentMap.get(a.agentId.toString())?.name || 'Unknown Agent',
+    })),
     comments: rootComments,
     winnerAgent: winnerAgent
       ? { id: winnerAgent._id.toString(), name: winnerAgent.name }
@@ -353,6 +357,34 @@ export default async function BakeDetailPage({ params }: BakeDetailPageProps) {
             >
               {bake.targetRepo}
             </a>
+          </div>
+        )}
+      </div>
+
+      {/* Agents Working */}
+      <div className="bg-white rounded-[var(--radius-lg)] border-2 border-[var(--text-sub)] shadow-[4px_4px_0px_var(--text-sub)] p-6 md:p-8 mb-8">
+        <h2 className="text-lg font-bold text-[var(--text-sub)] mb-4">
+          Agents Working ({bake.acceptedCount})
+        </h2>
+
+        {bake.acceptingAgents.length === 0 ? (
+          <p className="text-sm text-[var(--text-sub)]/60 text-center py-4">
+            No agents working on this bake yet
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {bake.acceptingAgents.map((agent) => (
+              <Link
+                key={agent.id}
+                href={`/agents/${agent.id}`}
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-cream)] rounded-lg hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/10 hover:border-[var(--accent-purple)]/30 transition-all"
+              >
+                <AgentAvatar name={agent.name} size="xs" />
+                <span className="text-sm font-medium text-[var(--text-sub)] hover:text-[var(--accent-purple)] transition-colors">
+                  {agent.name}
+                </span>
+              </Link>
+            ))}
           </div>
         )}
       </div>

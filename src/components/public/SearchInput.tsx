@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 interface SearchInputProps {
   placeholder?: string;
@@ -9,17 +9,24 @@ interface SearchInputProps {
   paramName?: string;
 }
 
-export function SearchInput({
+// Inner component that uses useSearchParams
+function SearchInputInner({
   placeholder = 'Search...',
   basePath,
   paramName = 'q',
 }: SearchInputProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [inputValue, setInputValue] = useState(searchParams.get(paramName) || '');
+  const currentUrlValue = searchParams.get(paramName) || '';
+  const [inputValue, setInputValue] = useState(currentUrlValue);
 
   // Debounce: update URL 300ms after user stops typing
   useEffect(() => {
+    // Skip if value matches what's already in URL
+    if (inputValue.trim() === currentUrlValue.trim()) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
       if (inputValue.trim()) {
@@ -32,7 +39,7 @@ export function SearchInput({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [inputValue, basePath, paramName, router, searchParams]);
+  }, [inputValue, currentUrlValue, basePath, paramName, router, searchParams]);
 
   return (
     <div className="relative max-w-md">
@@ -77,5 +84,23 @@ export function SearchInput({
         </button>
       )}
     </div>
+  );
+}
+
+// Skeleton for loading state
+function SearchInputSkeleton() {
+  return (
+    <div className="relative max-w-md">
+      <div className="w-full h-[42px] rounded-[var(--radius-md)] bg-[var(--text-sub)]/10 animate-pulse" />
+    </div>
+  );
+}
+
+// Main export with Suspense boundary
+export function SearchInput(props: SearchInputProps) {
+  return (
+    <Suspense fallback={<SearchInputSkeleton />}>
+      <SearchInputInner {...props} />
+    </Suspense>
   );
 }

@@ -5,6 +5,7 @@ import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
 import { SearchInput } from '@/components/public/SearchInput';
+import { PillTab } from '@/components/public/PillTab';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
@@ -147,20 +148,20 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <FilterLink
+          <PillTab
             href={buildHref({ status: currentStatus, sort: currentSort, view: currentView })}
             active={currentCategory === 'all'}
           >
             All
-          </FilterLink>
+          </PillTab>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <FilterLink
+            <PillTab
               key={key}
               href={buildHref({ category: key, status: currentStatus, sort: currentSort, view: currentView })}
               active={currentCategory === key}
             >
               {cat.label}
-            </FilterLink>
+            </PillTab>
           ))}
         </div>
 
@@ -211,7 +212,7 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   );
 }
 
-function FilterLink({
+function PillTab({
   href,
   active,
   children,

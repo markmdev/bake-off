@@ -41,6 +41,11 @@ interface AgentDetails {
     balance: number;
     winRate: number;
   };
+  counts: {
+    bakesCreated: number;
+    submissions: number;
+    transactions: number;
+  };
   bakesCreated: Array<{
     id: string;
     title: string;
@@ -75,6 +80,7 @@ interface AgentDetails {
 async function getAgentDetails(id: string): Promise<AgentDetails | null> {
   await connectDB();
 
+  // ObjectId validation already done in generateMetadata, but needed if called directly
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return null;
   }
@@ -82,8 +88,8 @@ async function getAgentDetails(id: string): Promise<AgentDetails | null> {
   const agent = await Agent.findById(id).lean();
   if (!agent) return null;
 
-  // Fetch related data in parallel
-  const [balance, bakesCreated, submissions, transactions] = await Promise.all([
+  // Fetch related data and counts in parallel
+  const [balance, bakesCreated, submissions, transactions, bakesCreatedCount, submissionsCount, transactionsCount] = await Promise.all([
     getAgentBalance(agent._id),
     Task.find({ creatorAgentId: agent._id })
       .sort({ publishedAt: -1 })
@@ -97,6 +103,9 @@ async function getAgentDetails(id: string): Promise<AgentDetails | null> {
       .sort({ createdAt: -1 })
       .limit(30)
       .lean(),
+    Task.countDocuments({ creatorAgentId: agent._id }),
+    Submission.countDocuments({ agentId: agent._id }),
+    BPTransaction.countDocuments({ agentId: agent._id }),
   ]);
 
   // Get bake details for submissions
@@ -107,10 +116,10 @@ async function getAgentDetails(id: string): Promise<AgentDetails | null> {
   // Get winning submissions
   const wins = submissions.filter((s) => s.isWinner);
 
-  // Calculate win rate
-  const winRate = agent.stats.bakesAttempted > 0
-    ? (agent.stats.bakesWon / agent.stats.bakesAttempted) * 100
-    : 0;
+  // Calculate win rate with null-safe access
+  const bakesAttempted = agent.stats?.bakesAttempted ?? 0;
+  const bakesWon = agent.stats?.bakesWon ?? 0;
+  const winRate = bakesAttempted > 0 ? (bakesWon / bakesAttempted) * 100 : 0;
 
   return {
     id: agent._id.toString(),
@@ -123,6 +132,11 @@ async function getAgentDetails(id: string): Promise<AgentDetails | null> {
       bakesCreated: agent.stats?.bakesCreated ?? 0,
       balance,
       winRate,
+    },
+    counts: {
+      bakesCreated: bakesCreatedCount,
+      submissions: submissionsCount,
+      transactions: transactionsCount,
     },
     bakesCreated: bakesCreated.map((b) => ({
       id: b._id.toString(),
@@ -213,7 +227,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
       {/* Sections */}
       <div className="space-y-8">
         {/* Bakes Created */}
-        <Section title="Bakes Created" count={agent.bakesCreated.length}>
+        <Section title="Bakes Created" count={agent.counts.bakesCreated}>
           {agent.bakesCreated.length === 0 ? (
             <EmptyState message="No bakes created yet" />
           ) : (
@@ -226,7 +240,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
         </Section>
 
         {/* Wins */}
-        <Section title="Wins" count={agent.wins.length}>
+        <Section title="Wins" count={agent.stats.bakesWon}>
           {agent.wins.length === 0 ? (
             <EmptyState message="No wins yet" />
           ) : (
@@ -239,7 +253,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
         </Section>
 
         {/* Submissions */}
-        <Section title="Recent Submissions" count={agent.submissions.length}>
+        <Section title="Recent Submissions" count={agent.counts.submissions}>
           {agent.submissions.length === 0 ? (
             <EmptyState message="No submissions yet" />
           ) : (
@@ -252,7 +266,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
         </Section>
 
         {/* Activity */}
-        <Section title="Activity" count={agent.transactions.length}>
+        <Section title="Activity" count={agent.counts.transactions}>
           {agent.transactions.length === 0 ? (
             <EmptyState message="No activity yet" />
           ) : (

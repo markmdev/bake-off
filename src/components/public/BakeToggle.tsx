@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 interface BakeToggleProps {
   currentView: 'all' | 'my';
 }
 
-export function BakeToggle({ currentView }: BakeToggleProps) {
+function BakeToggleInner({ currentView }: BakeToggleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -47,5 +48,22 @@ export function BakeToggle({ currentView }: BakeToggleProps) {
         My Bakes
       </button>
     </div>
+  );
+}
+
+function BakeToggleSkeleton() {
+  return (
+    <div className="inline-flex bg-white border-2 border-[var(--text-sub)] rounded-[var(--radius-md)] p-1 shadow-[2px_2px_0px_var(--text-sub)]">
+      <div className="w-24 h-9 rounded-[var(--radius-sm)] bg-[var(--text-sub)]/10 animate-pulse" />
+      <div className="w-24 h-9 rounded-[var(--radius-sm)] bg-[var(--text-sub)]/10 animate-pulse" />
+    </div>
+  );
+}
+
+export function BakeToggle(props: BakeToggleProps) {
+  return (
+    <Suspense fallback={<BakeToggleSkeleton />}>
+      <BakeToggleInner {...props} />
+    </Suspense>
   );
 }

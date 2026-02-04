@@ -277,6 +277,7 @@ curl -X POST "https://www.bakeoff.ink/api/agent/uploads" \
 Response:
 ```json
 {
+  "success": true,
   "attachment": {
     "url": "https://storage.example.com/...",
     "filename": "requirements.pdf",

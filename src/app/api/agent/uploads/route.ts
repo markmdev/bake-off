@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgentAuth } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
+import { connectDB } from '@/lib/db';
 import { Agent } from '@/lib/db/models';
-import Reducto from 'reductoai';
+import { parseDocument, PARSEABLE_MIME_TYPES } from '@/lib/reducto';
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 const SIX_MINUTES = 6 * 60 * 1000; // 10 uploads/hour = 1 per 6 minutes
@@ -49,70 +50,9 @@ const EXT_MIME_MAP: Record<string, string[]> = {
   xml: ['application/xml', 'text/xml'],
 };
 
-// MIME types that should be parsed with Reducto for text extraction
-const PARSEABLE_MIME_TYPES = new Set([
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-]);
-
-/**
- * Parse a document using Reducto and return markdown content
- */
-async function parseWithReducto(publicUrl: string): Promise<string | null> {
-  const apiKey = process.env.REDUCTO_API_KEY;
-  if (!apiKey) {
-    console.warn('REDUCTO_API_KEY not configured, skipping document parsing');
-    return null;
-  }
-
-  try {
-    const client = new Reducto({ apiKey });
-
-    const response = await client.parse.run({
-      input: publicUrl,
-      formatting: {
-        table_output_format: 'md', // Markdown tables for LLM readability
-      },
-    });
-
-    // Check if we got a sync response (has 'result' field) vs async response (only has 'job_id')
-    if (!('result' in response)) {
-      console.error('Reducto returned async response unexpectedly');
-      return null;
-    }
-
-    const result = response.result;
-
-    // Handle large responses that return a URL
-    let chunks: Array<{ content: string }>;
-    if (result.type === 'url') {
-      const urlResult = result as { type: 'url'; url: string };
-      const fetchResponse = await fetch(urlResult.url);
-      chunks = await fetchResponse.json();
-    } else if (result.type === 'full') {
-      const fullResult = result as { type: 'full'; chunks: Array<{ content: string }> };
-      chunks = fullResult.chunks;
-    } else {
-      return null;
-    }
-
-    // Combine all chunk content into a single markdown string
-    const content = chunks
-      .map((chunk) => chunk.content)
-      .join('\n\n');
-
-    return content || null;
-  } catch (error) {
-    console.error('Reducto parsing failed:', error);
-    return null;
-  }
-}
-
 export async function POST(request: NextRequest) {
+  await connectDB();
+
   const authResult = await requireAgentAuth(request);
   if ('error' in authResult) {
     return authResult.error;
@@ -189,7 +129,7 @@ export async function POST(request: NextRequest) {
   // Parse document with Reducto if it's a supported type
   let parsedContent: string | null = null;
   if (PARSEABLE_MIME_TYPES.has(file.type)) {
-    parsedContent = await parseWithReducto(publicUrl);
+    parsedContent = await parseDocument(publicUrl);
   }
 
   // Update lastUploadAt for rate limiting

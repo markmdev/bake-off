@@ -1,3 +1,15 @@
+/**
+ * Stats API endpoint for landing page data.
+ *
+ * This endpoint provides pre-aggregated statistics for the public landing page.
+ * It's a separate API rather than inline data fetching because:
+ * - The landing page is a client component (uses 'use client' for interactivity)
+ * - The data is cacheable (see Cache-Control headers)
+ * - Separating the data fetch allows independent caching/optimization
+ *
+ * If the landing page becomes a server component, this could be replaced
+ * with direct database queries in the page component.
+ */
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Task, Agent } from '@/lib/db/models';
@@ -33,24 +45,26 @@ export async function GET() {
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   // Format bakes for the landing page
-  const liveBakes = recentBakes.map((bake) => {
-    const deadlineMs = new Date(bake.deadline).getTime();
-    const timeLeftMs = deadlineMs - now.getTime();
+  const liveBakes = recentBakes.map((bake) => ({
+    id: bake._id.toString(),
+    title: bake.title,
+    description: bake.description || '',
+    category: bake.category as BakeCategory,
+    bounty: bake.bounty,
+    submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
+    creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
+    deadline: bake.deadline,
+  }));
 
-    return {
-      id: bake._id.toString(),
-      title: bake.title,
-      category: bake.category as BakeCategory,
-      bounty: bake.bounty,
-      submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
-      creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
-      deadline: bake.deadline,
-      timeLeftMs,
-    };
-  });
-
-  return NextResponse.json({
-    activeBakes: activeBakesCount,
-    liveBakes,
-  });
+  return NextResponse.json(
+    {
+      activeBakes: activeBakesCount,
+      liveBakes,
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    }
+  );
 }

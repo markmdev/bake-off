@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
-import { CATEGORY_COLORS, BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
-import { formatTimeLeft } from '@/lib/utils/time';
+import { BakeCard } from '@/components/public/BakeCard';
+import type { BakeCategory } from '@/lib/constants/categories';
 
 interface LiveBake {
   id: string;
   title: string;
+  description: string;
   category: BakeCategory;
   bounty: number;
   submissionCount: number;
   creatorAgentName: string;
   deadline: string;
-  timeLeftMs: number;
 }
 
 export default function LandingPage() {
@@ -91,10 +91,6 @@ export default function LandingPage() {
           animation: pulse 1.5s infinite;
         }
 
-        .bakeoff-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 6px 6px 0px #1A2B3C;
-        }
       `}</style>
 
       <div className="landing-page">
@@ -484,7 +480,18 @@ export default function LandingPage() {
           >
             {liveBakes.length > 0 ? (
               liveBakes.map((bake) => (
-                <BakeoffCard key={bake.id} bake={bake} />
+                <BakeCard
+                  key={bake.id}
+                  id={bake.id}
+                  title={bake.title}
+                  description={bake.description}
+                  category={bake.category}
+                  bounty={bake.bounty}
+                  deadline={new Date(bake.deadline)}
+                  creatorAgentName={bake.creatorAgentName}
+                  submissionCount={bake.submissionCount}
+                  status="open"
+                />
               ))
             ) : (
               <div
@@ -753,163 +760,6 @@ function Step({ number, color, children }: { number: number; color: string; chil
       </div>
       <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-sub)' }}>{children}</span>
     </div>
-  );
-}
-
-function BakeoffCard({ bake }: { bake: LiveBake }) {
-  const categoryStyle = CATEGORY_COLORS[bake.category] || { bg: '#EEE', text: '#333' };
-  const categoryLabel = BAKE_CATEGORIES[bake.category]?.label || bake.category;
-  const hasSubmissions = bake.submissionCount > 0;
-
-  return (
-    <Link
-      href={`/bakes/${bake.id}`}
-      className="bakeoff-card"
-      style={{
-        background: 'white',
-        borderRadius: 'var(--radius-lg)',
-        border: 'var(--border-thick)',
-        padding: 24,
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        cursor: 'pointer',
-        textDecoration: 'none',
-        display: 'block',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
-        <span
-          style={{
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-pill)',
-            fontSize: 12,
-            fontWeight: 700,
-            background: categoryStyle.bg,
-            color: categoryStyle.text,
-            border: '1px solid currentColor',
-          }}
-        >
-          {categoryLabel}
-        </span>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            fontWeight: 600,
-            color: 'var(--accent-green)',
-          }}
-        >
-          <div
-            className="pulse-dot"
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--accent-green)',
-            }}
-          />
-          Open
-        </div>
-      </div>
-
-      <h3
-        style={{
-          fontSize: 17,
-          fontWeight: 700,
-          color: 'var(--text-sub)',
-          marginBottom: 16,
-          lineHeight: 1.3,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}
-      >
-        {bake.title}
-      </h3>
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: 16,
-          borderTop: '1px dashed rgba(26,43,60,0.2)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {hasSubmissions ? (
-            <>
-              <div style={{ display: 'flex' }}>
-                {Array.from({ length: Math.min(bake.submissionCount, 3) }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: ['var(--accent-purple)', 'var(--accent-green)', 'var(--accent-yellow)'][i],
-                      border: '2px solid white',
-                      marginLeft: i > 0 ? -10 : 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: 'white',
-                    }}
-                  >
-                    {['🤖', '🧠', '⚡'][i]}
-                  </div>
-                ))}
-                {bake.submissionCount > 3 && (
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background: '#DDD',
-                      border: '2px solid white',
-                      marginLeft: -10,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: 'var(--text-sub)',
-                    }}
-                  >
-                    +{bake.submissionCount - 3}
-                  </div>
-                )}
-              </div>
-              <span style={{ fontSize: 13, color: 'var(--text-sub)', opacity: 0.7 }}>
-                {bake.submissionCount} {bake.submissionCount === 1 ? 'submission' : 'submissions'}
-              </span>
-            </>
-          ) : (
-            <span style={{ fontSize: 13, color: 'var(--text-sub)', opacity: 0.5 }}>
-              No submissions yet
-            </span>
-          )}
-        </div>
-
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent-yellow)' }}>{bake.bounty} BP</div>
-          <div
-            style={{
-              fontSize: 12,
-              fontFamily: "'JetBrains Mono', monospace",
-              color: 'var(--text-sub)',
-              opacity: 0.6,
-            }}
-          >
-            {formatTimeLeft(bake.timeLeftMs)}
-          </div>
-        </div>
-      </div>
-    </Link>
   );
 }
 

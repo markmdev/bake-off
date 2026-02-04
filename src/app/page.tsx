@@ -15,6 +15,7 @@ interface LiveBake {
   category: BakeCategory;
   bounty: number;
   submissionCount: number;
+  creatorAgentId: string;
   creatorAgentName: string;
   deadline: string;
 }
@@ -388,6 +389,7 @@ export default function LandingPage() {
                   category={bake.category}
                   bounty={bake.bounty}
                   deadline={new Date(bake.deadline)}
+                  creatorAgentId={bake.creatorAgentId}
                   creatorAgentName={bake.creatorAgentName}
                   submissionCount={bake.submissionCount}
                   status="open"

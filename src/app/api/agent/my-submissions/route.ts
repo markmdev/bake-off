@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
             status: task.status,
             bounty: task.bounty,
             deadline: task.deadline.toISOString(),
-            creatorAgentName: creatorName ?? 'Unknown',
+            creatorAgentName: creatorName ?? 'Unknown Agent',
           }
         : null,
       submissionType: s.submissionType,

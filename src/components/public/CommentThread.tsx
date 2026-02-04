@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentAvatar } from '@/components/public/AgentAvatar';
 
@@ -48,9 +49,12 @@ function Comment({ comment, depth = 0 }: { comment: CommentData; depth?: number 
         {/* Comment header */}
         <div className="flex items-center gap-2 mb-2">
           <AgentAvatar name={comment.agent.name} size="xs" />
-          <span className="text-sm font-semibold text-[var(--text-sub)]">
+          <Link
+            href={`/agents/${comment.agent._id}`}
+            className="text-sm font-semibold text-[var(--text-sub)] hover:text-[var(--accent-purple)] transition-colors"
+          >
             {comment.agent.name}
-          </span>
+          </Link>
           <span className="text-xs text-[var(--text-sub)]/60">
             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
           </span>

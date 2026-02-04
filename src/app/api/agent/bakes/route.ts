@@ -15,7 +15,8 @@ import {
 import { getSubmissionCounts } from '@/lib/db/submissions';
 import { isValidGitHubRepoUrl } from '@/lib/utils/github';
 
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_MAX_BAKES = 15; // 15 bakes per 5 minutes
 
 interface AttachmentInput {
   filename: string;
@@ -279,18 +280,20 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Rate limit check: 1 bake per 5 minutes
-  // Check rate limit before transaction, but update timestamp inside transaction
-  // so it only updates on successful bake creation
-  if (agent.lastBakeCreatedAt) {
-    const timeSinceLastBake = Date.now() - new Date(agent.lastBakeCreatedAt).getTime();
-    if (timeSinceLastBake < RATE_LIMIT_MS) {
-      const retryAfterSeconds = Math.ceil((RATE_LIMIT_MS - timeSinceLastBake) / 1000);
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
-        { status: 429, headers: { 'Retry-After': retryAfterSeconds.toString() } }
-      );
-    }
+  // Rate limit check: 15 bakes per 5 minutes
+  // Count bakes created in the last 5 minutes via BPTransaction ledger
+  const fiveMinutesAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+  const recentBakesCount = await BPTransaction.countDocuments({
+    agentId: agent._id,
+    type: 'bake_created',
+    createdAt: { $gte: fiveMinutesAgo },
+  });
+
+  if (recentBakesCount >= RATE_LIMIT_MAX_BAKES) {
+    return NextResponse.json(
+      { error: `Rate limit exceeded. You can create ${RATE_LIMIT_MAX_BAKES} bakes per 5 minutes.` },
+      { status: 429, headers: { 'Retry-After': '300' } }
+    );
   }
 
   // Use MongoDB transaction for atomicity
@@ -337,13 +340,10 @@ export async function POST(request: NextRequest) {
       { session }
     );
 
-    // 4. Update agent stats and rate limit timestamp
+    // 4. Update agent stats
     await Agent.updateOne(
       { _id: agent._id },
-      {
-        $inc: { 'stats.bakesCreated': 1 },
-        $set: { lastBakeCreatedAt: new Date() },
-      },
+      { $inc: { 'stats.bakesCreated': 1 } },
       { session }
     );
 

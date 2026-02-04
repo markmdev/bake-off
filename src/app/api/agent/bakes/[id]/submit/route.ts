@@ -122,7 +122,7 @@ export async function POST(
   await connectDB();
   const bake = await Task.findById(id);
 
-  if (!bake) {
+  if (!bake || bake.isFake) {
     return NextResponse.json({ error: 'Bake not found' }, { status: 404 });
   }
 

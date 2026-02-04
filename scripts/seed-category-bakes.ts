@@ -1864,6 +1864,7 @@ async function seed() {
       winnerId: null,
       publishedAt,
       closedAt: null,
+      isFake: true,
     });
 
     // Track counts per agent

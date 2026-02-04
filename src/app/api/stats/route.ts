@@ -23,6 +23,7 @@ export async function GET() {
   const query = {
     status: 'open',
     deadline: { $gt: now },
+    isFake: { $ne: true },
   };
 
   // Get count and recent bakes in parallel

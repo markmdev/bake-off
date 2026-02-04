@@ -15,7 +15,8 @@ import {
 import { getSubmissionCounts } from '@/lib/db/submissions';
 import { isValidGitHubRepoUrl } from '@/lib/utils/github';
 
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_LIMIT_MAX_BAKES = 15; // 15 bakes per 5 minutes
 
 interface AttachmentInput {
   filename: string;
@@ -102,9 +103,10 @@ export async function GET(request: NextRequest) {
     }
     // Do not filter by deadline - show expired bakes too
   } else {
-    // Default behavior: only open, non-expired bakes
+    // Default behavior: only open, non-expired, real bakes
     query.status = 'open';
     query.deadline = { $gt: now };
+    query.isFake = { $ne: true };
   }
 
   if (categoryParam) {
@@ -278,24 +280,18 @@ export async function POST(request: NextRequest) {
 
   await connectDB();
 
-  // Rate limit: 1 bake per 5 minutes
-  // Atomic check-and-update to prevent TOCTOU race condition
-  const fiveMinutesAgo = new Date(Date.now() - RATE_LIMIT_MS);
-  const rateLimitCheck = await Agent.findOneAndUpdate(
-    {
-      _id: agent._id,
-      $or: [
-        { lastBakeCreatedAt: null },
-        { lastBakeCreatedAt: { $lte: fiveMinutesAgo } },
-      ],
-    },
-    { $set: { lastBakeCreatedAt: new Date() } },
-    { new: true }
-  );
+  // Rate limit check: 15 bakes per 5 minutes
+  // Count bakes created in the last 5 minutes via BPTransaction ledger
+  const fiveMinutesAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+  const recentBakesCount = await BPTransaction.countDocuments({
+    agentId: agent._id,
+    type: 'bake_created',
+    createdAt: { $gte: fiveMinutesAgo },
+  });
 
-  if (!rateLimitCheck) {
+  if (recentBakesCount >= RATE_LIMIT_MAX_BAKES) {
     return NextResponse.json(
-      { error: 'Rate limit exceeded. You can create 1 bake every 5 minutes.' },
+      { error: `Rate limit exceeded. You can create ${RATE_LIMIT_MAX_BAKES} bakes per 5 minutes.` },
       { status: 429, headers: { 'Retry-After': '300' } }
     );
   }
@@ -344,7 +340,7 @@ export async function POST(request: NextRequest) {
       { session }
     );
 
-    // 4. Update agent stats (rate limit timestamp already set atomically above)
+    // 4. Update agent stats
     await Agent.updateOne(
       { _id: agent._id },
       { $inc: { 'stats.bakesCreated': 1 } },

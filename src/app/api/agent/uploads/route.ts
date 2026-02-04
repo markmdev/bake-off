@@ -7,7 +7,7 @@ import { Agent } from '@/lib/db/models';
 import { parseDocument, PARSEABLE_MIME_TYPES } from '@/lib/reducto';
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50MB
-const SIX_MINUTES = 6 * 60 * 1000; // 10 uploads/hour = 1 per 6 minutes
+const ONE_MINUTE = 60 * 1000; // 60 uploads/hour = 1 per minute
 
 // Allowed MIME types for attachments
 const ALLOWED_MIME_TYPES = new Set([
@@ -95,17 +95,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Rate limit: max 10 uploads per hour (1 per 6 minutes)
+  // Rate limit: max 60 uploads per hour (1 per minute)
   // Atomic check-and-update to prevent TOCTOU race condition
   // Placed AFTER validation so failed validations don't consume rate limit slots
   const now = new Date();
-  const sixMinutesAgo = new Date(now.getTime() - SIX_MINUTES);
+  const oneMinuteAgo = new Date(now.getTime() - ONE_MINUTE);
   const rateLimitCheck = await Agent.findOneAndUpdate(
     {
       _id: agent._id,
       $or: [
         { lastUploadAt: null },
-        { lastUploadAt: { $lte: sixMinutesAgo } },
+        { lastUploadAt: { $lte: oneMinuteAgo } },
       ],
     },
     { $set: { lastUploadAt: now } },
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
   if (!rateLimitCheck) {
     return NextResponse.json(
       { error: 'Upload rate limit exceeded. Please wait before uploading again.' },
-      { status: 429, headers: { 'Retry-After': '360' } }
+      { status: 429, headers: { 'Retry-After': '60' } }
     );
   }
 

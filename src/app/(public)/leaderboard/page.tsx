@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
 import { Agent, BPTransaction } from '@/lib/db/models';
+import { TabLink } from '@/components/public/TabLink';
 
 export const metadata: Metadata = {
   title: 'Leaderboard',
@@ -107,18 +108,18 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
 
       {/* Sort tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <SortTab href="/leaderboard?sort=bp" active={sortBy === 'bp'}>
+        <TabLink href="/leaderboard?sort=bp" isActive={sortBy === 'bp'}>
           By BP Balance
-        </SortTab>
-        <SortTab href="/leaderboard?sort=wins" active={sortBy === 'wins'}>
+        </TabLink>
+        <TabLink href="/leaderboard?sort=wins" isActive={sortBy === 'wins'}>
           By Wins
-        </SortTab>
-        <SortTab href="/leaderboard?sort=winrate" active={sortBy === 'winrate'}>
+        </TabLink>
+        <TabLink href="/leaderboard?sort=winrate" isActive={sortBy === 'winrate'}>
           By Win Rate
-        </SortTab>
-        <SortTab href="/leaderboard?sort=created" active={sortBy === 'created'}>
+        </TabLink>
+        <TabLink href="/leaderboard?sort=created" isActive={sortBy === 'created'}>
           By Bakes Created
-        </SortTab>
+        </TabLink>
       </div>
 
       {/* Leaderboard */}
@@ -156,30 +157,6 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
   );
 }
 
-function SortTab({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={`
-        px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap no-underline transition-all
-        ${active
-          ? 'bg-[var(--accent-purple)] text-white'
-          : 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-        }
-      `}
-    >
-      {children}
-    </a>
-  );
-}
 
 function AgentCard({ agent, sortBy }: { agent: AgentWithBalance; sortBy: string }) {
   const isTop3 = agent.rank <= 3;

@@ -4,6 +4,7 @@ import { Task, Submission, Agent } from '@/lib/db/models';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
+import { TabLink } from '@/components/public/TabLink';
 import { BAKE_CATEGORIES, type BakeCategory } from '@/lib/constants/categories';
 
 export const metadata: Metadata = {
@@ -121,20 +122,20 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         {/* Category filter */}
         <div className="flex flex-wrap gap-2">
-          <FilterLink
+          <TabLink
             href={`/bakes?status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
-            active={currentCategory === 'all'}
+            isActive={currentCategory === 'all'}
           >
             All
-          </FilterLink>
+          </TabLink>
           {Object.entries(BAKE_CATEGORIES).map(([key, cat]) => (
-            <FilterLink
+            <TabLink
               key={key}
               href={`/bakes?category=${key}&status=${currentStatus}&sort=${currentSort}&view=${currentView}`}
-              active={currentCategory === key}
+              isActive={currentCategory === key}
             >
               {cat.label}
-            </FilterLink>
+            </TabLink>
           ))}
         </div>
 
@@ -183,27 +184,3 @@ export default async function BakesPage({ searchParams }: BakesPageProps) {
   );
 }
 
-function FilterLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={`
-        px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all
-        ${active
-          ? 'bg-[var(--accent-purple)] text-white'
-          : 'bg-white text-[var(--text-sub)] hover:bg-[var(--accent-purple)]/10 border border-[var(--text-sub)]/20'
-        }
-      `}
-    >
-      {children}
-    </a>
-  );
-}

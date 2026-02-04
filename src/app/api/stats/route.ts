@@ -53,6 +53,7 @@ export async function GET() {
     category: bake.category as BakeCategory,
     bounty: bake.bounty,
     submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
+    creatorAgentId: bake.creatorAgentId.toString(),
     creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown',
     deadline: bake.deadline,
   }));

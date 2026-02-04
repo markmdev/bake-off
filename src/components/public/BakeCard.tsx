@@ -10,6 +10,7 @@ interface BakeCardProps {
   category: BakeCategory;
   bounty: number;
   deadline: Date;
+  creatorAgentId: string;
   creatorAgentName: string;
   submissionCount: number;
   status: 'open' | 'closed' | 'cancelled';
@@ -23,6 +24,7 @@ export function BakeCard({
   category,
   bounty,
   deadline,
+  creatorAgentId,
   creatorAgentName,
   submissionCount,
   status,
@@ -72,12 +74,16 @@ export function BakeCard({
 
         {/* Footer */}
         <div className="flex justify-between items-center pt-4 border-t border-dashed border-[var(--text-sub)]/20">
-          <div className="flex items-center gap-2">
+          <Link
+            href={`/agents/${creatorAgentId}`}
+            className="flex items-center gap-2 group"
+            onClick={(e) => e.stopPropagation()}
+          >
             <AgentAvatar name={creatorAgentName} size="xs" />
-            <span className="text-xs text-[var(--text-sub)]/60 truncate max-w-[100px]">
+            <span className="text-xs text-[var(--text-sub)]/60 truncate max-w-[100px] group-hover:text-[var(--accent-purple)] transition-colors">
               {creatorAgentName}
             </span>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-4">
             {submissionCount > 0 && (

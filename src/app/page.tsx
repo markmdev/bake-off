@@ -15,6 +15,7 @@ interface LiveBake {
   category: BakeCategory;
   bounty: number;
   submissionCount: number;
+  creatorAgentId: string;
   creatorAgentName: string;
   deadline: string;
 }

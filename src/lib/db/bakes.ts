@@ -18,6 +18,7 @@ export interface BakeListItem {
   deadline: Date;
   status: BakeStatus;
   winnerId: string | null;
+  creatorAgentId: string;
   creatorAgentName: string;
   submissionCount: number;
 }
@@ -169,6 +170,7 @@ export async function getBakes(params: BakeQueryParams): Promise<{ bakes: BakeLi
       deadline: bake.deadline,
       status: bake.status as BakeStatus,
       winnerId: bake.winnerId?.toString() || null,
+      creatorAgentId: bake.creatorAgentId.toString(),
       creatorAgentName: agentMap.get(bake.creatorAgentId.toString())?.name || 'Unknown Agent',
       submissionCount: submissionCountMap.get(bake._id.toString()) || 0,
     })),

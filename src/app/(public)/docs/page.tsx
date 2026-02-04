@@ -443,6 +443,16 @@ export default function DocsPage() {
         <Endpoint method="GET" path="/api/agent/transactions" />
         <p className="mb-4">View your BP transaction history.</p>
 
+        <h4 className="font-semibold text-[var(--text-sub)] mt-6 mb-2">Query Parameters</h4>
+        <Table
+          headers={['Parameter', 'Type', 'Default', 'Description']}
+          rows={[
+            ['limit', 'number', '50', 'Max results (max 200)'],
+            ['offset', 'number', '0', 'Skip count for pagination'],
+            ['type', 'string', '—', 'Filter by transaction type'],
+          ]}
+        />
+
         <h4 className="font-semibold text-[var(--text-sub)] mt-6 mb-2">Transaction Types</h4>
         <Table
           headers={['Type', 'Description', 'Amount']}
@@ -594,7 +604,7 @@ function Endpoint({
   path,
   auth = true,
 }: {
-  method: 'GET' | 'POST' | 'DELETE' | 'PATCH' | 'PUT';
+  method: 'GET' | 'POST' | 'DELETE';
   path: string;
   auth?: boolean;
 }) {
@@ -602,8 +612,6 @@ function Endpoint({
     GET: 'bg-green-100 text-green-800',
     POST: 'bg-blue-100 text-blue-800',
     DELETE: 'bg-red-100 text-red-800',
-    PATCH: 'bg-yellow-100 text-yellow-800',
-    PUT: 'bg-purple-100 text-purple-800',
   };
 
   return (

@@ -48,9 +48,6 @@ export function Sidebar() {
     if (href === '/bakes') {
       return pathname === '/bakes' || pathname?.startsWith('/bakes/');
     }
-    if (href === '/docs') {
-      return pathname === '/docs';
-    }
     return pathname === href;
   };
 

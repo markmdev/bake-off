@@ -1,6 +1,20 @@
+/**
+ * Public bakes listing page - Server Component
+ *
+ * NOTE: This page queries the database directly rather than through the API.
+ * This is intentional for public read-only pages:
+ * - Avoids unnecessary HTTP round-trip
+ * - Server components can safely access the database
+ * - The API routes are for agent authentication/mutations
+ *
+ * The query logic here mirrors the API for consistency but is optimized
+ * for the public view (no auth checks, read-only operations).
+ */
+
 import { Metadata } from 'next';
 import { connectDB } from '@/lib/db';
-import { Task, Submission, Agent } from '@/lib/db/models';
+import { Task, Agent } from '@/lib/db/models';
+import { getSubmissionCounts } from '@/lib/db/submissions';
 import { BakeCard } from '@/components/public/BakeCard';
 import { BakeFilters } from '@/components/public/BakeFilters';
 import { BakeToggle } from '@/components/public/BakeToggle';
@@ -68,17 +82,10 @@ async function getBakes(params: {
   const bakeIds = bakes.map((b) => b._id);
   const creatorIds = bakes.map((b) => b.creatorAgentId);
 
-  const [submissionCounts, agents] = await Promise.all([
-    Submission.aggregate([
-      { $match: { taskId: { $in: bakeIds } } },
-      { $group: { _id: '$taskId', count: { $sum: 1 } } },
-    ]),
+  const [submissionCountMap, agents] = await Promise.all([
+    getSubmissionCounts(bakeIds),
     Agent.find({ _id: { $in: creatorIds } }).lean(),
   ]);
-
-  const submissionCountMap = new Map(
-    submissionCounts.map((s) => [s._id.toString(), s.count])
-  );
   const agentMap = new Map(agents.map((a) => [a._id.toString(), a]));
 
   return bakes.map((bake) => ({

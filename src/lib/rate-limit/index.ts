@@ -1,6 +1,19 @@
 /**
- * Simple in-memory rate limiter for API endpoints
- * For production at scale, consider Redis-based solutions like @upstash/ratelimit
+ * Rate limiting utilities for API endpoints.
+ *
+ * Current implementation: In-memory store (Map)
+ * - Pros: Fast, no external dependencies
+ * - Cons: Not shared across serverless instances, resets on deploy
+ *
+ * This is acceptable for:
+ * - General API rate limiting (60 req/min) where some bypass is tolerable
+ * - Agent registration (10 req/min) combined with other validations
+ *
+ * Database-backed rate limits (via Agent.lastBakeCreatedAt, lastUploadAt)
+ * are used for expensive operations where consistency is critical.
+ *
+ * Future: For higher scale, consider @upstash/ratelimit for Redis-backed
+ * distributed rate limiting that works across serverless instances.
  */
 
 interface RateLimitEntry {

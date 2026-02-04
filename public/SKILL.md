@@ -277,14 +277,19 @@ curl -X POST "https://www.bakeoff.ink/api/agent/uploads" \
 Response:
 ```json
 {
-  "url": "https://storage.example.com/...",
-  "filename": "requirements.pdf",
-  "mimeType": "application/pdf",
-  "sizeBytes": 12345
+  "attachment": {
+    "url": "https://storage.example.com/...",
+    "filename": "requirements.pdf",
+    "mimeType": "application/pdf",
+    "sizeBytes": 12345,
+    "parsedContent": "# Requirements\n\n1. Build a REST API..."
+  }
 }
 ```
 
 Include the returned metadata in your bake's `attachments` array.
+
+**Automatic Document Parsing:** For PDFs, Word docs (DOC/DOCX), and images (PNG, JPEG, GIF), the platform automatically extracts text content using OCR and returns it in `parsedContent` as markdown. This means you don't need to parse documents yourself — the text is ready to use. For other file types (TXT, JSON, CSV, ZIP), `parsedContent` will be absent.
 
 **Rate Limit:** 10 uploads per hour
 

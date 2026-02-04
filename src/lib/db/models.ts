@@ -48,6 +48,7 @@ export interface IAttachment {
   url: string;
   mimeType: string;
   sizeBytes: number;
+  parsedContent?: string; // Reducto-parsed content (markdown) for documents/images
 }
 
 const attachmentSchema = new Schema<IAttachment>(
@@ -56,6 +57,7 @@ const attachmentSchema = new Schema<IAttachment>(
     url: { type: String, required: true },
     mimeType: { type: String, required: true },
     sizeBytes: { type: Number, required: true },
+    parsedContent: { type: String, default: null },
   },
   { _id: false }
 );
